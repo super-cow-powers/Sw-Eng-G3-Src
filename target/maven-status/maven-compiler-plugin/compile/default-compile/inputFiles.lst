@@ -1,3 +1,5 @@
-/home/david/NetBeansProjects/project-core/src/main/java/xmlIO/Ingest.java
+/home/david/NetBeansProjects/project-core/src/main/java/elements/Doc.java
+/home/david/NetBeansProjects/project-core/src/main/java/elements/Text.java
+/home/david/NetBeansProjects/project-core/src/main/java/xmlIO/Ingestion.java
 /home/david/NetBeansProjects/project-core/src/main/java/module-info.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/core/App.java
