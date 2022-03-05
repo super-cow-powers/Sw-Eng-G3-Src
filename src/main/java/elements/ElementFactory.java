@@ -26,48 +26,34 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package xmlIO;
+package elements;
 
-import elements.*;
-import java.util.Optional;
-import java.io.File;
-import java.io.IOException;
 import nu.xom.*;
+
 /**
  *
- * @author david
+ * @author David Miall<dm1306@york.ac.uk>
  */
-public class Ingestion {
-
-    /* Return new Ingestion class */
-    public Ingestion() {
-        
-    }
-    
-    /* Return the fully parsed representation of the XML doc */
-    public Optional<Document> parseXML(File xmlFile){
-          Builder parser = new Builder(new ElementFactory()); //Validate doc (true)
-         Document doc = null;
-        try {
-            doc = parser.build(xmlFile);
-        } catch (ParsingException ex) {
-            ex.printStackTrace();
-        } catch (IOException ex) {
-            ex.printStackTrace();
+public class ElementFactory extends NodeFactory {
+    @Override
+    public Element startMakingElement(String name, String namespaceURI) {
+        switch (name.toLowerCase()){
+            case "base:document":
+                return new DocElement(name, namespaceURI);
+            case "base:page":
+                return new PageElement(name, namespaceURI);
+            case "base:shape":
+                return new ShapeElement(name, namespaceURI);
+            case "base:image":
+                return new ImageElement(name, namespaceURI);
+            case "base:playable":
+                return new PlayableElement(name, namespaceURI);
+            case "base:table":
+                return new TableElement(name, namespaceURI);
+            case "base:text":
+                return new TextElement(name, namespaceURI);
+            
         }
-        return Optional.of(doc);
+        return new Element(name, namespaceURI);
     }
-    public Optional<Document> parseXML(String xmlDocString){
-        Builder parser = new Builder(true); //Validate doc (true)
-        Document doc = null;
-        try {
-            doc = parser.build(xmlDocString, null); //No base URL
-        } catch (ParsingException ex) {
-            ex.printStackTrace();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-        return Optional.of(doc);
-    }
-    
 }

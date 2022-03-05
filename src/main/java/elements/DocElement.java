@@ -26,48 +26,34 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package xmlIO;
+package elements;
 
-import elements.*;
-import java.util.Optional;
-import java.io.File;
-import java.io.IOException;
 import nu.xom.*;
+
 /**
  *
  * @author david
  */
-public class Ingestion {
+public class DocElement extends Element {
 
-    /* Return new Ingestion class */
-    public Ingestion() {
-        
-    }
-    
-    /* Return the fully parsed representation of the XML doc */
-    public Optional<Document> parseXML(File xmlFile){
-          Builder parser = new Builder(new ElementFactory()); //Validate doc (true)
-         Document doc = null;
-        try {
-            doc = parser.build(xmlFile);
-        } catch (ParsingException ex) {
-            ex.printStackTrace();
-        } catch (IOException ex) {
-            ex.printStackTrace();
+    private static ThreadLocal builders = new ThreadLocal() {
+
+        protected synchronized Object initialValue() {
+            return new Builder(new ElementFactory());
         }
-        return Optional.of(doc);
+
+    };
+
+    public DocElement(String name) {
+        super(name);
     }
-    public Optional<Document> parseXML(String xmlDocString){
-        Builder parser = new Builder(true); //Validate doc (true)
-        Document doc = null;
-        try {
-            doc = parser.build(xmlDocString, null); //No base URL
-        } catch (ParsingException ex) {
-            ex.printStackTrace();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-        return Optional.of(doc);
+
+    public DocElement(String name, String uri) {
+        super(name, uri);
     }
-    
+
+    public DocElement(Element element) {
+        super(element);
+    }
+
 }

@@ -28,10 +28,35 @@
  */
 package elements;
 
+import nu.xom.*;
+
 /**
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class Text {
+public class ImageElement extends VisualElement {
+    private static ThreadLocal builders = new ThreadLocal() {
+        
+         protected synchronized Object initialValue() {
+             return new Builder(new ElementFactory());
+         }
+         
+     };
+    
+    
+    public ImageElement(String name) {
+        super(name);
+    }
+
+    
+    public ImageElement(String name, String uri) {
+        super(name, uri);
+    }
+
+    
+    public ImageElement(Element element) {
+        super(element);
+    }
+
     
 }

@@ -27,14 +27,36 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 package elements;
+
+import nu.xom.*;
+
 /**
  *
- * @author david
+ * @author David Miall<dm1306@york.ac.uk>
  */
-
-public class Doc {
-
-    public Doc() {
+public class PageElement extends VisualElement {
+    private static ThreadLocal builders = new ThreadLocal() {
+        
+         protected synchronized Object initialValue() {
+             return new Builder(new ElementFactory());
+         }
+         
+     };
+    
+    
+    public PageElement(String name) {
+        super(name);
     }
+
+    
+    public PageElement(String name, String uri) {
+        super(name, uri);
+    }
+
+    
+    public PageElement(Element element) {
+        super(element);
+    }
+
     
 }

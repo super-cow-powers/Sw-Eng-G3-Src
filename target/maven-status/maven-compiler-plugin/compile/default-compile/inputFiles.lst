@@ -1,5 +1,12 @@
-/home/david/NetBeansProjects/project-core/src/main/java/elements/Doc.java
-/home/david/NetBeansProjects/project-core/src/main/java/elements/Text.java
+/home/david/NetBeansProjects/project-core/src/main/java/elements/ElementFactory.java
+/home/david/NetBeansProjects/project-core/src/main/java/elements/TableElement.java
+/home/david/NetBeansProjects/project-core/src/main/java/elements/ImageElement.java
+/home/david/NetBeansProjects/project-core/src/main/java/elements/VisualElement.java
+/home/david/NetBeansProjects/project-core/src/main/java/elements/DocElement.java
+/home/david/NetBeansProjects/project-core/src/main/java/elements/PageElement.java
 /home/david/NetBeansProjects/project-core/src/main/java/xmlIO/Ingestion.java
+/home/david/NetBeansProjects/project-core/src/main/java/elements/TextElement.java
 /home/david/NetBeansProjects/project-core/src/main/java/module-info.java
+/home/david/NetBeansProjects/project-core/src/main/java/elements/ShapeElement.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/core/App.java
+/home/david/NetBeansProjects/project-core/src/main/java/elements/PlayableElement.java

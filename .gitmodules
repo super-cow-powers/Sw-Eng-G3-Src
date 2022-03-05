@@ -1,0 +1,3 @@
+[submodule "sweng_21_PWS"]
+	path = sweng_21_PWS
+	url = https://github.com/super-cow-powers/sweng_21_PWS.git
