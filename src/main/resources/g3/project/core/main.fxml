@@ -8,42 +8,45 @@
 <?import javafx.geometry.*?>
 
 <BorderPane fx:id="containerPane" prefHeight="400" prefWidth="800"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="g3.project.ui.MainController">
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="g3.project.ui.MainController">
     <top>
-    <MenuBar fx:id="menuBar">
-        <menus>
-         <Menu text="File" >
-            <items>
-               <MenuItem text="New"/>
-               <MenuItem text="Open"/>
-               <MenuItem text="Save"/>
-               <MenuItem text="Save As"/>
-               <SeparatorMenuItem  />
-               <MenuItem text="Toggle Dark Mode" onAction="#handleToggleDarkModeAction"/>
-               <MenuItem text="Exit" onAction="#handleExitAction"/>
-            </items>
-         </Menu>
-         <Menu text="Edit">
-            <items>
-               <MenuItem text="Copy"/>
-               <MenuItem text="Cut"/>
-               <MenuItem text="Paste"/>
-            </items>
-         </Menu>
-         <Menu text="Help">
-            <items>
-               <MenuItem text="Search" disable="true"/>
-            </items>
-         </Menu>
-      </menus>
-    </MenuBar>
+        <MenuBar fx:id="menuBar">
+            <menus>
+                <Menu text="File" >
+                    <items>
+                        <MenuItem text="New"/>
+                        <MenuItem text="Open"/>
+                        <MenuItem text="Save"/>
+                        <MenuItem text="Save As"/>
+                        <SeparatorMenuItem  />
+                        <MenuItem text="Toggle Dark Mode" onAction="#handleToggleDarkModeAction"/>
+                        <MenuItem text="Exit" onAction="#handleExitAction"/>
+                    </items>
+                </Menu>
+                <Menu text="Edit">
+                    <items>
+                        <MenuItem text="Cut"/>
+                        <MenuItem text="Copy"/>
+                        <MenuItem text="Paste"/>
+                    </items>
+                </Menu>
+                <Menu text="Help"/>
+            </menus>
+        </MenuBar>
     </top>
     <center>
-        <Label text="Hello">
-            <font>
-                <Font name="System Bold" size="90.0" />
-            </font>
-        </Label>
+        <Pane fx:id="contentPane" style="-fx-background-color: white;">
+            <children>
+                <Label fx:id="helloText" layoutX="0.0" layoutY="99.0" text="Hello" >
+                    <font>
+                        <Font name="System Bold" size="90.0" />
+                    </font>
+                </Label>
+            </children>
+        </Pane>
     </center>
+    <padding>
+    <Insets bottom="25.0" left="25.0" right="25.0" top="0" />
+    </padding>
 </BorderPane>

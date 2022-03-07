@@ -55,6 +55,8 @@ public class MainController {
 
     @FXML
     private BorderPane containerPane;
+    
+    @FXML Pane contentPane;
 
     /**
      * Handle action related to "About" menu item.
@@ -104,7 +106,7 @@ public class MainController {
     }
 
     public void initialize() {
-        //this.scene = vbox;
+        this.scene = contentPane.getScene();
         
         darkMode = detector.isDark();
         detector.registerListener(isDark -> {
@@ -113,7 +115,7 @@ public class MainController {
                 toggleDarkMode();
             });
         });
-        toggleDarkMode();
         containerPane.getStyleClass().add(JMetroStyleClass.BACKGROUND);
+        toggleDarkMode();
     }
 }
