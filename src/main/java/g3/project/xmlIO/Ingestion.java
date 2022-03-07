@@ -26,13 +26,14 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package xmlIO;
+package g3.project.xmlIO;
 
-import elements.*;
+import g3.project.elements.ElementFactory;
 import java.util.Optional;
 import java.io.File;
 import java.io.IOException;
 import nu.xom.*;
+
 /**
  *
  * @author david
@@ -41,33 +42,29 @@ public class Ingestion {
 
     /* Return new Ingestion class */
     public Ingestion() {
-        
+
     }
-    
+
     /* Return the fully parsed representation of the XML doc */
-    public Optional<Document> parseXML(File xmlFile){
-          Builder parser = new Builder(new ElementFactory()); //Validate doc (true)
-         Document doc = null;
-        try {
-            doc = parser.build(xmlFile);
-        } catch (ParsingException ex) {
-            ex.printStackTrace();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+    public Optional<Document> parseDocXML(File xmlFile) throws ParsingException, IOException {
+        Builder parser = new Builder(new ElementFactory()); //Validate doc (true)
+        Document doc;
+        doc = parser.build(xmlFile);
         return Optional.of(doc);
     }
-    public Optional<Document> parseXML(String xmlDocString){
-        Builder parser = new Builder(true); //Validate doc (true)
-        Document doc = null;
-        try {
-            doc = parser.build(xmlDocString, null); //No base URL
-        } catch (ParsingException ex) {
-            ex.printStackTrace();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+    public Optional<Document> parseDocXML(String xmlDocString) throws ParsingException, IOException {
+        Builder parser = new Builder(true, new ElementFactory()); //Validate doc (true)
+        Document doc;
+        doc = parser.build(xmlDocString, null); //No base URL
         return Optional.of(doc);
     }
     
+    /* Parse a generic doc */
+    public Optional<Document> parseGenericXML(String xmlDocString) throws ParsingException, IOException {
+        Builder parser = new Builder(false);
+        Document doc;
+        doc = parser.build(xmlDocString, null); //No base URL
+        return Optional.of(doc);
+    }
+
 }

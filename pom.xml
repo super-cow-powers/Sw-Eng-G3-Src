@@ -9,12 +9,32 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
+    
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
+
     <dependencies>
         <dependency>
             <groupId>xom</groupId>
             <artifactId>xom</artifactId>
             <version>1.3.7</version>
         </dependency>
+        <dependency>
+            <groupId>org.jfxtras</groupId>
+            <artifactId>jmetro</artifactId>
+            <version>11.6.14</version>
+        </dependency>
+        <dependency>
+	    <groupId>com.github.Dansoftowner</groupId>
+	    <artifactId>jSystemThemeDetector</artifactId>
+	    <version>3.8</version>
+	</dependency>
     </dependencies>
     <profiles>
         <profile>
@@ -29,30 +49,30 @@
                 <dependency>
                     <groupId>org.openjfx</groupId>
                     <artifactId>javafx.base</artifactId>
-                    <version>14</version>
+                    <version>11</version>
                     <scope>system</scope>
-                    <systemPath>/usr/lib/jvm/openjfx-14/lib/javafx.base.jar</systemPath>
+                    <systemPath>/usr/lib/jvm/openjfx-11/libs/javafx.base.jar</systemPath>
                 </dependency>
                 <dependency>
                     <groupId>org.openjfx</groupId>
                     <artifactId>javafx-controls</artifactId>
                     <scope>system</scope>
-                    <systemPath>/usr/lib/jvm/openjfx-14/lib/javafx.controls.jar</systemPath>
-                    <version>14</version>
+                    <systemPath>/usr/lib/jvm/openjfx-11/libs/javafx.controls.jar</systemPath>
+                    <version>11</version>
                 </dependency>
                 <dependency>
                     <groupId>org.openjfx</groupId>
                     <artifactId>javafx-fxml</artifactId>
                     <scope>system</scope>
-                    <systemPath>/usr/lib/jvm/openjfx-14/lib/javafx.fxml.jar</systemPath>
-                    <version>14</version>
+                    <systemPath>/usr/lib/jvm/openjfx-11/libs/javafx.fxml.jar</systemPath>
+                    <version>11</version>
                 </dependency>
                 <dependency>
                     <groupId>org.openjfx</groupId>
                     <artifactId>javafx-graphics</artifactId>
                     <scope>system</scope>
-                    <systemPath>/usr/lib/jvm/openjfx-14/lib/javafx.graphics.jar</systemPath>
-                    <version>14</version>
+                    <systemPath>/usr/lib/jvm/openjfx-11/libs/javafx.graphics.jar</systemPath>
+                    <version>11</version>
                 </dependency>
             </dependencies>
         </profile>
@@ -68,22 +88,22 @@
                 <dependency>
                     <groupId>org.openjfx</groupId>
                     <artifactId>javafx.base</artifactId>
-                    <version>14</version>
+                    <version>11</version>
                 </dependency>
                 <dependency>
                     <groupId>org.openjfx</groupId>
                     <artifactId>javafx-controls</artifactId>
-                    <version>14</version>
+                    <version>11</version>
                 </dependency>
                 <dependency>
                     <groupId>org.openjfx</groupId>
                     <artifactId>javafx-fxml</artifactId>
-                    <version>14</version>
+                    <version>11</version>
                 </dependency>
                 <dependency>
                     <groupId>org.openjfx</groupId>
                     <artifactId>javafx-graphics</artifactId>
-                    <version>14</version>
+                    <version>11</version>
                 </dependency>
             </dependencies>
         </profile>
@@ -96,6 +116,9 @@
                 <version>3.8.0</version>
                 <configuration>
                     <release>11</release>
+                    <compilerArgs>
+                        <arg>-verbose</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
             <plugin>
@@ -104,12 +127,17 @@
                 <version>0.0.4</version>
                 <configuration>
                     <mainClass>g3.project.core.App</mainClass>
+                    <options>
+                        <option>-Dprism.order=es2</option>
+                    </options>
                 </configuration>
+                
                 <executions>
                     <execution>
                         <!-- Default configuration for running -->
                         <!-- Usage: mvn clean javafx:run -->
                         <id>default-cli</id>
+                        
                     </execution>
                     <execution>
                         <!-- Configuration for manual attach debugging -->

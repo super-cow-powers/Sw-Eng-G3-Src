@@ -26,34 +26,46 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package elements;
-
-import nu.xom.*;
+package g3.project.ui;
 
 /**
  *
- * @author david
+ * @author David Miall<dm1306@york.ac.uk>
  */
-public class DocElement extends Element {
-
-    private static ThreadLocal builders = new ThreadLocal() {
-
-        protected synchronized Object initialValue() {
-            return new Builder(new ElementFactory());
-        }
-
-    };
-
-    public DocElement(String name) {
-        super(name);
+public class ObjSize {
+    private final Double x_px;
+    private final Double y_px;
+    private final Double rot_deg;
+    
+    /**
+    *
+    * Create new size object. X and Y are in PX, rot is in degrees. 
+    */
+    public ObjSize(Double x, Double y, Double rot){
+        this.x_px = x;
+        this.y_px = y;
+        this.rot_deg = rot;
     }
-
-    public DocElement(String name, String uri) {
-        super(name, uri);
+    
+    /**
+     * 
+     * @return Returns X size in PX
+     */
+    public Double getX(){
+        return x_px;
     }
-
-    public DocElement(Element element) {
-        super(element);
+    /**
+     * 
+     * @return Returns Y size in PX
+     */
+    public Double getY(){
+        return y_px;
     }
-
+    /**
+     * 
+     * @return Returns Rotation in Degrees
+     */
+    public Double getRot(){
+        return rot_deg;
+    }
 }

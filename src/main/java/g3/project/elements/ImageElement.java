@@ -26,7 +26,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package elements;
+package g3.project.elements;
 
 import nu.xom.*;
 
@@ -34,7 +34,7 @@ import nu.xom.*;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class PlayableElement extends VisualElement {
+public class ImageElement extends VisualElement {
     private static ThreadLocal builders = new ThreadLocal() {
         
          protected synchronized Object initialValue() {
@@ -44,17 +44,17 @@ public class PlayableElement extends VisualElement {
      };
     
     
-    public PlayableElement(String name) {
+    public ImageElement(String name) {
         super(name);
     }
 
     
-    public PlayableElement(String name, String uri) {
+    public ImageElement(String name, String uri) {
         super(name, uri);
     }
 
     
-    public PlayableElement(Element element) {
+    public ImageElement(Element element) {
         super(element);
     }
 

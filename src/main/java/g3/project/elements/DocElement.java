@@ -26,26 +26,34 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package elements;
+package g3.project.elements;
 
-import nu.xom.Element;
+import nu.xom.*;
 
 /**
  *
- * @author David Miall<dm1306@york.ac.uk>
+ * @author david
  */
-public class VisualElement extends Element{
-    public VisualElement(String name) {
+public class DocElement extends Element {
+
+    private static ThreadLocal builders = new ThreadLocal() {
+
+        protected synchronized Object initialValue() {
+            return new Builder(new ElementFactory());
+        }
+
+    };
+
+    public DocElement(String name) {
         super(name);
     }
 
-    
-    public VisualElement(String name, String uri) {
+    public DocElement(String name, String uri) {
         super(name, uri);
     }
 
-    
-    public VisualElement(Element element) {
+    public DocElement(Element element) {
         super(element);
     }
+
 }

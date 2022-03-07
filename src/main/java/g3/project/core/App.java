@@ -8,7 +8,8 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import xmlIO.Ingestion;
+import nu.xom.ParsingException;
+import g3.project.xmlIO.Ingestion;
 
 
 /**
@@ -20,7 +21,11 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        scene = new Scene(loadFXML("hello"), 640, 480);
+        /*Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> {
+            System.out.println("Handler caught exception: "+throwable.getMessage());
+        });*/
+        scene = new Scene(loadFXML("main"), 640, 480);
+        
         stage.setScene(scene);
         stage.show();
     }
@@ -35,11 +40,15 @@ public class App extends Application {
     }
 
     public static void main(String[] args) {
-        System.out.print("PWD IS: " + System.getProperty("user.dir"));
-        File xmlFile = new File(System.getProperty("user.dir") + "/sweng_21_PWS/example_doc.xml"); 
-        var len = xmlFile;
+        File xmlFile = new File(System.getProperty("user.dir") + "/sweng_21_PWS/example_doc.xml");
         Ingestion ingest = new Ingestion();
-        ingest.parseXML(xmlFile);
+        try {
+            ingest.parseDocXML(xmlFile);
+        } catch (ParsingException ex) {
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
         launch();
     }
 
