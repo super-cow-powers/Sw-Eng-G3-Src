@@ -1,52 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.text.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.geometry.*?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
 
-<BorderPane fx:id="containerPane" prefHeight="400" prefWidth="800"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="g3.project.ui.MainController">
-    <top>
-        <MenuBar fx:id="menuBar">
-            <menus>
-                <Menu text="File" >
-                    <items>
-                        <MenuItem text="New"/>
-                        <MenuItem text="Open"/>
-                        <MenuItem text="Save"/>
-                        <MenuItem text="Save As"/>
-                        <SeparatorMenuItem  />
-                        <MenuItem text="Toggle Dark Mode" onAction="#handleToggleDarkModeAction"/>
-                        <MenuItem text="Exit" onAction="#handleExitAction"/>
-                    </items>
-                </Menu>
-                <Menu text="Edit">
-                    <items>
-                        <MenuItem text="Cut"/>
-                        <MenuItem text="Copy"/>
-                        <MenuItem text="Paste"/>
-                    </items>
-                </Menu>
-                <Menu text="Help"/>
-            </menus>
-        </MenuBar>
-    </top>
-    <center>
-        <Pane fx:id="contentPane" style="-fx-background-color: white;">
-            <children>
-                <Label fx:id="helloText" layoutX="0.0" layoutY="99.0" text="Hello" >
-                    <font>
-                        <Font name="System Bold" size="90.0" />
-                    </font>
-                </Label>
-            </children>
-        </Pane>
-    </center>
-    <padding>
-    <Insets bottom="25.0" left="25.0" right="25.0" top="0" />
-    </padding>
-</BorderPane>
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <MenuBar>
+        <menus>
+          <Menu mnemonicParsing="false" text="File">
+            <items>
+              <MenuItem mnemonicParsing="false" text="Close" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Edit">
+            <items>
+              <MenuItem mnemonicParsing="false" text="Delete" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Help">
+            <items>
+              <MenuItem mnemonicParsing="false" text="About" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+      <SplitPane dividerPositions="0.15" VBox.vgrow="ALWAYS">
+        <items>
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0" />
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+               <children>
+                  <ScrollPane prefHeight="373.0" prefWidth="505.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <content>
+                        <Pane prefHeight="329.0" prefWidth="454.0" style="-fx-background-color: white;" />
+                     </content>
+                  </ScrollPane>
+               </children>
+            </AnchorPane>
+        </items>
+      </SplitPane>
+   </children>
+</VBox>

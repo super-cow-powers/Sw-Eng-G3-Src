@@ -53,7 +53,7 @@
             <dependencies>
                 <dependency>
                     <groupId>org.openjfx</groupId>
-                    <artifactId>javafx.base</artifactId>
+                    <artifactId>javafx-base</artifactId>
                     <version>11</version>
                     <scope>system</scope>
                     <systemPath>/usr/lib/jvm/openjfx-11/libs/javafx.base.jar</systemPath>
@@ -92,7 +92,7 @@
             <dependencies>
                 <dependency>
                     <groupId>org.openjfx</groupId>
-                    <artifactId>javafx.base</artifactId>
+                    <artifactId>javafx-base</artifactId>
                     <version>11</version>
                 </dependency>
                 <dependency>

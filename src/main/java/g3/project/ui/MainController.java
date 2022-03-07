@@ -101,12 +101,12 @@ public class MainController {
         } else {
             style = Style.LIGHT;
         }
-        containerPane.getStylesheets().clear();
-        containerPane.getStylesheets().add(style.getStyleStylesheetURL());
+        //containerPane.getStylesheets().clear();
+        //containerPane.getStylesheets().add(style.getStyleStylesheetURL());
     }
 
     public void initialize() {
-        this.scene = contentPane.getScene();
+        //this.scene = contentPane.getScene();
         
         darkMode = detector.isDark();
         detector.registerListener(isDark -> {
@@ -115,7 +115,7 @@ public class MainController {
                 toggleDarkMode();
             });
         });
-        containerPane.getStyleClass().add(JMetroStyleClass.BACKGROUND);
+        //containerPane.getStyleClass().add(JMetroStyleClass.BACKGROUND);
         toggleDarkMode();
     }
 }
