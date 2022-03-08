@@ -37,6 +37,7 @@ import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import com.jthemedetecor.OsThemeDetector;
 import javafx.application.Platform;
+import javafx.scene.effect.DropShadow;
 import jfxtras.styles.jmetro.*;
 
 /**
@@ -52,12 +53,13 @@ public class MainController {
 
     @FXML
     private MenuBar menuBar;
+    
+    @FXML
+    private SplitPane splitPane;
 
     @FXML
-    private BorderPane containerPane;
+    private Pane contentPane;
     
-    @FXML Pane contentPane;
-
     /**
      * Handle action related to "About" menu item.
      *
@@ -116,6 +118,14 @@ public class MainController {
             });
         });
         //containerPane.getStyleClass().add(JMetroStyleClass.BACKGROUND);
+        splitPane.getDividers().get(0)
+                .positionProperty()
+                .addListener((obs, oldPos, newPos) -> {
+                if (newPos.doubleValue() > 0.30) {
+                    splitPane.getDividers().get(0).setPosition(0.30);
+                }
+            });
+        contentPane.setEffect(new DropShadow());
         toggleDarkMode();
     }
 }

@@ -25,7 +25,7 @@ public class App extends Application {
         });*/
         scene = new Scene(loadFXML("main"), 640, 480);
         
-        stage.setMaximized(true);
+        //stage.setMaximized(true);
         stage.setScene(scene);
         stage.show();
     }
