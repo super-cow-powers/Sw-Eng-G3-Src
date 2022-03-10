@@ -40,7 +40,12 @@ import g3.project.xmlIO.Ingestion;
 import java.io.File;
 import java.io.IOException;
 import javafx.application.Platform;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.text.Text;
+import javafx.stage.Modality;
+import javafx.stage.Popup;
+import javafx.stage.Stage;
 import jfxtras.styles.jmetro.*;
 import nu.xom.Document;
 import nu.xom.ParsingException;
@@ -65,7 +70,7 @@ public class MainController {
     private SplitPane splitPane;
 
     @FXML
-    private Pane contentPane;
+    private Pane pagePane;
 
     /**
      * Handle action related to "About" menu item.
@@ -90,30 +95,35 @@ public class MainController {
             }
         }
     }
+
     @FXML
-    private void onGlobalKeyPress(final InputEvent event){
-        
+    private void onGlobalKeyPress(final InputEvent event) {
+
     }
-    
+
     @FXML
-    private void onGlobalKeyRelease(final InputEvent event){
-        
+    private void onGlobalKeyRelease(final InputEvent event) {
+
     }
+
     @FXML
-    private void onGlobalKeyTyped(final InputEvent event){
-        
+    private void onGlobalKeyTyped(final InputEvent event) {
+
     }
+
     @FXML
-    private void onPageZoom(final ZoomEvent event){
+    private void onPageZoom(final ZoomEvent event) {
         System.out.println("Page is trying to zoom");
     }
+
     @FXML
-    private void onPageZoomStart(final ZoomEvent event){
-        
+    private void onPageZoomStart(final ZoomEvent event) {
+
     }
+
     @FXML
-    private void onPageZoomEnd(final ZoomEvent event){
-        
+    private void onPageZoomEnd(final ZoomEvent event) {
+
     }
 
     @FXML
@@ -143,13 +153,14 @@ public class MainController {
         //this.scene = contentPane.getScene();
         File xmlFile = new File("exampledoc.xml");
         Ingestion ingest = new Ingestion();
+
         var init_model_opt = ingest.parseDocXML(xmlFile);
-        if (init_model_opt.isPresent()){
+        if (init_model_opt.isPresent()) {
             model = init_model_opt.get();
         } else {
             //Oops, couldn't parse initial doc.
         }
-        
+
         darkMode = detector.isDark();
         detector.registerListener(isDark -> {
             Platform.runLater(() -> {
@@ -165,7 +176,7 @@ public class MainController {
                         splitPane.getDividers().get(0).setPosition(0.30);
                     }
                 });
-        contentPane.setEffect(new DropShadow());
+        pagePane.setEffect(new DropShadow());
         toggleDarkMode();
     }
 }
