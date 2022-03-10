@@ -90,6 +90,31 @@ public class MainController {
             }
         }
     }
+    @FXML
+    private void onGlobalKeyPress(final InputEvent event){
+        
+    }
+    
+    @FXML
+    private void onGlobalKeyRelease(final InputEvent event){
+        
+    }
+    @FXML
+    private void onGlobalKeyTyped(final InputEvent event){
+        
+    }
+    @FXML
+    private void onPageZoom(final ZoomEvent event){
+        System.out.println("Page is trying to zoom");
+    }
+    @FXML
+    private void onPageZoomStart(final ZoomEvent event){
+        
+    }
+    @FXML
+    private void onPageZoomEnd(final ZoomEvent event){
+        
+    }
 
     @FXML
     private void handleExitAction(final ActionEvent event) {
@@ -118,13 +143,13 @@ public class MainController {
         //this.scene = contentPane.getScene();
         File xmlFile = new File("exampledoc.xml");
         Ingestion ingest = new Ingestion();
-        try {
-            ingest.parseDocXML(xmlFile);
-        } catch (ParsingException ex) {
-            ex.printStackTrace();
-        } catch (IOException ex) {
-            ex.printStackTrace();
+        var init_model_opt = ingest.parseDocXML(xmlFile);
+        if (init_model_opt.isPresent()){
+            model = init_model_opt.get();
+        } else {
+            //Oops, couldn't parse initial doc.
         }
+        
         darkMode = detector.isDark();
         detector.registerListener(isDark -> {
             Platform.runLater(() -> {

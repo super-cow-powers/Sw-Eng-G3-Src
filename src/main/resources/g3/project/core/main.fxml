@@ -16,7 +16,7 @@
             <menus>
                 <Menu mnemonicParsing="false" text="File">
                     <items>
-                        <MenuItem mnemonicParsing="false" text="Close" />
+                        <MenuItem mnemonicParsing="false" onAction="#handleExitAction" text="Close" />
                     </items>
                 </Menu>
                 <Menu mnemonicParsing="false" text="Edit">
@@ -26,7 +26,7 @@
                 </Menu>
                 <Menu mnemonicParsing="false" text="Help">
                     <items>
-                        <MenuItem mnemonicParsing="false" text="About" />
+                        <MenuItem mnemonicParsing="false" onAction="#handleAboutAction" text="About" />
                     </items>
                 </Menu>
             </menus>
@@ -40,7 +40,7 @@
                             <content>
                                 <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0">
                                     <children>
-                                        <Pane fx:id="contentPane" maxHeight="400.0" maxWidth="500.0" minHeight="600.0" minWidth="960.0" prefHeight="329.0" prefWidth="500.0" style="-fx-background-color: white;" VBox.vgrow="NEVER" />
+                                        <Pane fx:id="contentPane" maxHeight="400.0" maxWidth="500.0" minHeight="600.0" minWidth="960.0" onKeyPressed="#onGlobalKeyPress" onKeyReleased="#onGlobalKeyRelease" onKeyTyped="#onGlobalKeyTyped" onZoom="#onPageZoom" onZoomFinished="#onPageZoomEnd" onZoomStarted="#onPageZoomStart" prefHeight="329.0" prefWidth="500.0" style="-fx-background-color: white;" VBox.vgrow="NEVER" />
                                     </children>
                                 </VBox>
                             </content>
