@@ -38,10 +38,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.application.Platform;
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.geometry.Point2D;
-import nu.xom.Document;
 
 /**
  *
@@ -138,7 +136,7 @@ public class Engine implements Runnable {
     }
 
     private void handleAction(ActionEvent action) {
-
+        
     }
 
     private void parseNewDoc(File xmlFile) {
