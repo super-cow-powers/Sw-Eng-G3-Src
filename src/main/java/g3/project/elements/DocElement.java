@@ -28,6 +28,8 @@
  */
 package g3.project.elements;
 
+import java.util.Optional;
+import java.util.Vector;
 import nu.xom.*;
 
 /**
@@ -35,7 +37,7 @@ import nu.xom.*;
  * @author david
  */
 public class DocElement extends Element {
-
+    
     private static ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
@@ -54,6 +56,25 @@ public class DocElement extends Element {
 
     public DocElement(Element element) {
         super(element);
+    }
+    
+    /**
+     * 
+     * @return Returns vector containing the Doc's pages
+     */
+    public Optional<Vector<PageElement>> GetPages(){
+        Vector<PageElement> pages = null;
+        for (int i = 0; i < this.getChildCount(); i++) {
+            var node = this.getChild(i);
+            if (node.getClass() == PageElement.class){
+                if (pages == null){ 
+                    pages = new Vector<PageElement>();
+                }
+                
+                pages.add((PageElement)node);
+            }
+        }
+        return Optional.ofNullable(pages);
     }
 
 }

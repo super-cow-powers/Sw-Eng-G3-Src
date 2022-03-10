@@ -133,7 +133,7 @@
                 <configuration>
                     <mainClass>g3.project.core.App</mainClass>
                     <options>
-                        <option>-Dprism.order=es2</option>
+                        
                     </options>
                 </configuration>
                 

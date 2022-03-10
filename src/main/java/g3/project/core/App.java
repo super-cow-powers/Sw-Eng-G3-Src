@@ -1,5 +1,6 @@
 package g3.project.core;
 
+import g3.project.ui.MainController;
 import java.io.File;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -17,6 +18,7 @@ import g3.project.xmlIO.Ingestion;
 public class App extends Application {
 
     private static Scene scene;
+    private static MainController mainUIController;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -24,10 +26,15 @@ public class App extends Application {
             System.out.println("Handler caught exception: "+throwable.getMessage());
         });*/
         scene = new Scene(loadFXML("main"), 640, 480);
-        
-        //stage.setMaximized(true);
         stage.setScene(scene);
         stage.show();
+    }
+
+    @Override
+    public void stop() {
+        System.out.println("Stage is closing");
+        mainUIController.gracefulExit();
+        // Save file
     }
 
     static void setRoot(String fxml) throws IOException {
@@ -36,7 +43,9 @@ public class App extends Application {
 
     private static Parent loadFXML(String fxml) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
-        return fxmlLoader.load();
+        Parent fx_ld = fxmlLoader.load();
+        mainUIController = (MainController)fxmlLoader.getController();
+        return fx_ld;
     }
 
     public static void main(String[] args) {

@@ -62,15 +62,9 @@ import nu.xom.ParsingException;
 public class MainController {
 
     private final OsThemeDetector detector = OsThemeDetector.getDetector();
-    private Ingestion ingest;
-    private Document model;
     private Engine engine;
     private Scene scene;
-    private final BlockingQueue<String> editedElementQueue = new LinkedBlockingQueue<String>(); //UI has edited an element
-    private final BlockingQueue<String> newElementQueue = new LinkedBlockingQueue<String>(); //UI requests element is created
-    private final BlockingQueue<String> redrawElementQueue = new LinkedBlockingQueue<String>(); //Engine requests on-screen element be updated
-    
-    private final BlockingQueue<DocElement> docQueue = new LinkedBlockingQueue<DocElement>(); //Operate on this document
+
     private boolean darkMode = false;
 
     @FXML
@@ -89,7 +83,7 @@ public class MainController {
      */
     @FXML
     private void handleAboutAction(final ActionEvent event) {
-        newElementQueue.offer("Hello from the other-side");
+        engine.offerNewElement("Hello from the other-side");
     }
 
     /**
@@ -140,21 +134,31 @@ public class MainController {
     @FXML
     private void handleExitAction(final ActionEvent event) {
         System.out.print("Quitting\n");
-        exit();
+
     }
-    
+
+    public void gracefulExit() {
+        engine.stop();
+        Platform.exit();
+    }
+
     @FXML
     private void handleToggleDarkModeAction(final ActionEvent event) {
         darkMode = !darkMode;
         toggleDarkMode();
     }
-    
-    public void drawText(String text, Point2D pos){
+
+    public void drawText(String text, Point2D pos) { //Test Method
         Label l = new Label();
         l.setText(text);
         l.relocate(pos.getX(), pos.getY());
         pagePane.getChildren().add(l);
         System.out.println("g3.project.ui.MainController.drawText()");
+    }
+    
+    public void setPageSize(ObjSize size){
+        pagePane.setMaxHeight(size.getY()); pagePane.setMinHeight(size.getY());
+        pagePane.setMaxWidth(size.getX()); pagePane.setMinWidth(size.getX());
     }
 
     private void toggleDarkMode() {
@@ -171,15 +175,8 @@ public class MainController {
     public void initialize() {
         //this.scene = contentPane.getScene();
         File xmlFile = new File("exampledoc.xml");
-        Ingestion ingest = new Ingestion();
-        engine = new Engine(editedElementQueue, newElementQueue, docQueue, this);
-        engine.start();
-        var init_model_opt = ingest.parseDocXML(xmlFile);
-        if (init_model_opt.isPresent()) {
-            model = init_model_opt.get();
-        } else {
-            //Oops, couldn't parse initial doc.
-        }
+
+        engine = new Engine(this);
 
         darkMode = detector.isDark();
         detector.registerListener(isDark -> {
@@ -196,6 +193,10 @@ public class MainController {
                         splitPane.getDividers().get(0).setPosition(0.30);
                     }
                 });
+        Platform.runLater(() -> { //Run when initialised
+            engine.start();
+            engine.offerNewDoc(xmlFile);
+        });
         pagePane.setEffect(new DropShadow());
         toggleDarkMode();
     }

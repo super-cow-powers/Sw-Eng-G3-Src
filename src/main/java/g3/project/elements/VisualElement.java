@@ -79,6 +79,11 @@ public class VisualElement extends Element {
         this.addAttribute(new Attribute("y_orig",Double.toString(y)));
         return this.getLoc();
     }
+    public Optional<String> getID() {
+        var ID = Optional.ofNullable(this.getAttribute("ID"))
+                .map(f->f.getValue());
+        return ID;
+    }
     
     /** 
      * Get the object's Z location.
