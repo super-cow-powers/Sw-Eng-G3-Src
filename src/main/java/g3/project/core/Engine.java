@@ -29,22 +29,70 @@
 package g3.project.core;
 
 import g3.project.elements.DocElement;
+import g3.project.ui.MainController;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javafx.application.Platform;
 import javafx.concurrent.Task;
+import javafx.geometry.Point2D;
 
 /**
  *
  * @author david
  */
-
-
-public class Engine extends Task{
+public class Engine implements Runnable {
+    private Thread engineThread;
     private DocElement currentDoc;
-    public Engine(){
-        
+    private final AtomicBoolean running = new AtomicBoolean(false);
+    
+    private final BlockingQueue<String> editedElementQueue; //UI has edited an element
+    private final BlockingQueue<String> newElementQueue; //UI requests element is created
+    //private final BlockingQueue<String> redrawElementQueue; //Engine requests on-screen element be updated
+
+    private final BlockingQueue<DocElement> docQueue; //Operate on this document
+
+    private final MainController controller;
+
+    public Engine(BlockingQueue<String> editedElementQueue, BlockingQueue<String> newElementQueue, BlockingQueue<DocElement> docQueue, MainController uiController) {
+        this.editedElementQueue = editedElementQueue;
+        this.newElementQueue = newElementQueue;
+        //this.redrawElementQueue = redrawElementQueue;
+        this.docQueue = docQueue;
+        this.controller = uiController;
     }
-    public Integer loadDoc(DocElement doc){
-        
+    
+    private Integer loadDoc(DocElement doc) {
+
         return 0;
     }
     
+    public void start(){
+        engineThread = new Thread(this);
+        engineThread.start();
+        running.set(true);
+    }
+    
+    public void stop(){
+        running.set(false);
+    }
+    
+    @Override
+    public void run() {
+        while (running.get() == true) {
+            if (!newElementQueue.isEmpty()) {
+                try {
+                System.out.println("hello from engine");
+                final String el = newElementQueue.take();
+                Platform.runLater(() -> {
+                    controller.drawText(el, new Point2D(0, 0));
+                    System.out.println("run later");
+                });//"Hello from the other side"
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+                
+            }
+        }
+    }
+
 }

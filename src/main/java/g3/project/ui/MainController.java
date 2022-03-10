@@ -36,10 +36,15 @@ import javafx.scene.control.*;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import com.jthemedetecor.OsThemeDetector;
+import g3.project.core.Engine;
+import g3.project.elements.DocElement;
 import g3.project.xmlIO.Ingestion;
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import javafx.application.Platform;
+import javafx.geometry.Point2D;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.text.Text;
@@ -59,8 +64,13 @@ public class MainController {
     private final OsThemeDetector detector = OsThemeDetector.getDetector();
     private Ingestion ingest;
     private Document model;
-
+    private Engine engine;
     private Scene scene;
+    private final BlockingQueue<String> editedElementQueue = new LinkedBlockingQueue<String>(); //UI has edited an element
+    private final BlockingQueue<String> newElementQueue = new LinkedBlockingQueue<String>(); //UI requests element is created
+    private final BlockingQueue<String> redrawElementQueue = new LinkedBlockingQueue<String>(); //Engine requests on-screen element be updated
+    
+    private final BlockingQueue<DocElement> docQueue = new LinkedBlockingQueue<DocElement>(); //Operate on this document
     private boolean darkMode = false;
 
     @FXML
@@ -79,6 +89,7 @@ public class MainController {
      */
     @FXML
     private void handleAboutAction(final ActionEvent event) {
+        newElementQueue.offer("Hello from the other-side");
     }
 
     /**
@@ -131,11 +142,19 @@ public class MainController {
         System.out.print("Quitting\n");
         exit();
     }
-
+    
     @FXML
     private void handleToggleDarkModeAction(final ActionEvent event) {
         darkMode = !darkMode;
         toggleDarkMode();
+    }
+    
+    public void drawText(String text, Point2D pos){
+        Label l = new Label();
+        l.setText(text);
+        l.relocate(pos.getX(), pos.getY());
+        pagePane.getChildren().add(l);
+        System.out.println("g3.project.ui.MainController.drawText()");
     }
 
     private void toggleDarkMode() {
@@ -153,7 +172,8 @@ public class MainController {
         //this.scene = contentPane.getScene();
         File xmlFile = new File("exampledoc.xml");
         Ingestion ingest = new Ingestion();
-
+        engine = new Engine(editedElementQueue, newElementQueue, docQueue, this);
+        engine.start();
         var init_model_opt = ingest.parseDocXML(xmlFile);
         if (init_model_opt.isPresent()) {
             model = init_model_opt.get();
