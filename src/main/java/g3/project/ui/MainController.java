@@ -36,9 +36,14 @@ import javafx.scene.control.*;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import com.jthemedetecor.OsThemeDetector;
+import g3.project.xmlIO.Ingestion;
+import java.io.File;
+import java.io.IOException;
 import javafx.application.Platform;
 import javafx.scene.effect.DropShadow;
 import jfxtras.styles.jmetro.*;
+import nu.xom.Document;
+import nu.xom.ParsingException;
 
 /**
  *
@@ -47,19 +52,21 @@ import jfxtras.styles.jmetro.*;
 public class MainController {
 
     private final OsThemeDetector detector = OsThemeDetector.getDetector();
+    private Ingestion ingest;
+    private Document model;
 
     private Scene scene;
     private boolean darkMode = false;
 
     @FXML
     private MenuBar menuBar;
-    
+
     @FXML
     private SplitPane splitPane;
 
     @FXML
     private Pane contentPane;
-    
+
     /**
      * Handle action related to "About" menu item.
      *
@@ -109,7 +116,15 @@ public class MainController {
 
     public void initialize() {
         //this.scene = contentPane.getScene();
-        
+        File xmlFile = new File("exampledoc.xml");
+        Ingestion ingest = new Ingestion();
+        try {
+            ingest.parseDocXML(xmlFile);
+        } catch (ParsingException ex) {
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
         darkMode = detector.isDark();
         detector.registerListener(isDark -> {
             Platform.runLater(() -> {
@@ -121,10 +136,10 @@ public class MainController {
         splitPane.getDividers().get(0)
                 .positionProperty()
                 .addListener((obs, oldPos, newPos) -> {
-                if (newPos.doubleValue() > 0.30) {
-                    splitPane.getDividers().get(0).setPosition(0.30);
-                }
-            });
+                    if (newPos.doubleValue() > 0.30) {
+                        splitPane.getDividers().get(0).setPosition(0.30);
+                    }
+                });
         contentPane.setEffect(new DropShadow());
         toggleDarkMode();
     }

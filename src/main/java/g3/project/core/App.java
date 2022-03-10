@@ -40,15 +40,6 @@ public class App extends Application {
     }
 
     public static void main(String[] args) {
-        File xmlFile = new File(System.getProperty("user.dir") + "/sweng_21_PWS/example_doc.xml");
-        Ingestion ingest = new Ingestion();
-        try {
-            ingest.parseDocXML(xmlFile);
-        } catch (ParsingException ex) {
-            ex.printStackTrace();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
         launch();
     }
 
