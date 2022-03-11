@@ -33,6 +33,7 @@ import g3.project.elements.PageElement;
 import g3.project.ui.MainController;
 import g3.project.xmlIO.Ingestion;
 import java.io.File;
+import java.util.Optional;
 import java.util.Vector;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -53,6 +54,7 @@ public class Engine implements Runnable {
     private Ingestion ingest = new Ingestion();
 
     private DocElement currentDoc;
+    private Vector<PageElement> currentPages;
 
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final AtomicBoolean UI_available = new AtomicBoolean(false);
@@ -146,6 +148,9 @@ public class Engine implements Runnable {
             var child = parsed.get().getChild(0);
             if (child.getClass() == DocElement.class) {
                 currentDoc = (DocElement) child;
+                currentDoc.GetPages().ifPresent(f -> {
+                    currentPages = f;
+                });
                 drawPage(0);
             } else {
                 //Looks like doc is malformed
@@ -162,24 +167,21 @@ public class Engine implements Runnable {
     }
 
     private void drawPage(String pageID) {
-        var pages_op = currentDoc.GetPages();
-        if (pages_op.isPresent()) {
-            Vector<PageElement> pages = pages_op.get();
-            var it = pages.iterator();
-            while (it.hasNext()) {
-                var page = it.next();
-                page.getID().ifPresent(f -> {
-                    if (f==pageID){
-                        drawPage(page);
-                    }
-                });
-            }
+        var it = currentPages.iterator();
+        while (it.hasNext()) {
+            var page = it.next();
+            page.getID().ifPresent(f -> {
+                if (f == pageID) {
+                    drawPage(page);
+                }
+            });
         }
     }
 
     private void drawPage(PageElement page) {
-        page.getSize().ifPresent(f->controller.setPageSize(f));
-        
+        Platform.runLater(() -> {
+            controller.configPage(page.getSize(), page.getFillColour());
+        });
     }
 
 }

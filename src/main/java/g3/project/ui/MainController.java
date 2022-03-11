@@ -41,12 +41,15 @@ import g3.project.elements.DocElement;
 import g3.project.xmlIO.Ingestion;
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Popup;
@@ -91,46 +94,14 @@ public class MainController {
      * @param event Input event.
      */
     @FXML
-    private void handleKeyInput(final InputEvent event) {
+    private void handleEvent(final InputEvent event) {
         System.out.println("g3.project.ui.MainController.handleKeyInput()");
         engine.offerEvent(event);
-    }
-
-    @FXML
-    private void onGlobalKeyPress(final InputEvent event) {
-        System.out.println("g3.project.ui.MainController.handleKeyInput()");
-        engine.offerEvent(event);
-    }
-
-    @FXML
-    private void onGlobalKeyRelease(final InputEvent event) {
-
-    }
-
-    @FXML
-    private void onGlobalKeyTyped(final InputEvent event) {
-
-    }
-
-    @FXML
-    private void onPageZoom(final ZoomEvent event) {
-        System.out.println("Page is trying to zoom");
-    }
-
-    @FXML
-    private void onPageZoomStart(final ZoomEvent event) {
-
-    }
-
-    @FXML
-    private void onPageZoomEnd(final ZoomEvent event) {
-
     }
 
     @FXML
     private void handleExitAction(final ActionEvent event) {
         System.out.print("Quitting\n");
-
     }
 
     public void gracefulExit() {
@@ -152,9 +123,19 @@ public class MainController {
         System.out.println("g3.project.ui.MainController.drawText()");
     }
     
-    public void setPageSize(ObjSize size){
-        pagePane.setMaxHeight(size.getY()); pagePane.setMinHeight(size.getY());
-        pagePane.setMaxWidth(size.getX()); pagePane.setMinWidth(size.getX());
+    public void configPage(Optional<SizeObj> size, Optional<Color> colour){
+        size.ifPresent(f->{
+        pagePane.setMaxHeight(f.getY()); pagePane.setMinHeight(f.getY());
+        pagePane.setMaxWidth(f.getX()); pagePane.setMinWidth(f.getX());
+        pagePane.setRotate(f.getRot());
+    });
+        colour.ifPresent(f->{
+            var col = String.format( "#%02X%02X%02X",
+            (int)( f.getRed() * 255 ),
+            (int)( f.getGreen() * 255 ),
+            (int)( f.getBlue() * 255 ) );
+            pagePane.setStyle("-fx-background-color: " + col);
+        });
     }
 
     private void toggleDarkMode() {

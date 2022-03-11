@@ -28,20 +28,23 @@
  */
 package g3.project.ui;
 
+import javafx.scene.paint.Color;
+import nu.xom.Node;
+
 /**
  *
+ * This is a temporary object for transfer between the engine and UI
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class ObjSize {
+public class SizeObj {
     private final Double x_px;
     private final Double y_px;
-    private final Double rot_deg;
-    
+    private final Double rot_deg;    
     /**
     *
-    * Create new size object. X and Y are in PX, rot is in degrees. 
+    * Create new object. X and Y are in PX, rot is in degrees. 
     */
-    public ObjSize(Double x, Double y, Double rot){
+    public SizeObj(Double x, Double y, Double rot){
         this.x_px = x;
         this.y_px = y;
         this.rot_deg = rot;

@@ -28,9 +28,10 @@
  */
 package g3.project.elements;
 
-import g3.project.ui.ObjSize;
+import g3.project.ui.SizeObj;
 import java.util.Optional;
 import javafx.geometry.Point2D;
+import javafx.scene.paint.Color;
 import nu.xom.Attribute;
 import nu.xom.Element;
 
@@ -52,76 +53,105 @@ public class VisualElement extends Element {
         super(element);
     }
 
-    /** 
-     * Get the object's X/Y location.
-     * Returns an Optional, which may contain either the location or nothing.
-     * The caller can then determine the action to take.
-     */ 
+    /**
+     * Get the object's X/Y location. Returns an Optional, which may contain
+     * either the location or nothing. The caller can then determine the action
+     * to take.
+     */
     public Optional<Point2D> getLoc() {
         var x = Optional.ofNullable(this.getAttribute("x_orig"))
-                .map(f->f.getValue())
-                .map(f->Double.valueOf(f));
+                .map(f -> f.getValue())
+                .map(f -> Double.valueOf(f));
         var y = Optional.ofNullable(this.getAttribute("y_orig"))
-                .map(f->f.getValue())
-                .map(f->Double.valueOf(f));
-        
-        return (x.isPresent() && y.isPresent())? 
-                Optional.of(new Point2D(x.get(),y.get())) : Optional.empty();
+                .map(f -> f.getValue())
+                .map(f -> Double.valueOf(f));
+
+        return (x.isPresent() && y.isPresent())
+                ? Optional.of(new Point2D(x.get(), y.get())) : Optional.empty();
     }
-    /** 
+
+    /**
      * Set the object's X/Y location. Returns the new location.
-     */ 
+     */
     public Optional<Point2D> setLoc(Point2D loc) {
         var x = loc.getX();
         var y = loc.getY();
-        
-        this.addAttribute(new Attribute("x_orig",Double.toString(x)));
-        this.addAttribute(new Attribute("y_orig",Double.toString(y)));
+
+        this.addAttribute(new Attribute("x_orig", Double.toString(x)));
+        this.addAttribute(new Attribute("y_orig", Double.toString(y)));
         return this.getLoc();
     }
+
     public Optional<String> getID() {
         var ID = Optional.ofNullable(this.getAttribute("ID"))
-                .map(f->f.getValue());
+                .map(f -> f.getValue());
         return ID;
     }
-    
-    /** 
-     * Get the object's Z location.
-     * Default to 0 if not present.
-     */ 
-    public Double getZInd(){
+
+    /**
+     * Get the object's Z location. Default to 0 if not present.
+     */
+    public Double getZInd() {
         var ind = this.getAttribute("z_ind");
         return (ind != null) ? Double.valueOf(ind.getValue()) : 0;
     }
-    /** 
+
+    /**
      * Set the object's Z location. Returns the new location.
-     */ 
+     */
     public Double setZInd(Double z) {
         this.addAttribute(new Attribute("z_ind", Double.toString(z)));
         return this.getZInd();
     }
-    
-    /** 
-     * Get the object's size.
-     * Returns an Optional, which may contain either the size or nothing.
-     * Rotation defaults to 0 if not present.
-     */ 
-    public Optional<ObjSize> getSize() {
+
+    /**
+     * Get the object's size. Returns an Optional, which may contain either the
+     * size or nothing. Rotation defaults to 0 if not present.
+     */
+    public Optional<SizeObj> getSize() {
         var x = Optional.ofNullable(this.getAttribute("x_size_px"))
-                .map(f->f.getValue())
-                .map(f->Double.valueOf(f));
+                .map(f -> f.getValue())
+                .map(f -> Double.valueOf(f));
         var y = Optional.ofNullable(this.getAttribute("y_size_px"))
-                .map(f->f.getValue())
-                .map(f->Double.valueOf(f));
+                .map(f -> f.getValue())
+                .map(f -> Double.valueOf(f));
         var rot = Optional.ofNullable(this.getAttribute("rot_angle"))
-                .map(f->f.getValue())
-                .map(f->Double.valueOf(f));
-        
-        return (x.isPresent() && y.isPresent())? 
-                    Optional.of(new ObjSize(x.get(),
-                                    y.get(),
-                                    rot.isPresent()? rot.get() : 0))
-                    : Optional.empty();
+                .map(f -> f.getValue())
+                .map(f -> Double.valueOf(f));
+
+        return (x.isPresent() && y.isPresent())
+                ? Optional.of(new SizeObj(x.get(),
+                        y.get(),
+                        rot.isPresent() ? rot.get() : 0))
+                : Optional.empty();
     }
-    
+
+    public Optional<Color> getFillColour() {
+        var col = Optional.ofNullable(this.getAttribute("fill"));
+        /**
+         * @TODO: Find a nicer looking way of making this work
+         * Probably containing more streams
+         */
+        if (col.isPresent()) {
+            var col_str = col.get().getValue().replace("#","");
+            
+            switch (col_str.length()) {
+                case 6:
+                    return Optional.of(new Color(
+                            (double)Integer.valueOf(col_str.substring(0, 2), 16)/255,
+                            (double)Integer.valueOf(col_str.substring(2, 4), 16)/255,
+                            (double)Integer.valueOf(col_str.substring(4, 6), 16)/255,
+                            1.0d));
+                case 8:
+                    return Optional.of(new Color(
+                            (double)Integer.valueOf(col_str.substring(0, 2), 16)/255,
+                            (double)Integer.valueOf(col_str.substring(2, 4), 16)/255,
+                            (double)Integer.valueOf(col_str.substring(4, 6), 16)/255,
+                            (double)Integer.valueOf(col_str.substring(6, 8), 16)/255));
+            }
+        }
+
+        return Optional.empty();
+    }
+
 }
