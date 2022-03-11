@@ -39,6 +39,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.geometry.Point2D;
 
 /**
@@ -57,7 +58,7 @@ public class Engine implements Runnable {
     private final AtomicBoolean UI_available = new AtomicBoolean(false);
 
     private final BlockingQueue<String> editedElementQueue = new LinkedBlockingQueue<String>(); //UI has edited an element
-    private final BlockingQueue<ActionEvent> actionQueue = new LinkedBlockingQueue<ActionEvent>(); //UI has edited an element
+    private final BlockingQueue<Event> eventQueue = new LinkedBlockingQueue<Event>(); //Something has happened
     private final BlockingQueue<String> newElementQueue = new LinkedBlockingQueue<String>(); //UI requests element is created    
     private final BlockingQueue<File> docQueue = new LinkedBlockingQueue<File>(); //Open new doc/s
 
@@ -87,8 +88,8 @@ public class Engine implements Runnable {
         engineThread.resume();
     }
 
-    public void offerAction(ActionEvent action) {
-        actionQueue.offer(action);
+    public void offerEvent(Event event) {
+        eventQueue.offer(event);
         engineThread.resume();
     }
 
@@ -104,7 +105,6 @@ public class Engine implements Runnable {
 
     @Override
     public void run() {
-        Integer currentPageNum = 0;
 
         while (running.get()
                 == true) {
@@ -121,8 +121,8 @@ public class Engine implements Runnable {
                     parseNewDoc(docQueue.take());
                 } else if (!editedElementQueue.isEmpty()) {
 
-                } else if (!actionQueue.isEmpty()) {
-                    handleAction(actionQueue.take());
+                } else if (!eventQueue.isEmpty()) {
+                    handleEvent(eventQueue.take());
                 } else {
                     engineThread.suspend();
                 }
@@ -135,8 +135,9 @@ public class Engine implements Runnable {
                 "Engine is going down NOW.");
     }
 
-    private void handleAction(ActionEvent action) {
-        
+    private void handleEvent(Event event) {
+        System.out.println("g3.project.core.Engine.handleEvent()");
+        System.out.println(event);
     }
 
     private void parseNewDoc(File xmlFile) {

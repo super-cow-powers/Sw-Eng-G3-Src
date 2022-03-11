@@ -87,23 +87,19 @@ public class MainController {
     }
 
     /**
-     * Handle action related to input (in this case specifically only responds
-     * to keyboard event CTRL-A).
-     *
+     * Handle action related to input 
      * @param event Input event.
      */
     @FXML
     private void handleKeyInput(final InputEvent event) {
-        if (event instanceof KeyEvent) {
-            final KeyEvent keyEvent = (KeyEvent) event;
-            if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.A) {
-            }
-        }
+        System.out.println("g3.project.ui.MainController.handleKeyInput()");
+        engine.offerEvent(event);
     }
 
     @FXML
     private void onGlobalKeyPress(final InputEvent event) {
-
+        System.out.println("g3.project.ui.MainController.handleKeyInput()");
+        engine.offerEvent(event);
     }
 
     @FXML
