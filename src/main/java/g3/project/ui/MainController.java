@@ -164,7 +164,7 @@ public class MainController {
         Button toolButton = new Button(toolname);
         toolButton.setMaxSize(50,50);
         toolButton.setMinSize(50,50);
-        toolButton.setId(toolID);
+        toolButton.setId("tool-"+toolID);
         toolButton.setWrapText(true);
         toolPane.getChildren().add(toolButton);
     }
