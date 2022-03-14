@@ -115,7 +115,7 @@ public class Engine implements Runnable {
                     System.out.println("hello from engine");
                     final String el = newElementQueue.take();
                     Platform.runLater(() -> {
-                        controller.drawText(el, new Point2D(0, 0));
+                        controller.drawText(el, new Point2D(50, 50));
                         System.out.println("run later");
                     });//"Hello from the other side"
 

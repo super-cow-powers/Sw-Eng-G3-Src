@@ -50,6 +50,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Popup;
@@ -86,7 +87,7 @@ public class MainController {
      */
     @FXML
     private void handleAboutAction(final ActionEvent event) {
-        engine.offerNewElement("Hello from the other-side");
+        engine.offerNewElement("Hello!");
     }
 
     /**
@@ -118,6 +119,7 @@ public class MainController {
     public void drawText(String text, Point2D pos) { //Test Method
         Label l = new Label();
         l.setText(text);
+        l.setFont(new Font(30));
         l.relocate(pos.getX(), pos.getY());
         pagePane.getChildren().add(l);
         System.out.println("g3.project.ui.MainController.drawText()");
