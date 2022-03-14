@@ -91,7 +91,8 @@ public class MainController {
     }
 
     /**
-     * Handle action related to input 
+     * Handle action related to input
+     *
      * @param event Input event.
      */
     @FXML
@@ -125,19 +126,35 @@ public class MainController {
         System.out.println("g3.project.ui.MainController.drawText()");
     }
     
-    public void configPage(Optional<SizeObj> size, Optional<Color> colour){
-        size.ifPresent(f->{
-        pagePane.setMaxHeight(f.getY()); pagePane.setMinHeight(f.getY());
-        pagePane.setMaxWidth(f.getX()); pagePane.setMinWidth(f.getX());
-        pagePane.setRotate(f.getRot());
-    });
-        colour.ifPresent(f->{
-            var col = String.format( "#%02X%02X%02X",
-            (int)( f.getRed() * 255 ),
-            (int)( f.getGreen() * 255 ),
-            (int)( f.getBlue() * 255 ) );
+    /**
+     * Configure the page
+     * @todo: Allow multiple pages
+     * @todo: Resize scroll pane when the page is rotated
+     */
+    public void configPage(Optional<SizeObj> size, Optional<Color> colour, String ID) {
+        size.ifPresent(f -> {
+            pagePane.setMaxHeight(f.getY());
+            pagePane.setMinHeight(f.getY());
+            pagePane.setMaxWidth(f.getX());
+            pagePane.setMinWidth(f.getX());
+            pagePane.setRotate(f.getRot());
+        });
+        colour.ifPresent(f -> {
+            var col = String.format("#%02X%02X%02X",
+                    (int) (f.getRed() * 255),
+                    (int) (f.getGreen() * 255),
+                    (int) (f.getBlue() * 255));
             pagePane.setStyle("-fx-background-color: " + col);
         });
+        pagePane.setId(ID);
+    }
+    /**
+     * Clear the page
+     * @todo: Allow multiple pages
+     */
+    public void clearPage(String ID){
+        pagePane.getChildren().clear();
+        pagePane.setStyle("-fx-background-color: #FFFFFF");
     }
 
     private void toggleDarkMode() {
