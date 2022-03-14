@@ -87,6 +87,10 @@ public class VisualElement extends Element {
                 .map(f -> f.getValue());
         return ID;
     }
+    public Optional<String> setID(String ID) {
+        this.addAttribute(new Attribute("ID", ID));
+        return this.getID();
+    }
 
     /**
      * Get the object's Z location. Default to 0 if not present.
