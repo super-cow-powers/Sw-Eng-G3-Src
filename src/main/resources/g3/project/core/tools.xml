@@ -30,20 +30,20 @@ POSSIBILITY OF SUCH DAMAGE.
 
 
 <tools>
-    <tool name="Cursor">
+    <tool name="Cursor" ID="TCsr">
         <icon></icon>
         <script>
         </script>
     </tool>
     
-    <tool name="Test">
+    <tool name="Test" ID="Ttest">
         <icon></icon>
         <script>
             print("hello")
         </script>
     </tool>
     
-    <tool name="Rectangle">
+    <tool name="Rectangle" ID="TRect">
         <icon></icon>
         <script>
         </script>

@@ -76,7 +76,10 @@ public class MainController {
 
     @FXML
     private SplitPane splitPane;
-
+    
+    @FXML
+    private FlowPane toolPane;
+    
     @FXML
     private Pane pagePane;
 
@@ -157,8 +160,13 @@ public class MainController {
         pagePane.setStyle("-fx-background-color: #FFFFFF");
     }
 
-    public void addTool(){
-        
+    public void addTool(String toolname, String toolID){
+        Button toolButton = new Button(toolname);
+        toolButton.setMaxSize(50,50);
+        toolButton.setMinSize(50,50);
+        toolButton.setId(toolID);
+        toolButton.setWrapText(true);
+        toolPane.getChildren().add(toolButton);
     }
     
     public void showNonBlockingMessage(String message)

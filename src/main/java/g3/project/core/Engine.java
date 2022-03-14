@@ -105,6 +105,11 @@ public class Engine implements Runnable {
                     Platform.runLater(() -> controller.showNonBlockingMessage("Failed Loading Tools!"));
                 }
         );
+        var iterTool = myTools.iterator();
+        while (iterTool.hasNext() == true){
+            var currentTool = iterTool.next();
+             Platform.runLater(() -> controller.addTool(currentTool.getName(), currentTool.getID()));
+        }
         //Quit if running flag set to false
         while (running.get()
                 == true) {

@@ -60,6 +60,16 @@ public class Tool extends Element {
         super(element);
     }
 
+    public String getName(){
+        var name = this.getAttribute("name");
+        return name.getValue();
+    }
+    
+    public String getID(){
+        var ID = this.getAttribute("ID");
+        return ID.getValue();
+    }
+    
     public String getScript(){
         var el = this.getChildElements("script").get(0);
         return (el instanceof ScriptElement)? ((ScriptElement)el).getScriptText() : "";
