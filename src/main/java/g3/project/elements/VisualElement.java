@@ -82,12 +82,12 @@ public class VisualElement extends Element {
         return this.getLoc();
     }
 
-    public Optional<String> getID() {
+    public String getID() {
         var ID = Optional.ofNullable(this.getAttribute("ID"))
                 .map(f -> f.getValue());
-        return ID;
+        return ID.get();
     }
-    public Optional<String> setID(String ID) {
+    public String setID(String ID) {
         this.addAttribute(new Attribute("ID", ID));
         return this.getID();
     }

@@ -34,7 +34,7 @@ import g3.project.ui.MainController;
 import g3.project.xmlIO.Ingestion;
 import java.io.File;
 import java.util.Optional;
-import java.util.Vector;
+import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -53,15 +53,14 @@ public class Engine implements Runnable {
 
     private Ingestion ingest = new Ingestion();
 
+    private ArrayList<Tool> myTools;
     private DocElement currentDoc;
-    private Vector<PageElement> currentPages;
+    private ArrayList<PageElement> currentPages;
 
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final AtomicBoolean UI_available = new AtomicBoolean(false);
 
-    private final BlockingQueue<String> editedElementQueue = new LinkedBlockingQueue<String>(); //UI has edited an element
     private final BlockingQueue<Event> eventQueue = new LinkedBlockingQueue<Event>(); //Something has happened
-    private final BlockingQueue<String> newElementQueue = new LinkedBlockingQueue<String>(); //UI requests element is created    
     private final BlockingQueue<File> docQueue = new LinkedBlockingQueue<File>(); //Open new doc/s
 
     private final MainController controller;
@@ -85,18 +84,8 @@ public class Engine implements Runnable {
         UI_available.set(true);
     }
 
-    public void offerEditedElement(String element) {
-        editedElementQueue.offer(element);
-        engineThread.resume();
-    }
-
     public void offerEvent(Event event) {
         eventQueue.offer(event);
-        engineThread.resume();
-    }
-
-    public void offerNewElement(String element) {
-        newElementQueue.offer(element);
         engineThread.resume();
     }
 
@@ -107,23 +96,22 @@ public class Engine implements Runnable {
 
     @Override
     public void run() {
-
+        while (running.get() == false) {
+        };
+        //Load in the tools
+        loadTools().ifPresentOrElse(t -> myTools = t.getTools(),
+                () -> {
+                    myTools = new ArrayList<Tool>();
+                    Platform.runLater(() -> controller.showNonBlockingMessage("Failed Loading Tools!"));
+                }
+        );
+        //Quit if running flag set to false
         while (running.get()
                 == true) {
             try {
-                if (!newElementQueue.isEmpty()) {
-                    System.out.println("hello from engine");
-                    final String el = newElementQueue.take();
-                    Platform.runLater(() -> {
-                        controller.drawText(el, new Point2D(50, 50));
-                        System.out.println("run later");
-                    });//"Hello from the other side"
-
-                } else if (!docQueue.isEmpty()) {
+                if (!docQueue.isEmpty()) { //New doc request?
                     parseNewDoc(docQueue.take());
-                } else if (!editedElementQueue.isEmpty()) {
-
-                } else if (!eventQueue.isEmpty()) {
+                } else if (!eventQueue.isEmpty()) { //New event?
                     handleEvent(eventQueue.take());
                 } else {
                     engineThread.suspend();
@@ -142,11 +130,11 @@ public class Engine implements Runnable {
         System.out.println(event);
     }
 
-    private void parseNewDoc(File xmlFile) {
+    private void parseNewDoc(File xmlFile) { //Load a new doc
         var parsed = ingest.parseDocXML(xmlFile);
         if (parsed.isPresent()) {
             var child = parsed.get().getChild(0);
-            if (child.getClass() == DocElement.class) {
+            if (child instanceof DocElement) {
                 currentDoc = (DocElement) child;
                 currentDoc.GetPages().ifPresent(f -> {
                     currentPages = f;
@@ -169,19 +157,25 @@ public class Engine implements Runnable {
     private void drawPage(String pageID) {
         var it = currentPages.iterator();
         while (it.hasNext()) {
-            var page = it.next();
-            page.getID().ifPresent(f -> {
-                if (f == pageID) {
-                    drawPage(page);
-                }
-            });
+            var page=it.next();
+            if (page.getID() == pageID) {
+                drawPage(page);
+            }
         }
     }
 
     private void drawPage(PageElement page) {
         Platform.runLater(() -> {
-            controller.configPage(page.getSize(), page.getFillColour());
+            controller.configPage(page.getSize(), page.getFillColour(), page.getID());
         });
+    }
+
+    private Optional<Tools> loadTools() {
+        var toolsXMLPath = Engine.class.getResource("tools.xml").getPath();
+        var parsedDoc = ingest.parseGenericXML(new File(toolsXMLPath), new ToolsFactory());
+        var root = parsedDoc.filter(d -> d.getRootElement() instanceof Tools)
+                .map(d -> (Tools) d.getRootElement());
+        return root;
     }
 
 }

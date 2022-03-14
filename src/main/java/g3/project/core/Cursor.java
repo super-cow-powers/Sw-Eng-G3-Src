@@ -26,55 +26,12 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package g3.project.elements;
-
-import java.util.Optional;
-import java.util.ArrayList;
-import nu.xom.*;
+package g3.project.core;
 
 /**
  *
- * @author david
+ * @author David Miall<dm1306@york.ac.uk>
  */
-public class DocElement extends Element {
+public class Cursor {
     
-    private static ThreadLocal builders = new ThreadLocal() {
-
-        protected synchronized Object initialValue() {
-            return new Builder(new ElementFactory());
-        }
-
-    };
-
-    public DocElement(String name) {
-        super(name);
-    }
-
-    public DocElement(String name, String uri) {
-        super(name, uri);
-    }
-
-    public DocElement(Element element) {
-        super(element);
-    }
-    
-    /**
-     * 
-     * @return Returns vector containing the Doc's pages
-     */
-    public Optional<ArrayList<PageElement>> GetPages(){
-        ArrayList<PageElement> pages = null;
-        for (int i = 0; i < this.getChildCount(); i++) {
-            var node = this.getChild(i);
-            if (node.getClass() == PageElement.class){
-                if (pages == null){ 
-                    pages = new ArrayList<PageElement>();
-                }
-                
-                pages.add((PageElement)node);
-            }
-        }
-        return Optional.ofNullable(pages);
-    }
-
 }

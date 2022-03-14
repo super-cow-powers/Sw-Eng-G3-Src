@@ -47,7 +47,7 @@ public class Ingestion {
 
     /* Return the fully parsed representation of the XML doc */
     public Optional<Document> parseDocXML(File xmlFile){
-        Builder parser = new Builder(new ElementFactory()); //Validate doc (true)
+        Builder parser = new Builder(new ElementFactory());
         Document doc = null;
         try {
             doc = parser.build(xmlFile);
@@ -59,7 +59,7 @@ public class Ingestion {
         return Optional.ofNullable(doc);
     }
     public Optional<Document> parseDocXML(String xmlDocString){
-        Builder parser = new Builder(true, new ElementFactory()); //Validate doc (true)
+        Builder parser = new Builder(new ElementFactory());
         Document doc = null;
         try {
             doc = parser.build(xmlDocString, null); //No base URL
@@ -72,13 +72,26 @@ public class Ingestion {
     }
     
     /* Parse a generic doc */
-    public Optional<Document> parseGenericXML(String xmlDocString){
-        Builder parser = new Builder(false);
+    public Optional<Document> parseGenericXML(String xmlDocString, NodeFactory factory){
+        Builder parser = (factory == null)? new Builder(false): new Builder(factory);
         Document doc = null;
         try {
             doc = parser.build(xmlDocString, null); //No base URL
         } catch (ParsingException ex) { 
             ex.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        return Optional.ofNullable(doc);
+    }
+    /* Return the fully parsed representation of the XML doc */
+    public Optional<Document> parseGenericXML(File xmlFile, NodeFactory factory){
+        Builder parser = (factory == null)? new Builder(false): new Builder(factory);
+        Document doc = null;
+        try {
+            doc = parser.build(xmlFile);
+        } catch (ParsingException ex) {//We're returning an optional
+            ex.printStackTrace();   //So I'm not throwing this out of the method
         } catch (IOException ex) {
             ex.printStackTrace();
         }

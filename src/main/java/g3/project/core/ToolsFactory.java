@@ -26,55 +26,27 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package g3.project.elements;
+package g3.project.core;
 
-import java.util.Optional;
-import java.util.ArrayList;
-import nu.xom.*;
+import g3.project.elements.ScriptElement;
+import nu.xom.Element;
+import nu.xom.NodeFactory;
 
 /**
  *
- * @author david
+ * @author David Miall<dm1306@york.ac.uk>
  */
-public class DocElement extends Element {
-    
-    private static ThreadLocal builders = new ThreadLocal() {
-
-        protected synchronized Object initialValue() {
-            return new Builder(new ElementFactory());
+public class ToolsFactory extends NodeFactory {
+    @Override
+    public Element startMakingElement(String name, String namespaceURI) {
+        switch (name.toLowerCase()){
+            case "tools":
+                return new Tools(name, namespaceURI);
+            case "tool":
+                return new Tool(name, namespaceURI);
+            case "script":
+                return new ScriptElement(name, namespaceURI);
         }
-
-    };
-
-    public DocElement(String name) {
-        super(name);
+        return new Element(name, namespaceURI);
     }
-
-    public DocElement(String name, String uri) {
-        super(name, uri);
-    }
-
-    public DocElement(Element element) {
-        super(element);
-    }
-    
-    /**
-     * 
-     * @return Returns vector containing the Doc's pages
-     */
-    public Optional<ArrayList<PageElement>> GetPages(){
-        ArrayList<PageElement> pages = null;
-        for (int i = 0; i < this.getChildCount(); i++) {
-            var node = this.getChild(i);
-            if (node.getClass() == PageElement.class){
-                if (pages == null){ 
-                    pages = new ArrayList<PageElement>();
-                }
-                
-                pages.add((PageElement)node);
-            }
-        }
-        return Optional.ofNullable(pages);
-    }
-
 }

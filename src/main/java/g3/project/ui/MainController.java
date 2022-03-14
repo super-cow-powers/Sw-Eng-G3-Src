@@ -87,7 +87,7 @@ public class MainController {
      */
     @FXML
     private void handleAboutAction(final ActionEvent event) {
-        engine.offerNewElement("Hello!");
+        engine.offerEvent(event);
     }
 
     /**
@@ -157,6 +157,15 @@ public class MainController {
         pagePane.setStyle("-fx-background-color: #FFFFFF");
     }
 
+    public void addTool(){
+        
+    }
+    
+    public void showNonBlockingMessage(String message)
+    {
+        
+    }
+    
     private void toggleDarkMode() {
         Style style;
         if (darkMode == true) {
