@@ -160,19 +160,14 @@ public class MainController {
         pagePane.setStyle("-fx-background-color: #FFFFFF");
     }
 
-    public void addTool(String toolname, String toolID, String toolScript){
+    public void addTool(String toolname, String toolID){
         Button toolButton = new Button(toolname);
         toolButton.setMaxSize(50,50);
         toolButton.setMinSize(50,50);
         toolButton.setId("tool-"+toolID);
         toolButton.setWrapText(true);
         toolButton.setOnAction(event -> {
-            if(toolScript.isBlank()){
-                System.out.println("Tool has no script inserted");
-            }else{
-                System.out.println(toolScript);
                 engine.offerEvent(event);
-            }
         });
         toolPane.getChildren().add(toolButton);
     }

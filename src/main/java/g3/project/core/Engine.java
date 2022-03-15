@@ -109,7 +109,7 @@ public class Engine implements Runnable {
         var iterTool = myTools.iterator();
         while (iterTool.hasNext() == true){
             var currentTool = iterTool.next();
-             Platform.runLater(() -> controller.addTool(currentTool.getName(), currentTool.getID(), currentTool.getScript()));
+             Platform.runLater(() -> controller.addTool(currentTool.getName(), currentTool.getID()));
         }
         //Quit if running flag set to false
         while (running.get()
