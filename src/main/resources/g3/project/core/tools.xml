@@ -30,20 +30,22 @@ POSSIBILITY OF SUCH DAMAGE.
 
 
 <tools>
-    <tool name="Cursor" ID="TCsr">
+    <tool name="Cursor" ID="tool-cursor">
         <icon></icon>
         <script>
         </script>
     </tool>
     
-    <tool name="Test" ID="Ttest">
+    <tool name="Test" ID="tool-test">
         <icon></icon>
         <script>
-            print("hello")
+            def onClick():
+                print("hello")
+            
         </script>
     </tool>
     
-    <tool name="Rectangle" ID="TRect">
+    <tool name="Rectangle" ID="tool-rect">
         <icon></icon>
         <script>
         </script>

@@ -41,6 +41,7 @@ import g3.project.elements.DocElement;
 import g3.project.xmlIO.Ingestion;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -68,7 +69,9 @@ public class MainController {
     private final OsThemeDetector detector = OsThemeDetector.getDetector();
     private Engine engine;
     private Scene scene;
-
+    //Scene graph nodes hashed by their ID
+    private HashMap<String, javafx.scene.Node> drawnElements;
+    
     private boolean darkMode = false;
 
     @FXML
@@ -164,7 +167,7 @@ public class MainController {
         Button toolButton = new Button(toolname);
         toolButton.setMaxSize(50,50);
         toolButton.setMinSize(50,50);
-        toolButton.setId("tool-"+toolID);
+        toolButton.setId(toolID);
         toolButton.setWrapText(true);
         toolButton.setOnAction(event -> {
                 engine.offerEvent(event);
@@ -191,7 +194,7 @@ public class MainController {
     public void initialize() {
         //this.scene = contentPane.getScene();
         File xmlFile = new File("exampledoc.xml");
-
+        drawnElements = new HashMap<>();
         engine = new Engine(this);
 
         darkMode = detector.isDark();
