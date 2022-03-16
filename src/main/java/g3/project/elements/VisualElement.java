@@ -85,8 +85,12 @@ public class VisualElement extends Element {
     public String getID() {
         var ID = Optional.ofNullable(this.getAttribute("ID"))
                 .map(f -> f.getValue());
-        return ID.get();
+        var myDoc = this.getDocument();
+        var myDocEl = (DocElement)(myDoc.getRootElement());
+        
+        return ID.isPresent()? ID.get(): myDocEl.NewUniqueID(this.getLocalName());
     }
+
     public String setID(String ID) {
         this.addAttribute(new Attribute("ID", ID));
         return this.getID();
@@ -133,25 +137,25 @@ public class VisualElement extends Element {
     public Optional<Color> getFillColour() {
         var col = Optional.ofNullable(this.getAttribute("fill"));
         /**
-         * @TODO: Find a nicer looking way of making this work
-         * Probably containing more streams
+         * @TODO: Find a nicer looking way of making this work Probably
+         * containing more streams
          */
         if (col.isPresent()) {
-            var col_str = col.get().getValue().replace("#","");
-            
+            var col_str = col.get().getValue().replace("#", "");
+
             switch (col_str.length()) {
                 case 6:
                     return Optional.of(new Color(
-                            (double)Integer.valueOf(col_str.substring(0, 2), 16)/255,
-                            (double)Integer.valueOf(col_str.substring(2, 4), 16)/255,
-                            (double)Integer.valueOf(col_str.substring(4, 6), 16)/255,
+                            (double) Integer.valueOf(col_str.substring(0, 2), 16) / 255,
+                            (double) Integer.valueOf(col_str.substring(2, 4), 16) / 255,
+                            (double) Integer.valueOf(col_str.substring(4, 6), 16) / 255,
                             1.0d));
                 case 8:
                     return Optional.of(new Color(
-                            (double)Integer.valueOf(col_str.substring(0, 2), 16)/255,
-                            (double)Integer.valueOf(col_str.substring(2, 4), 16)/255,
-                            (double)Integer.valueOf(col_str.substring(4, 6), 16)/255,
-                            (double)Integer.valueOf(col_str.substring(6, 8), 16)/255));
+                            (double) Integer.valueOf(col_str.substring(0, 2), 16) / 255,
+                            (double) Integer.valueOf(col_str.substring(2, 4), 16) / 255,
+                            (double) Integer.valueOf(col_str.substring(4, 6), 16) / 255,
+                            (double) Integer.valueOf(col_str.substring(6, 8), 16) / 255));
             }
         }
 

@@ -30,6 +30,7 @@ package g3.project.elements;
 
 import java.util.Optional;
 import java.util.ArrayList;
+import java.util.Random;
 import nu.xom.*;
 
 /**
@@ -75,6 +76,35 @@ public class DocElement extends Element {
             }
         }
         return Optional.ofNullable(pages);
+    }
+    
+    /**
+     * Return a new Unique ID for an element.
+     * The param is not really necessary, but useful
+     * @param idForType
+     * @return New UID
+     */
+    public String NewUniqueID(String idForType){
+        Random rand = new Random();
+        long time = System.currentTimeMillis();
+        var timestr = String.valueOf(time);
+        var id_str = idForType.concat(timestr);
+        while (ValidateUniqueID(id_str) == false){
+            time = System.currentTimeMillis() - rand.nextInt(200000);
+            timestr = String.valueOf(time);
+            id_str = idForType.concat(timestr);
+        }
+        return id_str;
+    }
+    
+    /**
+     * Validates if the given ID is unique or not
+     * @param ID
+     * @return 
+     */
+    public Boolean ValidateUniqueID(String ID){
+        
+        return true;
     }
 
 }

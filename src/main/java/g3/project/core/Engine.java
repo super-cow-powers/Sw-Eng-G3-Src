@@ -58,6 +58,7 @@ public class Engine implements Runnable {
     private ArrayList<PageElement> currentPages;
 
     private final AtomicBoolean running = new AtomicBoolean(false);
+    private final AtomicBoolean suspended = new AtomicBoolean(false);
     private final AtomicBoolean UI_available = new AtomicBoolean(false);
 
     private final BlockingQueue<Event> eventQueue = new LinkedBlockingQueue<Event>(); //Something has happened
@@ -76,8 +77,8 @@ public class Engine implements Runnable {
     }
 
     public void stop() {
-        engineThread.resume();
         running.set(false);
+        unsuspend();
     }
 
     public void allowDraw() {
@@ -86,12 +87,20 @@ public class Engine implements Runnable {
 
     public void offerEvent(Event event) {
         eventQueue.offer(event);
-        engineThread.resume();
+        unsuspend();
     }
 
     public void offerNewDoc(File xmlFile) {
         docQueue.offer(xmlFile);
-        engineThread.resume();
+        unsuspend();
+    }
+
+    //Trigger notify if suspended
+    private synchronized void unsuspend() {
+        if (suspended.get() == true) {
+            suspended.set(false);
+            notify();
+        }
     }
 
     @Override
@@ -107,20 +116,26 @@ public class Engine implements Runnable {
         );
         //Add tool buttons
         var iterTool = myTools.iterator();
-        while (iterTool.hasNext() == true){
+        while (iterTool.hasNext() == true) {
             var currentTool = iterTool.next();
-             Platform.runLater(() -> controller.addTool(currentTool.getName(), currentTool.getID()));
+            Platform.runLater(() -> controller.addTool(currentTool.getName(), currentTool.getID()));
         }
         //Quit if running flag set to false
         while (running.get()
                 == true) {
+
+            if (!docQueue.isEmpty()) { //New doc request?
+                parseNewDoc(docQueue.take());
+            } else if (!eventQueue.isEmpty()) { //New event?
+                handleEvent(eventQueue.take());
+            } else {
+                suspended.set(true);
+            }
             try {
-                if (!docQueue.isEmpty()) { //New doc request?
-                    parseNewDoc(docQueue.take());
-                } else if (!eventQueue.isEmpty()) { //New event?
-                    handleEvent(eventQueue.take());
-                } else {
-                    engineThread.suspend();
+                while (suspended.get() == true) { //Suspend
+                    synchronized (this) {
+                        wait();
+                    }
                 }
             } catch (InterruptedException ex) {
                 ex.printStackTrace();
@@ -163,7 +178,7 @@ public class Engine implements Runnable {
     private void drawPage(String pageID) {
         var it = currentPages.iterator();
         while (it.hasNext()) {
-            var page=it.next();
+            var page = it.next();
             if (page.getID() == pageID) {
                 drawPage(page);
             }
@@ -181,7 +196,22 @@ public class Engine implements Runnable {
         var parsedDoc = ingest.parseGenericXML(new File(toolsXMLPath), new ToolsFactory());
         var root = parsedDoc.filter(d -> d.getRootElement() instanceof Tools)
                 .map(d -> (Tools) d.getRootElement());
+        this.putMessage("Tools Loaded", false);
         return root;
     }
 
+    /**
+     * Instruct the UI to show a message to the User
+     *
+     * @param message
+     * @param blocking
+     */
+    private void putMessage(String message, Boolean blocking) {
+        if (blocking) {
+            //Not implemented
+        } else {
+            Platform.runLater(() -> controller.showNonBlockingMessage(message));
+        }
+
+    }
 }

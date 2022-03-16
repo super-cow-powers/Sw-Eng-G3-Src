@@ -26,52 +26,46 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package g3.project.core;
 
-import g3.project.elements.ScriptElement;
-import nu.xom.Builder;
-import nu.xom.Element;
+package g3.project.ui;
+
+import java.util.Optional;
+import javafx.geometry.Point2D;
 
 /**
  *
- * @author David Miall<dm1306@york.ac.uk>
+ * @author david
  */
-public class Tool extends Element {
-    private static ThreadLocal builders = new ThreadLocal() {
-        
-         protected synchronized Object initialValue() {
-             return new Builder(new ToolsFactory());
-         }
-         
-     };
-    
-    
-    public Tool(String name) {
-        super(name);
-    }
 
-    
-    public Tool(String name, String uri) {
-        super(name, uri);
-    }
 
+public class LocObj {
+    private final Point2D start;
+    private final Point2D centre;
+    private final Point2D end;
     
-    public Tool(Element element) {
-        super(element);
-    }
-
-    public String getName(){
-        var name = this.getAttribute("name");
-        return name.getValue();
+    /**
+     * Create location container.
+     * Any argument may be null
+     * @param startPoint
+     * @param centrePoint
+     * @param endPoint 
+     */
+    public LocObj(Point2D startPoint, Point2D centrePoint, Point2D endPoint){
+        start = startPoint;
+        centre = centrePoint;
+        end = endPoint;
     }
     
-    public String getID(){
-        var ID = this.getAttribute("ID");
-        return ID != null? ID.getValue(): "tool-null-id";
+    public Optional<Point2D> getStart(){
+        return Optional.ofNullable(start);
     }
     
-    public String getScript(){
-        var el = this.getChildElements("script").get(0);
-        return (el instanceof ScriptElement)? ((ScriptElement)el).getScriptText() : "";
+    public Optional<Point2D> getCentre(){
+        return Optional.ofNullable(centre);
     }
+    
+    public Optional<Point2D> getEnd(){
+        return Optional.ofNullable(end);
+    }
+    
 }

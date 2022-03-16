@@ -41,6 +41,7 @@ import g3.project.elements.DocElement;
 import g3.project.xmlIO.Ingestion;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
@@ -82,6 +83,9 @@ public class MainController {
     
     @FXML
     private FlowPane toolPane;
+    
+    @FXML
+    private Label messageLabel;
     
     @FXML
     private Pane pagePane;
@@ -132,6 +136,7 @@ public class MainController {
         System.out.println("g3.project.ui.MainController.drawText()");
     }
     
+    
     /**
      * Configure the page
      * @todo: Allow multiple pages
@@ -175,9 +180,20 @@ public class MainController {
         toolPane.getChildren().add(toolButton);
     }
     
+    public void updateShape(String ID, String type, SizeObj size, LocObj loc){
+        
+    }
+    
+    public void updateImage(String ID, String type, SizeObj size, LocObj loc, InputStream bytes){
+        
+    }
+    public void updateImage(String ID, String type, SizeObj size, LocObj loc, String path){
+        
+    }
+    
     public void showNonBlockingMessage(String message)
     {
-        
+        messageLabel.setText(message);
     }
     
     private void toggleDarkMode() {
