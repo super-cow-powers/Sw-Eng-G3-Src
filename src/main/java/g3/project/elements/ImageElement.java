@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -28,6 +28,8 @@
  */
 package g3.project.elements;
 
+import java.net.URI;
+import java.util.Optional;
 import nu.xom.*;
 
 /**
@@ -35,28 +37,41 @@ import nu.xom.*;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public class ImageElement extends VisualElement {
+
     private static ThreadLocal builders = new ThreadLocal() {
-        
-         protected synchronized Object initialValue() {
-             return new Builder(new ElementFactory());
-         }
-         
-     };
-    
-    
+
+        protected synchronized Object initialValue() {
+            return new Builder(new ElementFactory());
+        }
+
+    };
+
     public ImageElement(String name) {
         super(name);
     }
 
-    
     public ImageElement(String name, String uri) {
         super(name, uri);
     }
 
-    
     public ImageElement(Element element) {
         super(element);
     }
 
-    
+    public Optional<String> getURI() {
+        var base = this.getBaseURI();
+        var source = Optional.ofNullable(this.getAttribute("include_source"))
+                .map(f -> f.getValue())
+                .map(f -> {
+                    //var split = f.split
+                    if (f.contains(":/") || f.startsWith("/")) {
+                        //URI = f;
+                    } else if (f.startsWith(".")) {
+                        //URI = this.getBaseURI().
+                    }
+                    return f;
+                });
+        String URI = null;
+    }
+
 }

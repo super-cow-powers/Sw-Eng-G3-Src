@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -29,19 +29,26 @@
 package g3.project.core;
 
 import g3.project.elements.DocElement;
+import g3.project.elements.ImageElement;
 import g3.project.elements.PageElement;
+import g3.project.elements.VisualElement;
+import g3.project.ui.LocObj;
 import g3.project.ui.MainController;
+import g3.project.ui.SizeObj;
 import g3.project.xmlIO.Ingestion;
 import java.io.File;
+import java.io.InputStream;
 import java.util.Optional;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.geometry.Point2D;
+import javafx.scene.control.Button;
 
 /**
  *
@@ -61,6 +68,7 @@ public class Engine implements Runnable {
     private final AtomicBoolean suspended = new AtomicBoolean(false);
     private final AtomicBoolean UI_available = new AtomicBoolean(false);
 
+    private final BlockingQueue<Consumer> runQueue = new LinkedBlockingQueue<Consumer>(); //Run something on engine thread
     private final BlockingQueue<Event> eventQueue = new LinkedBlockingQueue<Event>(); //Something has happened
     private final BlockingQueue<File> docQueue = new LinkedBlockingQueue<File>(); //Open new doc/s
 
@@ -83,6 +91,11 @@ public class Engine implements Runnable {
 
     public void allowDraw() {
         UI_available.set(true);
+    }
+
+    public void offerFunction(Consumer f) {
+        runQueue.offer(f);
+        unsuspend();
     }
 
     public void offerEvent(Event event) {
@@ -149,6 +162,27 @@ public class Engine implements Runnable {
     private void handleEvent(Event event) {
         System.out.println("g3.project.core.Engine.handleEvent()");
         System.out.println(event);
+        var evTgt = event.getTarget();
+        if (evTgt instanceof Button) {
+            handleButtonEvent(event);
+        }
+    }
+
+    private void handleButtonEvent(Event ev) {
+        if (ev instanceof ActionEvent) {
+            var aev = (ActionEvent) ev;
+            var target = aev.getTarget();
+            if (target instanceof Button) {
+                if (((Button) target).getId().contains("-jump-card-button")) {
+                    var ID = ((Button) target).getId().replace("-jump-card-button", "");
+                    this.drawPage(ID);
+                }
+            }
+        }
+    }
+
+    private void handleNavButtonEvent(ActionEvent aev) {
+
     }
 
     private void parseNewDoc(File xmlFile) { //Load a new doc
@@ -160,7 +194,19 @@ public class Engine implements Runnable {
                 currentDoc.GetPages().ifPresent(f -> {
                     currentPages = f;
                 });
-                drawPage(0);
+                var it = currentPages.listIterator(); //Add buttons for each page
+                while (it.hasNext()) {
+                    var ind = it.nextIndex();
+                    var page = it.next();
+                    Platform.runLater(() -> {
+                        var tiopt = page.getTitle();
+                        var ID = page.getID();
+                        var title = tiopt.isPresent() ? tiopt.get() : ID;
+                        controller.addCardButton(title, ID, ind);
+                    });
+                }
+                drawPage(currentPages.get(0).getID());
+
             } else {
                 //Looks like doc is malformed
             }
@@ -170,25 +216,51 @@ public class Engine implements Runnable {
         }
     }
 
-    private void drawPage(Integer pageNum) {
+    public void drawImage(ImageElement img) {
+        Platform.runLater(() -> {
+            var uri = img.getURI();
+            //controller.updateImage(ID, type, size, loc, path);
+        });
+    }
+
+    public void drawPage(Integer pageNum) {
         var pages = currentDoc.GetPages();
         pages.ifPresent(f -> drawPage(f.get(pageNum)));
     }
 
-    private void drawPage(String pageID) {
+    public void drawPage(String pageID) {
         var it = currentPages.iterator();
         while (it.hasNext()) {
             var page = it.next();
-            if (page.getID() == pageID) {
+            var itID = page.getID();
+            if (itID.equals(pageID)) {
                 drawPage(page);
+                putMessage("Loaded New Card: " + pageID, false);
             }
         }
     }
 
-    private void drawPage(PageElement page) {
+    public void drawPage(PageElement page) {
         Platform.runLater(() -> {
-            controller.configPage(page.getSize(), page.getFillColour(), page.getID());
+            controller.configCard(page.getSize(), page.getFillColour(), page.getID());
         });
+        processPageEls(page);
+    }
+
+    //Process the elements on a page
+    private void processPageEls(VisualElement el) {
+
+        if (el instanceof PageElement) {
+            return;
+        } else if (el instanceof ImageElement) {
+            this.drawImage((ImageElement) el);
+        }
+        // Do whatever you're going to do with this node…
+        // recurse the children
+        for (int i = 0; i < page.getChildCount(); i++) {
+            process(page.getChild(i));
+        }
+
     }
 
     private Optional<Tools> loadTools() {

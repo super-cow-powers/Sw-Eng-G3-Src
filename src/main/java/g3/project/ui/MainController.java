@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -72,7 +72,7 @@ public class MainController {
     private Scene scene;
     //Scene graph nodes hashed by their ID
     private HashMap<String, javafx.scene.Node> drawnElements;
-    
+
     private boolean darkMode = false;
 
     @FXML
@@ -80,13 +80,16 @@ public class MainController {
 
     @FXML
     private SplitPane splitPane;
-    
+
     @FXML
     private FlowPane toolPane;
-    
+
+    @FXML
+    private HBox cardSelBox;
+
     @FXML
     private Label messageLabel;
-    
+
     @FXML
     private Pane pagePane;
 
@@ -135,14 +138,14 @@ public class MainController {
         pagePane.getChildren().add(l);
         System.out.println("g3.project.ui.MainController.drawText()");
     }
-    
-    
+
     /**
      * Configure the page
+     *
      * @todo: Allow multiple pages
      * @todo: Resize scroll pane when the page is rotated
      */
-    public void configPage(Optional<SizeObj> size, Optional<Color> colour, String ID) {
+    public void configCard(Optional<SizeObj> size, Optional<Color> colour, String ID) {
         size.ifPresent(f -> {
             pagePane.setMaxHeight(f.getY());
             pagePane.setMinHeight(f.getY());
@@ -159,43 +162,58 @@ public class MainController {
         });
         pagePane.setId(ID);
     }
+
     /**
      * Clear the page
+     *
      * @todo: Allow multiple pages
      */
-    public void clearPage(String ID){
+    public void clearCard(String ID) {
         pagePane.getChildren().clear();
         pagePane.setStyle("-fx-background-color: #FFFFFF");
     }
 
-    public void addTool(String toolname, String toolID){
+    public void addCardButton(String friendlyName, String ID, Integer number) {
+        Button cardButton = new Button(friendlyName);
+        cardButton.setMaxSize(150, 50);
+        cardButton.setMinSize(50, 50);
+        cardButton.setId(ID + "-jump-card-button");
+        cardButton.setWrapText(false);
+        cardButton.setOnAction(event -> {
+            clearCard(pagePane.getId());
+            engine.offerEvent(event);
+        });
+        cardSelBox.getChildren().add(cardButton);
+    }
+
+    public void addTool(String toolname, String toolID) {
         Button toolButton = new Button(toolname);
-        toolButton.setMaxSize(50,50);
-        toolButton.setMinSize(50,50);
+        toolButton.setMaxSize(75, 75);
+        toolButton.setMinSize(50, 50);
         toolButton.setId(toolID);
-        toolButton.setWrapText(true);
+        toolButton.setWrapText(false);
         toolButton.setOnAction(event -> {
-                engine.offerEvent(event);
+            engine.offerEvent(event);
         });
         toolPane.getChildren().add(toolButton);
     }
-    
-    public void updateShape(String ID, String type, SizeObj size, LocObj loc){
-        
+
+    public void updateShape(String ID, String type, SizeObj size, LocObj loc) {
+
     }
-    
-    public void updateImage(String ID, String type, SizeObj size, LocObj loc, InputStream bytes){
-        
+
+    public void updateImage(String ID, String type, SizeObj size, LocObj loc, InputStream bytes) {
+
     }
-    public void updateImage(String ID, String type, SizeObj size, LocObj loc, String path){
-        
+
+    public void updateImage(String ID, String type, SizeObj size, LocObj loc, String path) {
+
     }
-    
-    public void showNonBlockingMessage(String message)
-    {
+
+    public void showNonBlockingMessage(String message) {
         messageLabel.setText(message);
     }
-    
+
     private void toggleDarkMode() {
         Style style;
         if (darkMode == true) {

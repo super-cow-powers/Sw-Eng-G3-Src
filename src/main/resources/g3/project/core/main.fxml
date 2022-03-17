@@ -8,6 +8,7 @@
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
@@ -55,9 +56,9 @@
                   </SplitPane>
                </children>
             </VBox>
-                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
-                    <children>
-                        <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" prefHeight="373.0" prefWidth="505.0" vbarPolicy="ALWAYS" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <VBox>
+               <children>
+                        <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" prefHeight="373.0" prefWidth="505.0" vbarPolicy="ALWAYS" VBox.vgrow="ALWAYS">
                             <content>
                                 <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0">
                                     <children>
@@ -66,8 +67,13 @@
                                 </VBox>
                             </content>
                         </ScrollPane>
-                    </children>
-                </AnchorPane>
+                  <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" maxHeight="50.0" minHeight="50.0" pannable="true" prefHeight="50.0" prefWidth="200.0" vbarPolicy="NEVER" VBox.vgrow="NEVER">
+                     <content>
+                        <HBox fx:id="cardSelBox" maxHeight="50.0" minHeight="50.0" prefHeight="50.0" prefWidth="200.0" />
+                     </content>
+                  </ScrollPane>
+               </children>
+            </VBox>
             </items>
         </SplitPane>
       <Label fx:id="messageLabel" contentDisplay="CENTER" prefHeight="20.0" text="message" />
