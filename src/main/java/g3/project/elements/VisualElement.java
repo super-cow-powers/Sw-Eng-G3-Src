@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -28,6 +28,7 @@
  */
 package g3.project.elements;
 
+import g3.project.ui.LocObj;
 import g3.project.ui.SizeObj;
 import java.util.Optional;
 import javafx.geometry.Point2D;
@@ -58,7 +59,7 @@ public class VisualElement extends Element {
      * either the location or nothing. The caller can then determine the action
      * to take.
      */
-    public Optional<Point2D> getLoc() {
+    public Optional<LocObj> getLoc() {
         var x = Optional.ofNullable(this.getAttribute("x_orig"))
                 .map(f -> f.getValue())
                 .map(f -> Double.valueOf(f));
@@ -67,13 +68,13 @@ public class VisualElement extends Element {
                 .map(f -> Double.valueOf(f));
 
         return (x.isPresent() && y.isPresent())
-                ? Optional.of(new Point2D(x.get(), y.get())) : Optional.empty();
+                ? Optional.of(new LocObj(new Point2D(x.get(), y.get()), null, null)) : Optional.empty();
     }
 
     /**
      * Set the object's X/Y location. Returns the new location.
      */
-    public Optional<Point2D> setLoc(Point2D loc) {
+    public Optional<LocObj> setLoc(LocObj loc) {
         var x = loc.getX();
         var y = loc.getY();
 
@@ -86,9 +87,9 @@ public class VisualElement extends Element {
         var ID = Optional.ofNullable(this.getAttribute("ID"))
                 .map(f -> f.getValue());
         var myDoc = this.getDocument();
-        var myDocEl = (DocElement)(myDoc.getRootElement());
-        
-        return ID.isPresent()? ID.get(): myDocEl.NewUniqueID(this.getLocalName());
+        var myDocEl = (DocElement) (myDoc.getRootElement());
+
+        return ID.isPresent() ? ID.get() : myDocEl.NewUniqueID(this.getLocalName());
     }
 
     public String setID(String ID) {

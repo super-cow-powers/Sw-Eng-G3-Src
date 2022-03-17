@@ -58,20 +58,29 @@ public class ImageElement extends VisualElement {
         super(element);
     }
 
-    public Optional<String> getURI() {
-        var base = this.getBaseURI();
-        var source = Optional.ofNullable(this.getAttribute("include_source"))
+    public Optional<String> getSourceLoc() {
+
+        return Optional.ofNullable(this.getAttribute("include_source")) //Get include_source attribute
                 .map(f -> f.getValue())
                 .map(f -> {
-                    //var split = f.split
-                    if (f.contains(":/") || f.startsWith("/")) {
-                        //URI = f;
-                    } else if (f.startsWith(".")) {
-                        //URI = this.getBaseURI().
+                    var base_doc = this.getDocument().getRootElement();
+                    String my_dir = "";
+
+                    if (base_doc instanceof DocElement) {
+                        if (((DocElement) base_doc).GetBaseDir().isPresent()) {
+                            my_dir = ((DocElement) base_doc).GetBaseDir().get();
+                        }
                     }
-                    return f;
+                    String loc = null;
+
+                    if (f.contains(":/") || f.startsWith("/")) {//Absolute Path
+                        loc = f;
+                    } else if (f.startsWith(".")) {//Relative Path
+                        loc = my_dir.concat(f);
+                    }
+                    return loc;
                 });
-        String URI = null;
+
     }
 
 }

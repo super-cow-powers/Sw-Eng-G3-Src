@@ -54,6 +54,7 @@ import javafx.scene.effect.DropShadow;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
@@ -117,6 +118,20 @@ public class MainController {
     @FXML
     private void handleExitAction(final ActionEvent event) {
         System.out.print("Quitting\n");
+    }
+
+    @FXML
+    private void handleOpenNewDoc(final ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open New Stack");
+        fileChooser.setInitialDirectory(
+                new File(System.getProperty("user.home"))
+        );
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("XML", "*.xml"),
+                new FileChooser.ExtensionFilter("SPRES", "*.spres")
+        );
+        fileChooser.showOpenDialog(pagePane.getScene().getWindow());
     }
 
     public void gracefulExit() {
@@ -202,11 +217,11 @@ public class MainController {
 
     }
 
-    public void updateImage(String ID, String type, SizeObj size, LocObj loc, InputStream bytes) {
+    public void updateImage(String ID, SizeObj size, LocObj loc, String path) {
 
     }
 
-    public void updateImage(String ID, String type, SizeObj size, LocObj loc, String path) {
+    public void updateImage(String ID, SizeObj size, LocObj loc, InputStream bytes) {
 
     }
 

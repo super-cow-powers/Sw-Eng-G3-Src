@@ -49,6 +49,7 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
+import nu.xom.Element;
 
 /**
  *
@@ -218,8 +219,17 @@ public class Engine implements Runnable {
 
     public void drawImage(ImageElement img) {
         Platform.runLater(() -> {
-            var uri = img.getURI();
-            //controller.updateImage(ID, type, size, loc, path);
+
+            var source_opt = img.getSourceLoc();
+            var loc_opt = img.getLoc();
+            var size_opt = img.getSize();
+            var ID = img.getID();
+            var source = (source_opt.isPresent()) ? source_opt.get() : "";
+            var loc = (loc_opt.isPresent()) ? loc_opt.get() : new LocObj(new Point2D(0, 0), null, null);
+            var size = (size_opt.isPresent()) ? size_opt.get() : new SizeObj(20d, 20d, 0d);
+
+            controller.updateImage(ID, size, loc, source);
+
         });
     }
 
@@ -244,21 +254,24 @@ public class Engine implements Runnable {
         Platform.runLater(() -> {
             controller.configCard(page.getSize(), page.getFillColour(), page.getID());
         });
-        processPageEls(page);
+        processEls(page);
     }
 
     //Process the elements on a page
-    private void processPageEls(VisualElement el) {
+    private void processEls(VisualElement el) {
 
         if (el instanceof PageElement) {
-            return;
+
         } else if (el instanceof ImageElement) {
             this.drawImage((ImageElement) el);
         }
         // Do whatever you're going to do with this node…
         // recurse the children
-        for (int i = 0; i < page.getChildCount(); i++) {
-            process(page.getChild(i));
+        for (int i = 0; i < el.getChildCount(); i++) {
+            var ch = el.getChild(i);
+            if (ch instanceof VisualElement) {
+                processEls((VisualElement) ((Element) ch));
+            }
         }
 
     }

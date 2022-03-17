@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -38,7 +38,9 @@ import nu.xom.*;
  * @author david
  */
 public class DocElement extends Element {
-    
+
+    private String containing_dir = null;
+
     private static ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
@@ -58,52 +60,62 @@ public class DocElement extends Element {
     public DocElement(Element element) {
         super(element);
     }
-    
+
+    public void SetBaseDir(String dir) {
+        containing_dir = dir;
+    }
+
+    public Optional<String> GetBaseDir() {
+        return Optional.ofNullable(containing_dir);
+    }
+
     /**
-     * 
+     *
      * @return Returns vector containing the Doc's pages
      */
-    public Optional<ArrayList<PageElement>> GetPages(){
+    public Optional<ArrayList<PageElement>> GetPages() {
         ArrayList<PageElement> pages = null;
         for (int i = 0; i < this.getChildCount(); i++) {
             var node = this.getChild(i);
-            if (node.getClass() == PageElement.class){
-                if (pages == null){ 
+            if (node.getClass() == PageElement.class) {
+                if (pages == null) {
                     pages = new ArrayList<PageElement>();
                 }
-                
-                pages.add((PageElement)node);
+
+                pages.add((PageElement) node);
             }
         }
         return Optional.ofNullable(pages);
     }
-    
+
     /**
-     * Return a new Unique ID for an element.
-     * The param is not really necessary, but useful
+     * Return a new Unique ID for an element. The param is not really necessary,
+     * but useful
+     *
      * @param idForType
      * @return New UID
      */
-    public String NewUniqueID(String idForType){
+    public String NewUniqueID(String idForType) {
         Random rand = new Random();
         long time = System.currentTimeMillis();
         var timestr = String.valueOf(time);
         var id_str = idForType.concat(timestr);
-        while (ValidateUniqueID(id_str) == false){
+        while (ValidateUniqueID(id_str) == false) {
             time = System.currentTimeMillis() - rand.nextInt(200000);
             timestr = String.valueOf(time);
             id_str = idForType.concat(timestr);
         }
         return id_str;
     }
-    
+
     /**
      * Validates if the given ID is unique or not
+     *
      * @param ID
-     * @return 
+     * @return
      */
-    public Boolean ValidateUniqueID(String ID){
-        
+    public Boolean ValidateUniqueID(String ID) {
+
         return true;
     }
 

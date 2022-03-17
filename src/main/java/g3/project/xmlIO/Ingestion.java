@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -28,6 +28,7 @@
  */
 package g3.project.xmlIO;
 
+import g3.project.elements.DocElement;
 import g3.project.elements.ElementFactory;
 import java.util.Optional;
 import java.io.File;
@@ -46,11 +47,16 @@ public class Ingestion {
     }
 
     /* Return the fully parsed representation of the XML doc */
-    public Optional<Document> parseDocXML(File xmlFile){
+    public Optional<Document> parseDocXML(File xmlFile) {
         Builder parser = new Builder(new ElementFactory());
         Document doc = null;
         try {
             doc = parser.build(xmlFile);
+            if (doc != null) {
+                if (doc.getRootElement() instanceof DocElement) {
+                    ((DocElement) doc.getRootElement()).SetBaseDir(xmlFile.getParent());
+                }
+            }
         } catch (ParsingException ex) {//We're returning an optional
             ex.printStackTrace();   //So I'm not throwing this out of the method
         } catch (IOException ex) {
@@ -58,7 +64,8 @@ public class Ingestion {
         }
         return Optional.ofNullable(doc);
     }
-    public Optional<Document> parseDocXML(String xmlDocString){
+
+    public Optional<Document> parseDocXML(String xmlDocString) {
         Builder parser = new Builder(new ElementFactory());
         Document doc = null;
         try {
@@ -70,23 +77,24 @@ public class Ingestion {
         }
         return Optional.ofNullable(doc);
     }
-    
+
     /* Parse a generic doc */
-    public Optional<Document> parseGenericXML(String xmlDocString, NodeFactory factory){
-        Builder parser = (factory == null)? new Builder(false): new Builder(factory);
+    public Optional<Document> parseGenericXML(String xmlDocString, NodeFactory factory) {
+        Builder parser = (factory == null) ? new Builder(false) : new Builder(factory);
         Document doc = null;
         try {
             doc = parser.build(xmlDocString, null); //No base URL
-        } catch (ParsingException ex) { 
+        } catch (ParsingException ex) {
             ex.printStackTrace();
         } catch (IOException ex) {
             ex.printStackTrace();
         }
         return Optional.ofNullable(doc);
     }
+
     /* Return the fully parsed representation of the XML doc */
-    public Optional<Document> parseGenericXML(File xmlFile, NodeFactory factory){
-        Builder parser = (factory == null)? new Builder(false): new Builder(factory);
+    public Optional<Document> parseGenericXML(File xmlFile, NodeFactory factory) {
+        Builder parser = (factory == null) ? new Builder(false) : new Builder(factory);
         Document doc = null;
         try {
             doc = parser.build(xmlFile);
