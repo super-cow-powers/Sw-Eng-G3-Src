@@ -69,7 +69,6 @@ public class Engine implements Runnable {
     private final AtomicBoolean suspended = new AtomicBoolean(false);
     private final AtomicBoolean UI_available = new AtomicBoolean(false);
 
-    private final BlockingQueue<Consumer> runQueue = new LinkedBlockingQueue<Consumer>(); //Run something on engine thread
     private final BlockingQueue<Event> eventQueue = new LinkedBlockingQueue<Event>(); //Something has happened
     private final BlockingQueue<File> docQueue = new LinkedBlockingQueue<File>(); //Open new doc/s
 
@@ -92,11 +91,6 @@ public class Engine implements Runnable {
 
     public void allowDraw() {
         UI_available.set(true);
-    }
-
-    public void offerFunction(Consumer f) {
-        runQueue.offer(f);
-        unsuspend();
     }
 
     public void offerEvent(Event event) {
@@ -187,6 +181,7 @@ public class Engine implements Runnable {
     }
 
     private void parseNewDoc(File xmlFile) { //Load a new doc
+
         var parsed = ingest.parseDocXML(xmlFile);
         if (parsed.isPresent()) {
             var child = parsed.get().getChild(0);
@@ -218,17 +213,16 @@ public class Engine implements Runnable {
     }
 
     public void drawImage(ImageElement img) {
+        var source_opt = img.getSourceLoc();
+        var loc_opt = img.getLoc();
+        var size_opt = img.getSize();
+        var ID = img.getID();
         Platform.runLater(() -> {
-
-            var source_opt = img.getSourceLoc();
-            var loc_opt = img.getLoc();
-            var size_opt = img.getSize();
-            var ID = img.getID();
             var source = (source_opt.isPresent()) ? source_opt.get() : "";
             var loc = (loc_opt.isPresent()) ? loc_opt.get() : new LocObj(new Point2D(0, 0), null, null);
             var size = (size_opt.isPresent()) ? size_opt.get() : new SizeObj(20d, 20d, 0d);
 
-            controller.updateImage(ID, size, loc, source);
+            controller.updateImage(ID, null, null, source);
 
         });
     }

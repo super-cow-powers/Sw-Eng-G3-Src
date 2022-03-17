@@ -53,7 +53,8 @@ public class Ingestion {
         try {
             doc = parser.build(xmlFile);
             if (doc != null) {
-                if (doc.getRootElement() instanceof DocElement) {
+                var root = doc.getRootElement();
+                if (root instanceof DocElement) {
                     ((DocElement) doc.getRootElement()).SetBaseDir(xmlFile.getParent());
                 }
             }

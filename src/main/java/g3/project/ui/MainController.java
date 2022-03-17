@@ -39,9 +39,13 @@ import com.jthemedetecor.OsThemeDetector;
 import g3.project.core.Engine;
 import g3.project.elements.DocElement;
 import g3.project.xmlIO.Ingestion;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
@@ -51,6 +55,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -73,6 +79,8 @@ public class MainController {
     private Scene scene;
     //Scene graph nodes hashed by their ID
     private HashMap<String, javafx.scene.Node> drawnElements;
+    //Cache image bytes by location
+    private HashMap<String, Image> loadedImages = new HashMap<>();
 
     private boolean darkMode = false;
 
@@ -131,7 +139,10 @@ public class MainController {
                 new FileChooser.ExtensionFilter("XML", "*.xml"),
                 new FileChooser.ExtensionFilter("SPRES", "*.spres")
         );
-        fileChooser.showOpenDialog(pagePane.getScene().getWindow());
+        File new_file = fileChooser.showOpenDialog(pagePane.getScene().getWindow());
+        if (new_file != null) {
+            engine.offerNewDoc(new_file);
+        }
     }
 
     public void gracefulExit() {
@@ -218,11 +229,30 @@ public class MainController {
     }
 
     public void updateImage(String ID, SizeObj size, LocObj loc, String path) {
-
+        Image im = null;
+        if (loadedImages.containsKey(path) == false) { //Caching images
+            im = new Image(path);
+            loadedImages.put(path, im);
+        } else {
+            im = loadedImages.get(path);
+        }
+        updateImage(ID, size, loc, im);
     }
 
-    public void updateImage(String ID, SizeObj size, LocObj loc, InputStream bytes) {
+    private void updateImage(String ID, SizeObj size, LocObj loc, Image im) {
+        ImageView imv = null;
+        if (drawnElements.containsKey(ID)) {
+            var im_el = drawnElements.get(ID);
+            if (im_el instanceof ImageView) {
+                imv = (ImageView) im_el;
+            }
+        } else {
+            imv = new ImageView();
+            drawnElements.put(ID, imv);
+        }
 
+        imv.setImage(im);
+        pagePane.getChildren().add(imv);
     }
 
     public void showNonBlockingMessage(String message) {
