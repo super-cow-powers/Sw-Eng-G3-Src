@@ -28,9 +28,64 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 -->
 
+<!--Icons are 50px x 50px-->
 
 <tools>
     <tool name="Cursor" ID="tool-cursor">
+        <icon></icon>
+        <script>
+        </script>
+    </tool>
+
+    <tool name="Text" ID="tool_text">
+            <icon></icon>
+            <script>
+            </script>
+        </tool>
+
+    <tool name="Line" ID="tool-line">
+        <icon></icon>
+        <script>
+        </script>
+    </tool>
+
+    <tool name="Square" ID="tool-square">
+        <icon></icon>
+        <script>
+        </script>
+    </tool>
+
+    <tool name="Rectangle" ID="tool-rect">
+        <icon></icon>
+        <script>
+        </script>
+    </tool>
+
+    <tool name="Circle" ID="tool_circle">
+        <icon></icon>
+        <script>
+        </script>
+    </tool>
+
+    <tool name="Triangle" ID="tool_triangle">
+        <icon></icon>
+        <script>
+        </script>
+    </tool>
+
+    <tool name="Image" ID="tool_image">
+        <icon></icon>
+        <script>
+        </script>
+    </tool>
+
+    <tool name="Video" ID="tool_video">
+        <icon></icon>
+        <script>
+        </script>
+    </tool>
+
+    <tool name="Audio" ID="tool_audio">
         <icon></icon>
         <script>
         </script>
@@ -42,12 +97,6 @@ POSSIBILITY OF SUCH DAMAGE.
             def onClick():
                 print("hello")
             
-        </script>
-    </tool>
-    
-    <tool name="Rectangle" ID="tool-rect">
-        <icon></icon>
-        <script>
         </script>
     </tool>
 </tools>
