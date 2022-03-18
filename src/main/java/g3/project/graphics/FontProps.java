@@ -26,50 +26,60 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package g3.project.ui;
+package g3.project.graphics;
 
-import java.util.Optional;
-import javafx.geometry.Point2D;
+import javafx.scene.paint.Color;
 
 /**
  *
- * @author david
+ * @author David Miall<dm1306@york.ac.uk>
  */
-public class LocObj {
-
-    private final Point2D start;
-    private final Point2D centre;
-    private final Point2D end;
-    private final Double zIndex;
-
-    /**
-     * Create location container. Any argument may be null
-     *
-     * @param startPoint
-     * @param centrePoint
-     * @param endPoint
+public class FontProps {
+    /*
+    <xsd:attribute name="underscore" type="xsd:boolean" use="optional" />
+					<xsd:attribute name="italic" type="xsd:boolean" use="optional" />
+					<xsd:attribute name="bold" type="xsd:boolean" use="optional" />
+					<xsd:attribute name="size" type="xsd:double" use="optional" />
+					<xsd:attribute name="name" type="xsd:token" use="optional" />
+					<xsd:attribute name="colour" type="base:colourType" use="optional" />
      */
-    public LocObj(Point2D startPoint, Point2D centrePoint, Point2D endPoint, Double z) {
-        start = startPoint;
-        centre = centrePoint;
-        end = endPoint;
-        zIndex = z != null ? z : 0;
+    final private boolean underscore;
+    final private boolean italic;
+    final private boolean bold;
+    final private Double size;
+    final private String name; 
+    final private Color colour;
+    public FontProps(boolean underscore, boolean italic, boolean bold, Double size, String name, Color colour){
+        this.underscore = underscore;
+        this.italic = italic;
+        this.bold = bold;
+        this.size = size;
+        this.name = name;
+        this.colour = colour;
+    }
+    
+    public boolean getUnderscore(){
+        return underscore;
     }
 
-    public Optional<Point2D> getStart() {
-        return Optional.ofNullable(start);
+    public boolean isItalic() {
+        return italic;
     }
 
-    public Optional<Point2D> getCentre() {
-        return Optional.ofNullable(centre);
+    public boolean isBold() {
+        return bold;
     }
 
-    public Optional<Point2D> getEnd() {
-        return Optional.ofNullable(end);
+    public Double getSize() {
+        return size;
     }
 
-    public Double getZ() {
-        return zIndex;
+    public String getName() {
+        return name;
     }
 
+    public Color getColour() {
+        return colour;
+    }
+    
 }

@@ -52,6 +52,10 @@ public class ElementFactory extends NodeFactory {
                 return new TableElement(name, namespaceURI);
             case "base:text":
                 return new TextElement(name, namespaceURI);
+            case "base:stroke":
+                return new StrokeElement(name, namespaceURI);
+            case "base:font":
+                return new FontElement(name, namespaceURI);
             case "base:script":
                 return new ScriptElement(name, namespaceURI);
         }

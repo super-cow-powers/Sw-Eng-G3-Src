@@ -68,18 +68,23 @@ public class VisualElement extends Element {
                 .map(f -> Double.valueOf(f));
 
         return (x.isPresent() && y.isPresent())
-                ? Optional.of(new LocObj(new Point2D(x.get(), y.get()), null, null)) : Optional.empty();
+                ? Optional.of(new LocObj(new Point2D(x.get(), y.get()), null, null, getZInd())) : Optional.empty();
     }
 
     /**
      * Set the object's X/Y location. Returns the new location.
      */
     public Optional<LocObj> setLoc(LocObj loc) {
-        var x = loc.getX();
-        var y = loc.getY();
+        var start = loc.getStart();
+        var centre = loc.getCentre();
+        var end = loc.getEnd();
 
-        this.addAttribute(new Attribute("x_orig", Double.toString(x)));
-        this.addAttribute(new Attribute("y_orig", Double.toString(y)));
+        start.ifPresent(s -> {
+            this.addAttribute(new Attribute("x_orig", Double.toString(s.getX())));
+            this.addAttribute(new Attribute("y_orig", Double.toString(s.getY())));
+        });
+        
+
         return this.getLoc();
     }
 

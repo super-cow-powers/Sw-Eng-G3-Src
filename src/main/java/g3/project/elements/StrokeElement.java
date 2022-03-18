@@ -26,50 +26,37 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package g3.project.ui;
+package g3.project.elements;
 
-import java.util.Optional;
-import javafx.geometry.Point2D;
+import nu.xom.*;
 
 /**
  *
- * @author david
+ * @author David Miall<dm1306@york.ac.uk>
  */
-public class LocObj {
-
-    private final Point2D start;
-    private final Point2D centre;
-    private final Point2D end;
-    private final Double zIndex;
-
-    /**
-     * Create location container. Any argument may be null
-     *
-     * @param startPoint
-     * @param centrePoint
-     * @param endPoint
-     */
-    public LocObj(Point2D startPoint, Point2D centrePoint, Point2D endPoint, Double z) {
-        start = startPoint;
-        centre = centrePoint;
-        end = endPoint;
-        zIndex = z != null ? z : 0;
+public class StrokeElement extends Element {
+    private static ThreadLocal builders = new ThreadLocal() {
+        
+         protected synchronized Object initialValue() {
+             return new Builder(new ElementFactory());
+         }
+         
+     };
+    
+    
+    public StrokeElement(String name) {
+        super(name);
     }
 
-    public Optional<Point2D> getStart() {
-        return Optional.ofNullable(start);
+    
+    public StrokeElement(String name, String uri) {
+        super(name, uri);
     }
 
-    public Optional<Point2D> getCentre() {
-        return Optional.ofNullable(centre);
+    
+    public StrokeElement(Element element) {
+        super(element);
     }
 
-    public Optional<Point2D> getEnd() {
-        return Optional.ofNullable(end);
-    }
-
-    public Double getZ() {
-        return zIndex;
-    }
-
+    
 }

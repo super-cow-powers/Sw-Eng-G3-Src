@@ -78,6 +78,9 @@ public class ImageElement extends VisualElement {
                     } else if (f.startsWith(".")) {//Relative Path
                         loc = my_dir.concat(f);
                     }
+                    if (!f.startsWith("http")){
+                        loc = "file:".concat(loc);
+                    }
                     return loc;
                 });
 

@@ -50,12 +50,13 @@ public class Ingestion {
     public Optional<Document> parseDocXML(File xmlFile) {
         Builder parser = new Builder(new ElementFactory());
         Document doc = null;
+        var xmPath = xmlFile.getAbsoluteFile().getParent()+"/";
         try {
             doc = parser.build(xmlFile);
             if (doc != null) {
                 var root = doc.getRootElement();
                 if (root instanceof DocElement) {
-                    ((DocElement) doc.getRootElement()).SetBaseDir(xmlFile.getParent());
+                    ((DocElement) doc.getRootElement()).SetBaseDir(xmPath);
                 }
             }
         } catch (ParsingException ex) {//We're returning an optional
