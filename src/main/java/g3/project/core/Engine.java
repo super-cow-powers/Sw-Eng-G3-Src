@@ -210,6 +210,7 @@ public class Engine implements Runnable {
             Platform.runLater(() -> {
                 controller.clearCardButtons();
                 controller.clearCard("");
+                controller.setViewScale(1d);
             });
             var child = parsed.get().getChild(0);
             if (child instanceof DocElement) {

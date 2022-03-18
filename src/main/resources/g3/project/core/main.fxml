@@ -59,7 +59,7 @@
             </VBox>
             <VBox >
                <children>
-                        <ScrollPane fx:id="pageScroll" fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" prefHeight="373.0" prefWidth="505.0" vbarPolicy="ALWAYS" VBox.vgrow="ALWAYS">
+                        <ScrollPane fx:id="pageScroll" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefHeight="373.0" prefWidth="505.0" vbarPolicy="NEVER" VBox.vgrow="ALWAYS">
                             <content>
                                 <VBox fx:id="pageVBox" alignment="CENTER" prefHeight="200.0" prefWidth="100.0">
                                     <children>

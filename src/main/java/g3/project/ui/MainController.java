@@ -267,7 +267,6 @@ public class MainController {
         pagePane.getChildren().clear();
         pagePane.setStyle("-fx-background-color: #FFFFFF");
         drawnElements.clear();
-        setViewScale(1d);
     }
 
     public void addCardButton(String friendlyName, String ID, Integer number) {
@@ -331,6 +330,7 @@ public class MainController {
             var start = loc.getStart().get();
             imv.relocate(start.getX(), start.getY());
         }
+        imv.setViewOrder(loc.getZ());
         imv.setRotate(size.getRot());
         imv.setPreserveRatio(true);
         imv.setFitHeight(size.getY());
