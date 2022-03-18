@@ -25,7 +25,7 @@ public class App extends Application {
         /*Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> {
             System.out.println("Handler caught exception: "+throwable.getMessage());
         });*/
-        scene = new Scene(loadFXML("main"), 640, 480);
+        scene = new Scene(loadFXML("main"), 900, 600);
         stage.setScene(scene);
         stage.show();
     }
@@ -44,7 +44,7 @@ public class App extends Application {
     private static Parent loadFXML(String fxml) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
         Parent fx_ld = fxmlLoader.load();
-        mainUIController = (MainController)fxmlLoader.getController();
+        mainUIController = (MainController) fxmlLoader.getController();
         return fx_ld;
     }
 
