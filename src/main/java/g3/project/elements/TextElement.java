@@ -28,6 +28,8 @@
  */
 package g3.project.elements;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 import nu.xom.*;
 
 /**
@@ -57,6 +59,19 @@ public class TextElement extends Element {
     public TextElement(Element element) {
         super(element);
     }
-
+    
+    /**
+     * Get all font blocks in this text section
+     * @return 
+     */
+    public ArrayList<FontElement> getFontBlocks(){
+        var list = new ArrayList<FontElement>();
+        for(var ch : this.getChildElements()){
+            if (ch instanceof FontElement){
+                list.add((FontElement)ch);
+            }
+        }
+        return list;
+    }
     
 }

@@ -38,26 +38,44 @@ import javafx.scene.layout.*;
 import com.jthemedetecor.OsThemeDetector;
 import g3.project.core.Engine;
 import g3.project.elements.DocElement;
+import g3.project.graphics.ExtShape;
+import g3.project.graphics.FontProps;
 import g3.project.xmlIO.Ingestion;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import javafx.animation.FadeTransition;
 import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.scene.transform.Scale;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import jfxtras.styles.jmetro.*;
 import nu.xom.Document;
 import nu.xom.ParsingException;
@@ -71,10 +89,17 @@ public class MainController {
     private final OsThemeDetector detector = OsThemeDetector.getDetector();
     private Engine engine;
     private Scene scene;
+
+    private Scale viewportScale = new Scale(1, 1);
+
     //Scene graph nodes hashed by their ID
     private HashMap<String, javafx.scene.Node> drawnElements;
+    //Cache image bytes by location
+    private HashMap<String, Image> loadedImages = new HashMap<>();
 
     private boolean darkMode = false;
+
+    private Timer timer = new Timer();
 
     @FXML
     private MenuBar menuBar;
@@ -93,6 +118,14 @@ public class MainController {
 
     @FXML
     private Pane pagePane;
+
+    @FXML
+    private ScrollPane pageScroll;
+
+    @FXML
+    private VBox pageVBox;
+
+    private final Long messageDuration = 6000l;
 
     /**
      * Handle action related to "About" menu item.
@@ -115,6 +148,23 @@ public class MainController {
         engine.offerEvent(event);
     }
 
+    private void pageScrollEventHandler(final ScrollEvent event) {
+        if ((event.isControlDown() == true) && (event.getDeltaY() != 0)) {
+            System.out.println("Delta:" + event.getDeltaY());
+            var scaleValue = pagePane.getScaleX() + (event.getDeltaY() * 0.01);
+            setViewScale(scaleValue);
+        }
+        engine.offerEvent(event);
+    }
+
+    public void setViewScale(Double scaleValue) {
+        pagePane.setScaleX(scaleValue);
+        pagePane.setScaleY(scaleValue);
+        pageVBox.setMinHeight(pageVBox.getHeight() * scaleValue);
+        pageVBox.setMinWidth(pageVBox.getWidth() * scaleValue);
+        System.out.println("Scale: " + pageVBox.getScaleX());
+    }
+
     @FXML
     private void handleExitAction(final ActionEvent event) {
         System.out.print("Quitting\n");
@@ -131,11 +181,15 @@ public class MainController {
                 new FileChooser.ExtensionFilter("XML", "*.xml"),
                 new FileChooser.ExtensionFilter("SPRES", "*.spres")
         );
-        fileChooser.showOpenDialog(pagePane.getScene().getWindow());
+        File new_file = fileChooser.showOpenDialog(pagePane.getScene().getWindow());
+        if (new_file != null) {
+            engine.offerNewDoc(new_file);
+        }
     }
 
     public void gracefulExit() {
         engine.stop();
+        timer.cancel();
         Platform.exit();
     }
 
@@ -152,6 +206,33 @@ public class MainController {
         l.relocate(pos.getX(), pos.getY());
         pagePane.getChildren().add(l);
         System.out.println("g3.project.ui.MainController.drawText()");
+    }
+
+    /**
+     * Redraw shape on screen
+     *
+     * @param ID
+     * @param size
+     * @param loc
+     * @param shapeType
+     * @param fillColour
+     * @param strokeColour
+     * @param strokeWidth
+     * @param textString
+     * @param textProps
+     */
+    public void updateShape(String ID, SizeObj size, LocObj loc, String shapeType, Color fillColour,
+            Color strokeColour, Double strokeWidth, String textString, FontProps textProps) {
+        ExtShape newShape = new ExtShape(shapeType, ID, size.getX(), size.getY(), fillColour, strokeColour, strokeWidth, textString, textProps);
+        newShape.setRotate(size.getRot());
+        if (drawnElements.containsKey(ID)) {
+            pagePane.getChildren().remove(drawnElements.get(ID));
+        }
+        drawnElements.put(ID, newShape);
+        var start = loc.getStart().get();
+        newShape.relocate(start.getX(), start.getY());
+        newShape.setViewOrder(loc.getZ());
+        pagePane.getChildren().add(newShape);
     }
 
     /**
@@ -181,11 +262,11 @@ public class MainController {
     /**
      * Clear the page
      *
-     * @todo: Allow multiple pages
      */
     public void clearCard(String ID) {
         pagePane.getChildren().clear();
         pagePane.setStyle("-fx-background-color: #FFFFFF");
+        drawnElements.clear();
     }
 
     public void addCardButton(String friendlyName, String ID, Integer number) {
@@ -201,6 +282,13 @@ public class MainController {
         cardSelBox.getChildren().add(cardButton);
     }
 
+    /**
+     * Remove all card buttons
+     */
+    public void clearCardButtons() {
+        cardSelBox.getChildren().clear();
+    }
+
     public void addTool(String toolname, String toolID) {
         Button toolButton = new Button(toolname);
         toolButton.setMaxSize(75, 75);
@@ -213,20 +301,60 @@ public class MainController {
         toolPane.getChildren().add(toolButton);
     }
 
-    public void updateShape(String ID, String type, SizeObj size, LocObj loc) {
-
-    }
-
     public void updateImage(String ID, SizeObj size, LocObj loc, String path) {
-
+        Image im = null;
+        if (loadedImages.containsKey(path) == false) { //Caching images
+            im = new Image(path);
+            loadedImages.put(path, im);
+        } else {
+            im = loadedImages.get(path);
+        }
+        updateImage(ID, size, loc, im);
     }
 
-    public void updateImage(String ID, SizeObj size, LocObj loc, InputStream bytes) {
+    private void updateImage(String ID, SizeObj size, LocObj loc, Image im) {
+        ImageView imv = null;
+        if (drawnElements.containsKey(ID)) {
+            var im_el = drawnElements.get(ID);
+            if (im_el instanceof ImageView) {
+                imv = (ImageView) im_el;
+            }
+        } else {
+            imv = new ImageView();
+            drawnElements.put(ID, imv);
+            pagePane.getChildren().add(imv);
+        }
 
+        imv.setImage(im);
+        if (loc.getStart().isPresent()) {
+            var start = loc.getStart().get();
+            imv.relocate(start.getX(), start.getY());
+        }
+        imv.setViewOrder(loc.getZ());
+        imv.setRotate(size.getRot());
+        imv.setPreserveRatio(true);
+        imv.setFitHeight(size.getY());
+        imv.setFitWidth(size.getY());
+
+        
     }
 
     public void showNonBlockingMessage(String message) {
         messageLabel.setText(message);
+        messageLabel.setOpacity(1d);
+        timer.schedule(new TimerTask() {
+            public void run() {
+                Platform.runLater(() -> clearNBMessage());
+            }
+        },
+                messageDuration);
+    }
+
+    private void clearNBMessage() {
+        FadeTransition ft = new FadeTransition(Duration.millis(500), messageLabel);
+        ft.setFromValue(1d);
+        ft.setToValue(0d);
+        ft.play();
     }
 
     private void toggleDarkMode() {
@@ -257,15 +385,20 @@ public class MainController {
         splitPane.getDividers().get(0)
                 .positionProperty()
                 .addListener((obs, oldPos, newPos) -> {
-                    if (newPos.doubleValue() > 0.30) {
-                        splitPane.getDividers().get(0).setPosition(0.30);
+                    if (newPos.doubleValue() > 0.15) {
+                        splitPane.getDividers().get(0).setPosition(0.15);
                     }
                 });
         Platform.runLater(() -> { //Run when initialised
             engine.start();
             engine.offerNewDoc(xmlFile);
         });
+        pagePane.setOnScroll((e) -> pageScrollEventHandler(e)); //Scaling stuff
+        pageScroll.setOnKeyReleased((e)->engine.offerEvent(e)); //I'll get the engine to handle the keys
+
+        pageScroll.setPannable(true);
         pagePane.setEffect(new DropShadow());
+
         toggleDarkMode();
     }
 }

@@ -29,9 +29,10 @@
 package g3.project.core;
 
 import g3.project.elements.DocElement;
-import g3.project.elements.ImageElement;
+import g3.project.elements.*;
 import g3.project.elements.PageElement;
 import g3.project.elements.VisualElement;
+import g3.project.graphics.FontProps;
 import g3.project.ui.LocObj;
 import g3.project.ui.MainController;
 import g3.project.ui.SizeObj;
@@ -49,6 +50,9 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.paint.Color;
 import nu.xom.Element;
 
 /**
@@ -64,12 +68,12 @@ public class Engine implements Runnable {
     private ArrayList<Tool> myTools;
     private DocElement currentDoc;
     private ArrayList<PageElement> currentPages;
+    private String currentPageID = "";
 
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final AtomicBoolean suspended = new AtomicBoolean(false);
     private final AtomicBoolean UI_available = new AtomicBoolean(false);
 
-    private final BlockingQueue<Consumer> runQueue = new LinkedBlockingQueue<Consumer>(); //Run something on engine thread
     private final BlockingQueue<Event> eventQueue = new LinkedBlockingQueue<Event>(); //Something has happened
     private final BlockingQueue<File> docQueue = new LinkedBlockingQueue<File>(); //Open new doc/s
 
@@ -92,11 +96,6 @@ public class Engine implements Runnable {
 
     public void allowDraw() {
         UI_available.set(true);
-    }
-
-    public void offerFunction(Consumer f) {
-        runQueue.offer(f);
-        unsuspend();
     }
 
     public void offerEvent(Event event) {
@@ -137,15 +136,15 @@ public class Engine implements Runnable {
         //Quit if running flag set to false
         while (running.get()
                 == true) {
-
-            if (!docQueue.isEmpty()) { //New doc request?
-                parseNewDoc(docQueue.take());
-            } else if (!eventQueue.isEmpty()) { //New event?
-                handleEvent(eventQueue.take());
-            } else {
-                suspended.set(true);
-            }
             try {
+                if (!docQueue.isEmpty()) { //New doc request?
+                    parseNewDoc(docQueue.take());
+                } else if (!eventQueue.isEmpty()) { //New event?
+                    handleEvent(eventQueue.take());
+                } else {
+                    suspended.set(true);
+                }
+
                 while (suspended.get() == true) { //Suspend
                     synchronized (this) {
                         wait();
@@ -158,6 +157,7 @@ public class Engine implements Runnable {
 
         System.out.println(
                 "Engine is going down NOW.");
+        return;
     }
 
     private void handleEvent(Event event) {
@@ -166,7 +166,24 @@ public class Engine implements Runnable {
         var evTgt = event.getTarget();
         if (evTgt instanceof Button) {
             handleButtonEvent(event);
+        } else
+        if (event instanceof KeyEvent) {
+            var kev = (KeyEvent) event;
+            var current_card = getPageIndex(currentPageID);
+            if (kev.getCode() == KeyCode.LEFT) {
+                if (current_card > 0){
+                    current_card--;
+                }
+                this.drawPage(current_card);
+            } else if (kev.getCode() == KeyCode.RIGHT) {
+                if (current_card < currentPages.size()-1){
+                    current_card++;
+                }
+                this.drawPage(current_card);
+            }
         }
+        
+        event.consume();
     }
 
     private void handleButtonEvent(Event ev) {
@@ -187,8 +204,14 @@ public class Engine implements Runnable {
     }
 
     private void parseNewDoc(File xmlFile) { //Load a new doc
+
         var parsed = ingest.parseDocXML(xmlFile);
         if (parsed.isPresent()) {
+            Platform.runLater(() -> {
+                controller.clearCardButtons();
+                controller.clearCard("");
+                controller.setViewScale(1d);
+            });
             var child = parsed.get().getChild(0);
             if (child instanceof DocElement) {
                 currentDoc = (DocElement) child;
@@ -218,19 +241,57 @@ public class Engine implements Runnable {
     }
 
     public void drawImage(ImageElement img) {
+        var source_opt = img.getSourceLoc();
+        var loc_opt = img.getLoc();
+        var size_opt = img.getSize();
+        var ID = img.getID();
         Platform.runLater(() -> {
-
-            var source_opt = img.getSourceLoc();
-            var loc_opt = img.getLoc();
-            var size_opt = img.getSize();
-            var ID = img.getID();
             var source = (source_opt.isPresent()) ? source_opt.get() : "";
-            var loc = (loc_opt.isPresent()) ? loc_opt.get() : new LocObj(new Point2D(0, 0), null, null);
+            var loc = (loc_opt.isPresent()) ? loc_opt.get() : new LocObj(new Point2D(0, 0), null, null, 0d);
             var size = (size_opt.isPresent()) ? size_opt.get() : new SizeObj(20d, 20d, 0d);
 
             controller.updateImage(ID, size, loc, source);
 
         });
+    }
+
+    public void drawShape(ShapeElement shape) {
+        Platform.runLater(() -> {
+
+            ArrayList<FontElement> font_blocks = new ArrayList<>();
+            FontProps fontProps;
+            String textString;
+            var size = shape.getSize();
+            var loc = shape.getLoc();
+            var shapeType = shape.getType();
+            var fill_op = shape.getFillColour();
+            Color fill;
+            if (fill_op.isPresent()) {
+                fill = fill_op.get();
+            } else {
+                fill = Color.WHITESMOKE;
+            }
+            var text_op = shape.getText();
+            if (text_op.isPresent()) {
+                font_blocks = text_op.get().getFontBlocks();
+            }
+
+            if (font_blocks.size() > 0) {
+                textString = font_blocks.get(0).getValue();
+                fontProps = font_blocks.get(0).getProperties();
+            } else {
+                fontProps = null;
+                textString = "";
+            }
+            if (size.isPresent() && loc.isPresent()) {
+                Platform.runLater(() -> {
+                    if (fontProps != null) {
+                        controller.updateShape(shape.getID(), size.get(), loc.get(), shapeType, fill, null, null, textString, fontProps);
+                    }
+                });
+            }
+        }
+        );
     }
 
     public void drawPage(Integer pageNum) {
@@ -252,9 +313,25 @@ public class Engine implements Runnable {
 
     public void drawPage(PageElement page) {
         Platform.runLater(() -> {
+            controller.clearCard(currentPageID);
             controller.configCard(page.getSize(), page.getFillColour(), page.getID());
         });
         processEls(page);
+        currentPageID = page.getID();
+    }
+
+    private Integer getPageIndex(String pageID) {
+        var it = currentPages.iterator();
+        var i = 0;
+        while (it.hasNext()) {
+            var page = it.next();
+            var itID = page.getID();
+            if (itID.equals(pageID)) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
     }
 
     //Process the elements on a page
@@ -264,6 +341,8 @@ public class Engine implements Runnable {
 
         } else if (el instanceof ImageElement) {
             this.drawImage((ImageElement) el);
+        } else if (el instanceof ShapeElement) {
+            this.drawShape((ShapeElement) el);
         }
         // Do whatever you're going to do with this node…
         // recurse the children

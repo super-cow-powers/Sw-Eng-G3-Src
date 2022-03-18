@@ -37,7 +37,7 @@
                 </Menu>
             </menus>
         </MenuBar>
-        <SplitPane fx:id="splitPane" dividerPositions="0.1488294314381271" VBox.vgrow="ALWAYS">
+        <SplitPane fx:id="splitPane" dividerPositions="0.05" VBox.vgrow="ALWAYS">
             <items>
             <VBox prefHeight="200.0" prefWidth="100.0">
                <children>
@@ -57,11 +57,11 @@
                   </SplitPane>
                </children>
             </VBox>
-            <VBox>
+            <VBox >
                <children>
-                        <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" prefHeight="373.0" prefWidth="505.0" vbarPolicy="ALWAYS" VBox.vgrow="ALWAYS">
+                        <ScrollPane fx:id="pageScroll" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefHeight="373.0" prefWidth="505.0" vbarPolicy="NEVER" VBox.vgrow="ALWAYS">
                             <content>
-                                <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0">
+                                <VBox fx:id="pageVBox" alignment="CENTER" prefHeight="200.0" prefWidth="100.0">
                                     <children>
                                         <Pane fx:id="pagePane" maxHeight="400.0" maxWidth="500.0" minHeight="600.0" minWidth="960.0" onKeyPressed="#handleEvent" onKeyReleased="#handleEvent" onKeyTyped="#handleEvent" onZoom="#handleEvent" onZoomFinished="#handleEvent" onZoomStarted="#handleEvent" prefHeight="329.0" prefWidth="500.0" style="-fx-background-color: white;" VBox.vgrow="NEVER" />
                                     </children>

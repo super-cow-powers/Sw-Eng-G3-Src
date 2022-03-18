@@ -28,6 +28,7 @@
  */
 package g3.project.elements;
 
+import java.util.Optional;
 import nu.xom.*;
 
 /**
@@ -35,28 +36,45 @@ import nu.xom.*;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public class ShapeElement extends VisualElement {
+
     private static ThreadLocal builders = new ThreadLocal() {
-        
-         protected synchronized Object initialValue() {
-             return new Builder(new ElementFactory());
-         }
-         
-     };
-    
-    
+
+        protected synchronized Object initialValue() {
+            return new Builder(new ElementFactory());
+        }
+
+    };
+
     public ShapeElement(String name) {
         super(name);
     }
 
-    
     public ShapeElement(String name, String uri) {
         super(name, uri);
     }
 
-    
     public ShapeElement(Element element) {
         super(element);
     }
 
+    public String getType() {
+        var type = this.getAttribute("type");
+        return type != null? type.getValue(): "";
+    }
     
+    public String setType(String type){
+        this.addAttribute(new Attribute("type", type));
+        return this.getType();
+    }
+    
+    public Optional<TextElement> getText(){
+        TextElement text = null;
+        for (var ch: this.getChildElements()){
+            if (ch instanceof TextElement){
+                text = (TextElement)ch;
+            }
+        }
+        return Optional.ofNullable(text);
+    }
+
 }

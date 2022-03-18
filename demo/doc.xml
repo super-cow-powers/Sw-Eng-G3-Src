@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<base:document xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:ext='http://PWS_Exts' xmlns:base='http://PWS_Base' xsi:schemaLocation='http://PWS_Base https://raw.githubusercontent.com/super-cow-powers/sweng_21_PWS/master/PWS.xsd http://PWS_Exts https://raw.githubusercontent.com/super-cow-powers/sweng_21_PWS/master/my_exts.xsd'>
+    <base:page x_orig="0" y_orig="0" z_ind="0" fill="#AABBCCFF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-0" disp_duration_s="40" show_after_s="0" title="Start">
+
+        <base:shape fill="#A2A2A2FF" x_orig="100" y_orig="300" z_ind="0" x_size_px="400" y_size_px="120" rot_angle="0" ID="tb-0" disp_duration_s="10" show_after_s="5" type="textbox">
+            <base:text>
+                <base:font  underscore="true" size="100"> Hello!</base:font>
+            </base:text>
+        </base:shape>
+        
+        
+    </base:page>
+
+    <base:page x_orig="0" y_orig="0" z_ind="0" fill="#AABBCCFF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-1" disp_duration_s="40" show_after_s="0" title="Welcome">
+        <base:shape fill="#DBA092FF" x_orig="100" y_orig="300" z_ind="0" x_size_px="600" y_size_px="60" rot_angle="0" ID="tb-1" disp_duration_s="10" show_after_s="5" type="textbox">
+            <base:text>
+                <base:font colour="#FFFFFFFF" underscore="false" size="55">Welcome to our talk.</base:font>
+            </base:text>
+        </base:shape>
+    </base:page>
+    
+    <base:page x_orig="0" y_orig="0" z_ind="0" fill="#AABBCCFF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-2" disp_duration_s="40" show_after_s="0" title="Welcome">
+        <base:shape fill="#DBA092FF" x_orig="100" y_orig="300" z_ind="0" x_size_px="600" y_size_px="60" rot_angle="0" ID="tb-1" disp_duration_s="10" show_after_s="5" type="textbox">
+            <base:text>
+                <base:font colour="#FFFFFFFF" underscore="false" size="55">Welcome to our talk.</base:font>
+            </base:text>
+        </base:shape>
+        <base:shape fill="#DBA092FF" x_orig="100" y_orig="400" z_ind="0" x_size_px="600" y_size_px="60" rot_angle="0" ID="tb-2" disp_duration_s="10" show_after_s="5" type="textbox">
+            <base:text>
+                <base:font colour="#FFFFFFFF" underscore="true" size="40">What's it about?</base:font>
+            </base:text>
+        </base:shape>
+    </base:page>
+
+    <base:page x_orig="0" y_orig="0" z_ind="0" fill="#AABBCCFF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-3" disp_duration_s="40" show_after_s="0" title="About">
+        <base:shape fill="#DBA092FF" x_orig="100" y_orig="50" z_ind="0" x_size_px="600" y_size_px="60" rot_angle="0" ID="tb-3" disp_duration_s="10" show_after_s="5" type="textbox">
+            <base:text>
+                <base:font colour="#FFFFFFFF" underscore="false" size="20">Well, "Lolcats" mostly...</base:font>
+            </base:text>
+        </base:shape>
+	
+    </base:page>
+    
+    <base:page x_orig="0" y_orig="0" z_ind="0" fill="#AABBCCFF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-4" disp_duration_s="40" show_after_s="0" title="1">
+        <base:shape fill="#DBA092FF" x_orig="100" y_orig="50" z_ind="0" x_size_px="600" y_size_px="60" rot_angle="0" ID="tb-4" disp_duration_s="10" show_after_s="5" type="textbox">
+            <base:text>
+                <base:font colour="#FFFFFFFF" underscore="false" size="20">Like this one</base:font>
+            </base:text>
+        </base:shape>
+		
+        <base:image include_source="./pass.jpg" x_orig="300" y_orig="200" z_ind="0" x_size_px="400" y_size_px="400" rot_angle="22" ID="im0" disp_duration_s="40" show_after_s="0" />
+
+    </base:page>
+    
+    <base:page x_orig="0" y_orig="0" z_ind="0" fill="#AABBCCFF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-5" disp_duration_s="40" show_after_s="0" title="2">
+        <base:shape fill="#DBA092FF" x_orig="100" y_orig="50" z_ind="0" x_size_px="600" y_size_px="60" rot_angle="0" ID="tb-5" disp_duration_s="10" show_after_s="5" type="textbox">
+            <base:text>
+                <base:font colour="#FFFFFFFF" underscore="false" size="20">Or this one</base:font>
+            </base:text>
+        </base:shape>
+		
+        <base:image include_source="./pass.jpg" x_orig="300" y_orig="200" z_ind="0" x_size_px="400" y_size_px="400" rot_angle="22" ID="im1" disp_duration_s="40" show_after_s="0" />
+        <base:image include_source="./pic1.jpg" x_orig="300" y_orig="200" z_ind="-1" x_size_px="400" y_size_px="400" rot_angle="-22" ID="im2" disp_duration_s="40" show_after_s="0" />
+    </base:page>
+    
+    <base:page x_orig="0" y_orig="0" z_ind="0" fill="#AABBCCFF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-6" disp_duration_s="40" show_after_s="0" title="3">
+        <base:shape fill="#DBA092FF" x_orig="200" y_orig="250" z_ind="0" x_size_px="500" y_size_px="60" rot_angle="90" ID="tb-5" disp_duration_s="10" show_after_s="5" type="textbox">
+            <base:text>
+                <base:font colour="#FFFFFFFF" underscore="false" size="25">This is an historical Lolcat</base:font>
+            </base:text>
+        </base:shape>
+		
+        <base:image include_source="./hist.jpg" x_orig="50" y_orig="100" z_ind="0" x_size_px="400" y_size_px="400" rot_angle="0" ID="im3" disp_duration_s="40" show_after_s="0" />
+    </base:page>
+	
+    <base:page x_orig="0" y_orig="0" z_ind="0" fill="#AABBCCFF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-blah" disp_duration_s="40" show_after_s="0" title="4">
+
+        <base:image include_source="./blah.jpg" x_orig="250" y_orig="100" z_ind="0" x_size_px="500" y_size_px="500" rot_angle="-22" ID="im4" disp_duration_s="40" show_after_s="0" />
+
+    </base:page>
+    
+    <base:page x_orig="0" y_orig="0" z_ind="0" fill="#AABBCCFF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-blah-b" disp_duration_s="40" show_after_s="0" title="5">
+
+        <base:image include_source="./blah.jpg" x_orig="250" y_orig="100" z_ind="2" x_size_px="500" y_size_px="500" rot_angle="-22" ID="im4" disp_duration_s="40" show_after_s="0" />
+        <base:shape fill="#DBA092BB" x_orig="150" y_orig="275" z_ind="-1" x_size_px="700" y_size_px="60" rot_angle="0" ID="tb-6" disp_duration_s="10" show_after_s="5" type="textbox">
+            <base:text>
+                <base:font colour="#000000FF" underscore="true" size="50">Wait - That's not a Lolcat!</base:font>
+            </base:text>
+        </base:shape>
+    </base:page>
+	
+    <base:page x_orig="0" y_orig="0" z_ind="0" fill="#AABBCCFF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-blah-c" disp_duration_s="40" show_after_s="0" title="6">
+
+        <base:image include_source="./blah.jpg" x_orig="250" y_orig="100" z_ind="2" x_size_px="500" y_size_px="500" rot_angle="-22" ID="im4" disp_duration_s="40" show_after_s="0" />
+        <base:shape fill="#DBA092BB" x_orig="150" y_orig="275" z_ind="-1" x_size_px="700" y_size_px="60" rot_angle="0" ID="tb-6" disp_duration_s="10" show_after_s="5" type="textbox">
+            <base:text>
+                <base:font colour="#000000FF" underscore="true" size="50">Wait - That's not a Lolcat!</base:font>
+            </base:text>
+        </base:shape>
+        <base:shape fill="#4CD82CBB" x_orig="150" y_orig="375" z_ind="-1" x_size_px="700" y_size_px="60" rot_angle="0" ID="tb-7" disp_duration_s="10" show_after_s="5" type="textbox">
+            <base:text>
+                <base:font colour="#000000FF" underscore="false" size="30">How did you get in here‽</base:font>
+            </base:text>
+        </base:shape>
+    </base:page>
+    
+    <base:page x_orig="0" y_orig="0" z_ind="0" fill="#AABBCCFF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-7" disp_duration_s="40" show_after_s="0" title="7">
+        <base:shape fill="#DBA092FF" x_orig="100" y_orig="300" z_ind="0" x_size_px="600" y_size_px="60" rot_angle="0" ID="tb-8" disp_duration_s="10" show_after_s="5" type="textbox">
+            <base:text>
+                <base:font colour="#FFFFFFFF" underscore="false" size="40">Back to the Cats</base:font>
+            </base:text>
+        </base:shape>
+    </base:page>
+    <base:page x_orig="0" y_orig="0" z_ind="0" fill="#AABBCCFF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-8" disp_duration_s="40" show_after_s="0" title="8">
+        <base:shape fill="#DBA092FF" x_orig="100" y_orig="50" z_ind="0" x_size_px="600" y_size_px="60" rot_angle="0" ID="tb-9" disp_duration_s="10" show_after_s="5" type="textbox">
+            <base:text>
+                <base:font colour="#FFFFFFFF" underscore="false" size="20">This is actually what's in the program</base:font>
+            </base:text>
+        </base:shape>
+		
+        <base:image include_source="./graphic.jpg" x_orig="300" y_orig="200" z_ind="0" x_size_px="400" y_size_px="400" rot_angle="0" ID="im-graph" disp_duration_s="40" show_after_s="0" />
+    </base:page>
+    
+    
+    
+    <base:page x_orig="0" y_orig="0" z_ind="0" fill="#AABBCCFF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-int" disp_duration_s="40" show_after_s="0" title="10">
+        <base:shape fill="#DBA092FF" x_orig="100" y_orig="50" z_ind="0" x_size_px="600" y_size_px="50" rot_angle="0" ID="tb-9" disp_duration_s="10" show_after_s="5" type="textbox">
+            <base:text>
+                <base:font colour="#FFFFFFFF" underscore="false" size="20">These get downloaded from the internet</base:font>
+            </base:text>
+        </base:shape>
+        <base:shape fill="#000000FF" x_orig="100" y_orig="100" z_ind="0" x_size_px="600" y_size_px="50" rot_angle="0" ID="tb-10" disp_duration_s="10" show_after_s="5" type="textbox">
+            <base:text>
+                <base:font colour="#FFFFFFFF" underscore="false" size="12">Source: https://upload.wikimedia.org/wikipedia/commons/1/1a/Cat_crying_%28Lolcat%29.jpg
+Source:https://i.redd.it/q36xva16boi81.gif</base:font>
+            </base:text>
+        </base:shape>
+        <base:image include_source="https://upload.wikimedia.org/wikipedia/commons/1/1a/Cat_crying_%28Lolcat%29.jpg" x_orig="50" y_orig="200" z_ind="0" x_size_px="400" y_size_px="400" rot_angle="0" ID="im-int" disp_duration_s="40" show_after_s="0" />
+        <base:image include_source="https://i.redd.it/q36xva16boi81.gif" x_orig="500" y_orig="200" z_ind="0" x_size_px="400" y_size_px="400" rot_angle="0" ID="im-int-red" disp_duration_s="40" show_after_s="0" />
+    </base:page>
+    
+     <base:page x_orig="0" y_orig="0" z_ind="0" fill="#000000FF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-end" disp_duration_s="40" show_after_s="0" title="End">
+
+        <base:shape fill="#000000FF" x_orig="250" y_orig="200" z_ind="0" x_size_px="400" y_size_px="120" rot_angle="0" ID="tb-0" disp_duration_s="10" show_after_s="5" type="textbox">
+            <base:text>
+                <base:font colour="#FFFFFFFF" underscore="true" size="150"> Fin.</base:font>
+            </base:text>
+        </base:shape>
+        
+        
+    </base:page>
+    
+</base:document>
