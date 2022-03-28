@@ -55,6 +55,10 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import nu.xom.Element;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+
 /**
  *
  * @author david
@@ -69,7 +73,9 @@ public class Engine implements Runnable {
     private DocElement currentDoc;
     private ArrayList<PageElement> currentPages;
     private String currentPageID = "";
-
+    
+    private ScriptEngineManager scriptingEngineManager;
+    
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final AtomicBoolean suspended = new AtomicBoolean(false);
     private final AtomicBoolean UI_available = new AtomicBoolean(false);
@@ -118,6 +124,8 @@ public class Engine implements Runnable {
 
     @Override
     public void run() {
+        //Load Script engine
+        scriptingEngineManager = new ScriptEngineManager();
         while (running.get() == false) {
         };
         //Load in the tools
