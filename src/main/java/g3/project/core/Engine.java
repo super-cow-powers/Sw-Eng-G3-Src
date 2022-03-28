@@ -53,6 +53,7 @@ import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
+import javax.script.ScriptContext;
 import nu.xom.Element;
 
 import javax.script.ScriptEngine;
@@ -124,8 +125,9 @@ public class Engine implements Runnable {
 
     @Override
     public void run() {
-        //Load Script engine
+        //Init script engine manager
         scriptingEngineManager = new ScriptEngineManager();
+        
         while (running.get() == false) {
         };
         //Load in the tools
@@ -314,7 +316,6 @@ public class Engine implements Runnable {
             var itID = page.getID();
             if (itID.equals(pageID)) {
                 drawPage(page);
-                putMessage("Loaded New Card: " + pageID, false);
             }
         }
     }
@@ -326,6 +327,7 @@ public class Engine implements Runnable {
         });
         processEls(page);
         currentPageID = page.getID();
+        putMessage("Loaded New Card: " + currentPageID, false);
     }
 
     private Integer getPageIndex(String pageID) {
@@ -342,9 +344,12 @@ public class Engine implements Runnable {
         return -1;
     }
 
-    //Process the elements on a page
+    /**
+     * Process the elements on a page
+     * @param el 
+     */
     private void processEls(VisualElement el) {
-
+        // Do whatever you're going to do with this node…
         if (el instanceof PageElement) {
 
         } else if (el instanceof ImageElement) {
@@ -352,12 +357,20 @@ public class Engine implements Runnable {
         } else if (el instanceof ShapeElement) {
             this.drawShape((ShapeElement) el);
         }
-        // Do whatever you're going to do with this node…
-        // recurse the children
+        
+        // Then recurse the children
         for (int i = 0; i < el.getChildCount(); i++) {
             var ch = el.getChild(i);
             if (ch instanceof VisualElement) {
                 processEls((VisualElement) ((Element) ch));
+            } else if (ch instanceof ScriptElement){ //Is the child a script?
+                var ch_scr = ((ScriptElement)ch);
+                //Make a new script engine, with the specified language
+                var new_scr_engine = scriptingEngineManager
+                        .getEngineByName(ch_scr.getScriptLang());
+                //Attach the correct local bindings
+                new_scr_engine.setBindings(el.getScriptingBindings(), ScriptContext.ENGINE_SCOPE);
+                ch_scr.setScriptingEngine(new_scr_engine);
             }
         }
 

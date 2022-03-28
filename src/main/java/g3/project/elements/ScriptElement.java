@@ -28,6 +28,8 @@
  */
 package g3.project.elements;
 
+import javax.script.ScriptEngine;
+import javax.script.SimpleScriptContext;
 import nu.xom.Builder;
 import nu.xom.Element;
 import nu.xom.Text;
@@ -36,8 +38,9 @@ import nu.xom.Text;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class ScriptElement extends Element {
-
+final public class ScriptElement extends Element {
+    private ScriptEngine my_engine;
+    private final String myLang = "python";
     private static ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
@@ -70,5 +73,31 @@ public class ScriptElement extends Element {
         }
 
         return scriptStr;
+    }
+    
+    /**
+     * Get the language used for the script
+     * Currently only supporting Python
+     * @return String of language name
+     */
+    public String getScriptLang(){
+        return myLang;
+    }
+    
+    /**
+     * Not currently supported
+     * @param lang language name string
+     * @return set language name string
+     */
+    public String setScriptLang(String lang){
+        return myLang;
+    }
+    
+    /**
+     * Set the element's script engine
+     * @param newScriptEngine 
+     */
+    public void setScriptingEngine(ScriptEngine newScriptEngine){
+        this.my_engine = newScriptEngine;
     }
 }

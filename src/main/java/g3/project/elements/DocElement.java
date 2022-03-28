@@ -112,11 +112,20 @@ public class DocElement extends Element {
      * Validates if the given ID is unique or not
      *
      * @param ID
-     * @return
+     * @return Validity
      */
     public Boolean ValidateUniqueID(String ID) {
 
         return true;
+    }
+    
+    /**
+     * Returns an element in the doc by its' ID
+     * @param ID
+     * @return Optional of Element
+     */
+    public Optional<Element> GetElementByID(String ID){
+        
     }
 
 }

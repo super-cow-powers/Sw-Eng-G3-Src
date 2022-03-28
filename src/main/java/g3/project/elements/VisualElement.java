@@ -33,6 +33,8 @@ import g3.project.ui.SizeObj;
 import java.util.Optional;
 import javafx.geometry.Point2D;
 import javafx.scene.paint.Color;
+import javax.script.Bindings;
+import javax.script.SimpleBindings;
 import nu.xom.Attribute;
 import nu.xom.Element;
 
@@ -41,17 +43,21 @@ import nu.xom.Element;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public class VisualElement extends Element {
+    private SimpleBindings elementScriptBindings = new SimpleBindings();
 
     public VisualElement(String name) {
         super(name);
+        getID();
     }
 
     public VisualElement(String name, String uri) {
         super(name, uri);
+        getID();
     }
 
     public VisualElement(Element element) {
         super(element);
+        getID();
     }
 
     /**
@@ -87,8 +93,12 @@ public class VisualElement extends Element {
 
         return this.getLoc();
     }
-
-    public String getID() {
+    
+    /**
+     * Returns the element's ID, or assigns it a new one if not present
+     * @return Unique ID
+     */
+    public final String getID() {
         var ID = Optional.ofNullable(this.getAttribute("ID"))
                 .map(f -> f.getValue());
         var myDoc = this.getDocument();
@@ -97,7 +107,7 @@ public class VisualElement extends Element {
         return ID.isPresent() ? ID.get() : myDocEl.NewUniqueID(this.getLocalName());
     }
 
-    public String setID(String ID) {
+    public final String setID(String ID) {
         this.addAttribute(new Attribute("ID", ID));
         return this.getID();
     }
@@ -166,6 +176,10 @@ public class VisualElement extends Element {
         }
 
         return Optional.empty();
+    }
+    
+    public Bindings getScriptingBindings(){
+        return elementScriptBindings;
     }
 
 }
