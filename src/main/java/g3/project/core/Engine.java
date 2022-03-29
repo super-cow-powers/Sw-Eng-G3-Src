@@ -41,6 +41,8 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Optional;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Stack;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -74,9 +76,10 @@ public class Engine implements Runnable {
     private DocElement currentDoc;
     private ArrayList<PageElement> currentPages;
     private String currentPageID = "";
-    
+    private Stack<String> navHistory = new Stack<>();
+
     private ScriptEngineManager scriptingEngineManager;
-    
+
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final AtomicBoolean suspended = new AtomicBoolean(false);
     private final AtomicBoolean UI_available = new AtomicBoolean(false);
@@ -127,7 +130,7 @@ public class Engine implements Runnable {
     public void run() {
         //Init script engine manager
         scriptingEngineManager = new ScriptEngineManager();
-        
+
         while (running.get() == false) {
         };
         //Load in the tools
@@ -176,23 +179,16 @@ public class Engine implements Runnable {
         var evTgt = event.getTarget();
         if (evTgt instanceof Button) {
             handleButtonEvent(event);
-        } else
-        if (event instanceof KeyEvent) {
+        } else if (event instanceof KeyEvent) {
             var kev = (KeyEvent) event;
-            var current_card = getPageIndex(currentPageID);
+
             if (kev.getCode() == KeyCode.LEFT) {
-                if (current_card > 0){
-                    current_card--;
-                }
-                this.drawPage(current_card);
+                gotoPrevPage();
             } else if (kev.getCode() == KeyCode.RIGHT) {
-                if (current_card < currentPages.size()-1){
-                    current_card++;
-                }
-                this.drawPage(current_card);
+                gotoNextPage();
             }
         }
-        
+
         event.consume();
     }
 
@@ -201,16 +197,16 @@ public class Engine implements Runnable {
             var aev = (ActionEvent) ev;
             var target = aev.getTarget();
             if (target instanceof Button) {
-                if (((Button) target).getId().contains("-jump-card-button")) {
-                    var ID = ((Button) target).getId().replace("-jump-card-button", "");
-                    this.drawPage(ID);
-                }
+                handleNavButtonEvent(aev, (Button) target);
             }
         }
     }
 
-    private void handleNavButtonEvent(ActionEvent aev) {
-
+    private void handleNavButtonEvent(ActionEvent aev, Button target) {
+        if (((Button) target).getId().contains("-jump-card-button")) {
+            var ID = ((Button) target).getId().replace("-jump-card-button", "");
+            this.gotoPage(ID, true);
+        }
     }
 
     private void parseNewDoc(File xmlFile) { //Load a new doc
@@ -239,7 +235,8 @@ public class Engine implements Runnable {
                         controller.addCardButton(title, ID, ind);
                     });
                 }
-                drawPage(currentPages.get(0).getID());
+                currentPageID = currentPages.get(0).getID(); //Initialise ID for first page
+                this.gotoPage(currentPageID, true);
 
             } else {
                 //Looks like doc is malformed
@@ -304,23 +301,44 @@ public class Engine implements Runnable {
         );
     }
 
-    public void drawPage(Integer pageNum) {
-        var pages = currentDoc.GetPages();
-        pages.ifPresent(f -> drawPage(f.get(pageNum)));
+    /**
+     * Go to next sequential page
+     */
+    public void gotoNextPage() {
+        var current_card = getPageIndex(currentPageID);
+        if (current_card < currentPages.size() - 1) {
+            current_card++;
+        }
+        this.gotoPage(current_card, true);
     }
 
-    public void drawPage(String pageID) {
+    /**
+     * Go to last visited page
+     */
+    public void gotoPrevPage() {
+        this.gotoPage(navHistory.pop(), false);
+    }
+
+    public void gotoPage(Integer pageNum, Boolean store_history) {
+        var pages = currentDoc.GetPages();
+        pages.ifPresent(f -> gotoPage(f.get(pageNum), store_history));
+    }
+
+    public void gotoPage(String pageID, Boolean store_history) {
         var it = currentPages.iterator();
         while (it.hasNext()) {
             var page = it.next();
             var itID = page.getID();
             if (itID.equals(pageID)) {
-                drawPage(page);
+                gotoPage(page, store_history);
             }
         }
     }
 
-    public void drawPage(PageElement page) {
+    public void gotoPage(PageElement page, Boolean store_history) {
+        if (store_history == true){
+            navHistory.push(currentPageID); //Push previous to stack
+        }
         Platform.runLater(() -> {
             controller.clearCard(currentPageID);
             controller.configCard(page.getSize(), page.getFillColour(), page.getID());
@@ -346,7 +364,8 @@ public class Engine implements Runnable {
 
     /**
      * Process the elements on a page
-     * @param el 
+     *
+     * @param el
      */
     private void processEls(VisualElement el) {
         // Do whatever you're going to do with this node…
@@ -357,14 +376,14 @@ public class Engine implements Runnable {
         } else if (el instanceof ShapeElement) {
             this.drawShape((ShapeElement) el);
         }
-        
+
         // Then recurse the children
         for (int i = 0; i < el.getChildCount(); i++) {
             var ch = el.getChild(i);
             if (ch instanceof VisualElement) {
                 processEls((VisualElement) ((Element) ch));
-            } else if (ch instanceof ScriptElement){ //Is the child a script?
-                var ch_scr = ((ScriptElement)ch);
+            } else if (ch instanceof ScriptElement) { //Is the child a script?
+                var ch_scr = ((ScriptElement) ch);
                 //Make a new script engine, with the specified language
                 var new_scr_engine = scriptingEngineManager
                         .getEngineByName(ch_scr.getScriptLang());
@@ -391,7 +410,7 @@ public class Engine implements Runnable {
      * @param message
      * @param blocking
      */
-    private void putMessage(String message, Boolean blocking) {
+    public void putMessage(String message, Boolean blocking) {
         if (blocking) {
             //Not implemented
         } else {

@@ -125,7 +125,7 @@ public class DocElement extends Element {
      * @return Optional of Element
      */
     public Optional<Element> GetElementByID(String ID){
-        
+        return Optional.empty();
     }
 
 }

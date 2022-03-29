@@ -47,17 +47,14 @@ public class VisualElement extends Element {
 
     public VisualElement(String name) {
         super(name);
-        getID();
     }
 
     public VisualElement(String name, String uri) {
         super(name, uri);
-        getID();
     }
 
     public VisualElement(Element element) {
         super(element);
-        getID();
     }
 
     /**
