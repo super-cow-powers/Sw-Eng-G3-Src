@@ -24,8 +24,8 @@ jobs:
       - name: Lint Code Base
         uses: github/super-linter/slim@v4
         env:
-          VALIDATE_ALL_CODEBASE: false
-          JAVA_FILE_NAME: ${DEFAULT_WORKSPACE}/checkstyle.xml 
+          VALIDATE_ALL_CODEBASE: true
+          JAVA_FILE_NAME: checkstyle.xml 
           VALIDATE_JAVA: true
           DEFAULT_BRANCH: master
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

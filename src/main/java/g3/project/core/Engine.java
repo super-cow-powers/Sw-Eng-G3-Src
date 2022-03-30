@@ -193,7 +193,6 @@ public final class Engine implements Runnable {
         scriptingEngineManager = new ScriptEngineManager();
 
         while (!(running.get())) {
-            ;
         }
 
         // Load in the tools
@@ -348,6 +347,7 @@ public final class Engine implements Runnable {
      * @param img Image to draw.
      */
     public void drawImage(final ImageElement img) {
+        var defXY = 20d;
         var sourceOpt = img.getSourceLoc();
         var locOpt = img.getLoc();
         var sizeOpt = img.getSize();
@@ -358,7 +358,7 @@ public final class Engine implements Runnable {
                     ? locOpt.get()
                     : new LocObj(new Point2D(0, 0), null, null, 0d);
             var size = (sizeOpt.isPresent())
-                    ? sizeOpt.get() : new SizeObj(20d, 20d, 0d);
+                    ? sizeOpt.get() : new SizeObj(defXY, defXY, 0d);
 
             controller.updateImage(id, size, loc, source);
         });
