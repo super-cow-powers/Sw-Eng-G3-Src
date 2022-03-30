@@ -28,8 +28,8 @@
  */
 package g3.project.core;
 
-import g3.project.elements.DocElement;
 import g3.project.elements.*;
+import g3.project.elements.DocElement;
 import g3.project.elements.PageElement;
 import g3.project.elements.VisualElement;
 import g3.project.graphics.FontProps;
@@ -38,17 +38,12 @@ import g3.project.ui.MainController;
 import g3.project.ui.SizeObj;
 import g3.project.xmlIO.Ingestion;
 import java.io.File;
-import java.io.InputStream;
-import java.util.Optional;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -58,109 +53,178 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javax.script.ScriptContext;
-import nu.xom.Element;
-
-import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import nu.xom.Element;
 
 /**
- *
  * @author david
  */
-public class Engine implements Runnable {
+public final class Engine implements Runnable {
 
+    /**
+     * Thread I'm to run on.
+     */
     private Thread engineThread;
-
-    private Ingestion ingest = new Ingestion();
-
+    /**
+     * XML IO.
+     */
+    private final Ingestion ingest = new Ingestion();
+    /**
+     * List of tools.
+     */
     private ArrayList<Tool> myTools;
+    /**
+     * Document currently open.
+     */
     private DocElement currentDoc;
+    /**
+     * Pages in current doc.
+     */
     private ArrayList<PageElement> currentPages;
+    /**
+     * ID of currently open page/card.
+     */
     private String currentPageID = "";
-    private Stack<String> navHistory = new Stack<>();
-
+    /**
+     * Navigation history stack.
+     */
+    private final Stack<String> navHistory = new Stack<>();
+    /**
+     * Factory/manager for all script engines.
+     */
     private ScriptEngineManager scriptingEngineManager;
-
+    /**
+     * Am I running?
+     */
     private final AtomicBoolean running = new AtomicBoolean(false);
+    /**
+     * Am I suspended?
+     */
     private final AtomicBoolean suspended = new AtomicBoolean(false);
-    private final AtomicBoolean UI_available = new AtomicBoolean(false);
+    /**
+     * Is the UI available?
+     */
+    private final AtomicBoolean uiAvailable = new AtomicBoolean(false);
 
-    private final BlockingQueue<Event> eventQueue = new LinkedBlockingQueue<Event>(); //Something has happened
-    private final BlockingQueue<File> docQueue = new LinkedBlockingQueue<File>(); //Open new doc/s
-
+    /**
+     * Event queue from input sources.
+     */
+    private final BlockingQueue<Event> eventQueue
+            = new LinkedBlockingQueue<Event>(); // Something has happened
+    /**
+     * Document open-request queue.
+     */
+    private final BlockingQueue<File> docQueue
+            = new LinkedBlockingQueue<File>();
+    /**
+     * Ref to the UI controller.
+     */
     private final MainController controller;
 
-    public Engine(MainController uiController) {
+    /**
+     * Constructor.
+     *
+     * @param uiController Ref to the main UI controller.
+     */
+    public Engine(final MainController uiController) {
         this.controller = uiController;
     }
 
+    /**
+     * Start the Engine.
+     */
     public void start() {
         engineThread = new Thread(this);
         engineThread.start();
         running.set(true);
     }
 
+    /**
+     * Stop the engine.
+     */
     public void stop() {
         running.set(false);
         unsuspend();
     }
 
+    /**
+     * Tell the engine that the UI is now active.
+     */
     public void allowDraw() {
-        UI_available.set(true);
+        uiAvailable.set(true);
     }
 
-    public void offerEvent(Event event) {
+    /**
+     * Send an event to the engine.
+     *
+     * @param event Event to send.
+     */
+    public void offerEvent(final Event event) {
         eventQueue.offer(event);
         unsuspend();
     }
 
-    public void offerNewDoc(File xmlFile) {
+    /**
+     * Send a doc to the engine.
+     *
+     * @param xmlFile Doc to open.
+     */
+    public void offerNewDoc(final File xmlFile) {
         docQueue.offer(xmlFile);
         unsuspend();
     }
 
-    //Trigger notify if suspended
+    /**
+     * Unsuspend engine if required.
+     */
     private synchronized void unsuspend() {
-        if (suspended.get() == true) {
+        // Trigger notify if suspended
+        if (suspended.get()) {
             suspended.set(false);
             notify();
         }
     }
 
     @Override
+    @SuppressWarnings("empty-statement")
     public void run() {
-        //Init script engine manager
+        // Init script engine manager
         scriptingEngineManager = new ScriptEngineManager();
 
-        while (running.get() == false) {
-        };
-        //Load in the tools
-        loadTools().ifPresentOrElse(t -> myTools = t.getTools(),
-                () -> {
-                    myTools = new ArrayList<Tool>();
-                    Platform.runLater(() -> controller.showNonBlockingMessage("Failed Loading Tools!"));
-                }
-        );
-        //Add tool buttons
-        var iterTool = myTools.iterator();
-        while (iterTool.hasNext() == true) {
-            var currentTool = iterTool.next();
-            Platform.runLater(() -> controller.addTool(currentTool.getName(), currentTool.getID()));
+        while (!(running.get())) {
+            ;
         }
-        //Quit if running flag set to false
-        while (running.get()
-                == true) {
+
+        // Load in the tools
+        loadTools()
+                .ifPresentOrElse(
+                        t -> myTools = t.getTools(),
+                        () -> {
+                            myTools = new ArrayList<Tool>();
+                            Platform.runLater(() -> controller.
+                            showNonBlockingMessage("Failed Loading"
+                                    + " Tools!"));
+                        });
+        // Add tool buttons
+        var iterTool = myTools.iterator();
+        while (iterTool.hasNext()) {
+            var currentTool = iterTool.next();
+            Platform.runLater(() -> controller.
+                    addTool(currentTool.getName(), currentTool.getID()));
+        }
+        // Quit if running flag set to false
+        while (running.get()) {
             try {
-                if (!docQueue.isEmpty()) { //New doc request?
+                if (!docQueue.isEmpty()) { // New doc request?
                     parseNewDoc(docQueue.take());
-                } else if (!eventQueue.isEmpty()) { //New event?
+                } else if (!eventQueue.isEmpty()) { // New event?
                     handleEvent(eventQueue.take());
                 } else {
                     suspended.set(true);
                 }
 
-                while (suspended.get() == true) { //Suspend
+                while (suspended.get()) { // Suspend
                     synchronized (this) {
                         wait();
                     }
@@ -170,12 +234,16 @@ public class Engine implements Runnable {
             }
         }
 
-        System.out.println(
-                "Engine is going down NOW.");
+        System.out.println("Engine is going down NOW.");
         return;
     }
 
-    private void handleEvent(Event event) {
+    /**
+     * Handle an incoming event.
+     *
+     * @param event Event to handle.
+     */
+    private void handleEvent(final Event event) {
         System.out.println("g3.project.core.Engine.handleEvent()");
         System.out.println(event);
         var evTgt = event.getTarget();
@@ -191,8 +259,13 @@ public class Engine implements Runnable {
             }
         }
     }
-    
-    private void handleButtonEvent(Event ev) {
+
+    /**
+     * Handle an event from a button.
+     *
+     * @param ev Button event.
+     */
+    private void handleButtonEvent(final Event ev) {
         if (ev instanceof ActionEvent) {
             var aev = (ActionEvent) ev;
             var target = aev.getTarget();
@@ -202,151 +275,220 @@ public class Engine implements Runnable {
         }
     }
 
-    private void handleNavButtonEvent(ActionEvent aev, Button target) {
+    /**
+     * Handle an event from a Navigation button.
+     *
+     * @param aev Button event.
+     * @param target Target button.
+     */
+    private void handleNavButtonEvent(final ActionEvent aev,
+            final Button target) {
         if (((Button) target).getId().contains("-jump-card-button")) {
-            var ID = ((Button) target).getId().replace("-jump-card-button", "");
-            this.gotoPage(ID, true);
+            var id = ((Button) target).getId().replace("-jump-card-button", "");
+            this.gotoPage(id, true);
         }
     }
 
-    private void parseNewDoc(File xmlFile) { //Load a new doc
+    /**
+     * Parse a new XML document.
+     *
+     * @param xmlFile Doc to parse
+     */
+    private void parseNewDoc(final File xmlFile) { // Load a new doc
 
         var parsed = ingest.parseDocXML(xmlFile);
         if (parsed.isPresent()) {
-            Platform.runLater(() -> {
-                controller.clearCardButtons();
-                controller.clearCard("");
-                controller.setViewScale(1d);
-            });
+            Platform.runLater(
+                    () -> {
+                        controller.clearCardButtons();
+                        controller.clearCard("");
+                        controller.setViewScale(1d);
+                    });
             var child = parsed.get().getChild(0);
             if (child instanceof DocElement) {
                 currentDoc = (DocElement) child;
-                currentDoc.GetPages().ifPresent(f -> {
-                    currentPages = f;
-                });
-                var it = currentPages.listIterator(); //Add buttons for each page
+                currentDoc
+                        .GetPages()
+                        .ifPresent(
+                                f -> {
+                                    currentPages = f;
+                                });
+                // Add buttons for each page
+                var it = currentPages.listIterator();
                 while (it.hasNext()) {
                     var ind = it.nextIndex();
                     var page = it.next();
-                    Platform.runLater(() -> {
-                        var tiopt = page.getTitle();
-                        var ID = page.getID();
-                        var title = tiopt.isPresent() ? tiopt.get() : ID;
-                        controller.addCardButton(title, ID, ind);
-                    });
+                    Platform.runLater(
+                            () -> {
+                                var tiopt = page.getTitle();
+                                var id = page.getID();
+                                var title = tiopt.isPresent() ? tiopt.get() : id;
+
+                                controller.addCardButton(title, id, ind);
+                            });
                 }
-                currentPageID = currentPages.get(0).getID(); //Initialise ID for first page
+                // Initialise ID for first page
+                currentPageID = currentPages.get(0).getID();
                 this.gotoPage(currentPageID, true);
 
             } else {
-                //Looks like doc is malformed
+                putMessage("Malformed Doc - not Doc Element!", true);
+                // Looks like doc is malformed
             }
             System.out.println("New document loaded");
         } else {
-            //Oops, couldn't parse initial doc.
+            putMessage("Doc parse error", true);
+            // Oops, couldn't parse initial doc.
         }
     }
 
-    public void drawImage(ImageElement img) {
-        var source_opt = img.getSourceLoc();
-        var loc_opt = img.getLoc();
-        var size_opt = img.getSize();
-        var ID = img.getID();
+    /**
+     * Instruct the UI to draw an image.
+     *
+     * @param img Image to draw.
+     */
+    public void drawImage(final ImageElement img) {
+        var sourceOpt = img.getSourceLoc();
+        var locOpt = img.getLoc();
+        var sizeOpt = img.getSize();
+        var id = img.getID();
         Platform.runLater(() -> {
-            var source = (source_opt.isPresent()) ? source_opt.get() : "";
-            var loc = (loc_opt.isPresent()) ? loc_opt.get() : new LocObj(new Point2D(0, 0), null, null, 0d);
-            var size = (size_opt.isPresent()) ? size_opt.get() : new SizeObj(20d, 20d, 0d);
+            var source = (sourceOpt.isPresent()) ? sourceOpt.get() : "";
+            var loc = (locOpt.isPresent())
+                    ? locOpt.get()
+                    : new LocObj(new Point2D(0, 0), null, null, 0d);
+            var size = (sizeOpt.isPresent())
+                    ? sizeOpt.get() : new SizeObj(20d, 20d, 0d);
 
-            controller.updateImage(ID, size, loc, source);
-
+            controller.updateImage(id, size, loc, source);
         });
     }
 
-    public void drawShape(ShapeElement shape) {
+    /**
+     * Instruct the UI to draw a shape.
+     *
+     * @param shape Shape to draw.
+     */
+    public void drawShape(final ShapeElement shape) {
 
-        ArrayList<FontElement> font_blocks = new ArrayList<>();
+        ArrayList<FontElement> fontBlocks = new ArrayList<>();
         FontProps fontProps;
         String textString;
         var size = shape.getSize();
         var loc = shape.getLoc();
         var shapeType = shape.getType();
-        var fill_op = shape.getFillColour();
+        var fillOpt = shape.getFillColour();
         Color fill;
-        if (fill_op.isPresent()) {
-            fill = fill_op.get();
+        if (fillOpt.isPresent()) {
+            fill = fillOpt.get();
         } else {
             fill = Color.WHITESMOKE;
         }
-        var text_op = shape.getText();
-        if (text_op.isPresent()) {
-            font_blocks = text_op.get().getFontBlocks();
+        var textOpt = shape.getText();
+        if (textOpt.isPresent()) {
+            fontBlocks = textOpt.get().getFontBlocks();
         }
 
-        if (font_blocks.size() > 0) {
-            textString = font_blocks.get(0).getValue();
-            fontProps = font_blocks.get(0).getProperties();
+        if (fontBlocks.size() > 0) {
+            textString = fontBlocks.get(0).getValue();
+            fontProps = fontBlocks.get(0).getProperties();
         } else {
             fontProps = null;
             textString = "";
         }
         if (size.isPresent() && loc.isPresent()) {
-            Platform.runLater(() -> {
-                if (fontProps != null) {
-                    controller.updateShape(shape.getID(), size.get(), loc.get(), shapeType, fill, null, null, textString, fontProps);
-                }
-            });
+            Platform.runLater(
+                    () -> {
+                        if (fontProps != null) {
+                            controller.updateShape(
+                                    shape.getID(),
+                                    size.get(),
+                                    loc.get(),
+                                    shapeType,
+                                    fill,
+                                    null,
+                                    null,
+                                    textString,
+                                    fontProps);
+                        }
+                    });
         }
-
     }
 
     /**
-     * Go to next sequential page
+     * Go to next sequential page.
      */
     public void gotoNextPage() {
-        var current_card = getPageIndex(currentPageID);
-        if (current_card < currentPages.size() - 1) {
-            current_card++;
+        var currentCard = getPageIndex(currentPageID);
+        if (currentCard < currentPages.size() - 1) {
+            currentCard++;
         }
-        this.gotoPage(current_card, true);
+        this.gotoPage(currentCard, true);
     }
 
     /**
-     * Go to last visited page
+     * Go to last visited page.
      */
     public void gotoPrevPage() {
         this.gotoPage(navHistory.pop(), false);
     }
 
-    public void gotoPage(Integer pageNum, Boolean store_history) {
+    /**
+     * Go to specified page number.
+     *
+     * @param pageNum Number to go to.
+     * @param storeHistory Should I record it in history?
+     */
+    public void gotoPage(final Integer pageNum, final Boolean storeHistory) {
         var pages = currentDoc.GetPages();
-        pages.ifPresent(f -> gotoPage(f.get(pageNum), store_history));
+        pages.ifPresent(f -> gotoPage(f.get(pageNum), storeHistory));
     }
 
-    public void gotoPage(String pageID, Boolean store_history) {
+    /**
+     * Go to specified page.
+     *
+     * @param pageID ID to go to.
+     * @param storeHistory Should I record it in history?
+     */
+    public void gotoPage(final String pageID, final Boolean storeHistory) {
         var it = currentPages.iterator();
         while (it.hasNext()) {
             var page = it.next();
             var itID = page.getID();
             if (itID.equals(pageID)) {
-                gotoPage(page, store_history);
+                gotoPage(page, storeHistory);
             }
         }
     }
 
-    public void gotoPage(PageElement page, Boolean store_history) {
-        if (store_history == true) {
-            navHistory.push(currentPageID); //Push previous to stack
+    /**
+     * Go to provided page.
+     *
+     * @param page Page to go to.
+     * @param storeHistory Should I record it in history?
+     */
+    public void gotoPage(final PageElement page, final Boolean storeHistory) {
+        if (storeHistory) {
+            navHistory.push(currentPageID); // Push previous to stack
         }
-        Platform.runLater(() -> {
-            controller.clearCard(currentPageID);
-            controller.configCard(page.getSize(), page.getFillColour(), page.getID());
-        });
+        Platform.runLater(
+                () -> {
+                    controller.clearCard(currentPageID);
+                    controller.configCard(page.getSize(),
+                            page.getFillColour(), page.getID());
+                });
         processEls(page);
         currentPageID = page.getID();
         putMessage("Loaded New Card: " + currentPageID, false);
     }
 
-    private Integer getPageIndex(String pageID) {
+    /**
+     * Get the index of specified page.
+     *
+     * @param pageID page.
+     * @return Index, or -1 on failure
+     */
+    private Integer getPageIndex(final String pageID) {
         var it = currentPages.iterator();
         var i = 0;
         while (it.hasNext()) {
@@ -361,15 +503,15 @@ public class Engine implements Runnable {
     }
 
     /**
-     * Process the elements on a page
+     * Process elements on a page.
      *
-     * @param el
+     * @param el Element
      */
-    private void processEls(VisualElement el) {
+    private void processEls(final VisualElement el) {
         // Do whatever you're going to do with this node…
-        if (el instanceof PageElement) {
-
-        } else if (el instanceof ImageElement) {
+        /*if (el instanceof PageElement) {
+        } else*/
+        if (el instanceof ImageElement) {
             this.drawImage((ImageElement) el);
         } else if (el instanceof ShapeElement) {
             this.drawShape((ShapeElement) el);
@@ -380,44 +522,54 @@ public class Engine implements Runnable {
             var ch = el.getChild(i);
             if (ch instanceof VisualElement) {
                 processEls((VisualElement) ((Element) ch));
-            } else if (ch instanceof ScriptElement) { //Is the child a script?
-                var ch_scr = ((ScriptElement) ch);
-                //Make a new script engine, with the specified language
-                var new_scr_engine = scriptingEngineManager
-                        .getEngineByName(ch_scr.getScriptLang());
-                //Attach the correct local bindings
-                new_scr_engine.setBindings(el.getScriptingBindings(), ScriptContext.ENGINE_SCOPE);
-                
+            } else if (ch instanceof ScriptElement) { // Is the child a script?
+                var chScr = ((ScriptElement) ch);
+                // Make a new script engine, with the specified language
+                var newScrEngine = scriptingEngineManager.
+                        getEngineByName(chScr.getScriptLang());
+                // Attach the correct local bindings
+                newScrEngine.setBindings(el.getScriptingBindings(),
+                        ScriptContext.ENGINE_SCOPE);
+
                 try {
-                    ch_scr.setScriptingEngine(new_scr_engine);
+                    chScr.setScriptingEngine(newScrEngine);
                 } catch (ScriptException ex) {
-                    putMessage("Exception in script for: " + el.getID() + " is: \n" + ex.getMessage(), Boolean.TRUE);
+                    putMessage(
+                            "Exception in script for: " + el.getID() + " is: "
+                            + ex.getMessage(), Boolean.TRUE);
                 }
             }
         }
     }
 
+    /**
+     * Load Tools from XML.
+     *
+     * @return Optional<Tools>
+     */
     private Optional<Tools> loadTools() {
         var toolsXMLPath = Engine.class.getResource("tools.xml").getPath();
-        var parsedDoc = ingest.parseGenericXML(new File(toolsXMLPath), new ToolsFactory());
-        var root = parsedDoc.filter(d -> d.getRootElement() instanceof Tools)
-                .map(d -> (Tools) d.getRootElement());
+        var parsedDoc = ingest.
+                parseGenericXML(new File(toolsXMLPath), new ToolsFactory());
+        var root
+                = parsedDoc
+                        .filter(d -> d.getRootElement() instanceof Tools)
+                        .map(d -> (Tools) d.getRootElement());
         this.putMessage("Tools Loaded", false);
         return root;
     }
 
     /**
-     * Instruct the UI to show a message to the User
+     * Instruct the UI to show a message to the User.
      *
-     * @param message
-     * @param blocking
+     * @param message Message to show
+     * @param blocking Should I block the User?
      */
-    public void putMessage(String message, Boolean blocking) {
+    public void putMessage(final String message, final Boolean blocking) {
         if (blocking) {
             Platform.runLater(() -> controller.showBlockingMessage(message));
         } else {
             Platform.runLater(() -> controller.showNonBlockingMessage(message));
         }
-
     }
 }
