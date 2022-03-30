@@ -44,7 +44,8 @@ import nu.xom.Element;
  */
 public class VisualElement extends Element {
     private SimpleBindings elementScriptBindings = new SimpleBindings();
-
+    private VisualElement scriptedClone;
+    
     public VisualElement(String name) {
         super(name);
     }
@@ -86,8 +87,6 @@ public class VisualElement extends Element {
             this.addAttribute(new Attribute("x_orig", Double.toString(s.getX())));
             this.addAttribute(new Attribute("y_orig", Double.toString(s.getY())));
         });
-        
-
         return this.getLoc();
     }
     
@@ -175,8 +174,26 @@ public class VisualElement extends Element {
         return Optional.empty();
     }
     
+    /**
+     * Get the local scope for this object
+     * @return 
+     */
     public Bindings getScriptingBindings(){
         return elementScriptBindings;
+    }
+    
+    /**
+     * Get the ScriptElement attached to this object
+     * @return 
+     */
+    public Optional<ScriptElement> getScriptEl(){
+        var ch_els = this.getChildElements();
+        for (var ch : ch_els){
+            if (ch instanceof ScriptElement){
+                return Optional.of((ScriptElement)ch);
+            }
+        }
+        return Optional.empty();
     }
 
 }

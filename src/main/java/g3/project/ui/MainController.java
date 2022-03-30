@@ -338,7 +338,10 @@ public class MainController {
 
         
     }
-
+    /**
+     * Show a non-blocking message to the user
+     * @param message 
+     */
     public void showNonBlockingMessage(String message) {
         messageLabel.setText(message);
         messageLabel.setOpacity(1d);
@@ -348,6 +351,16 @@ public class MainController {
             }
         },
                 messageDuration);
+    }
+    
+    /**
+     * Show a blocking message to the user
+     * 
+     * @TODO Implement!!
+     * @param message 
+     */
+    public void showBlockingMessage(String message) {
+        showNonBlockingMessage(message);
     }
 
     private void clearNBMessage() {

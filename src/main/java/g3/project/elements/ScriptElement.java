@@ -28,7 +28,9 @@
  */
 package g3.project.elements;
 
+import javax.script.Invocable;
 import javax.script.ScriptEngine;
+import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 import nu.xom.Builder;
 import nu.xom.Element;
@@ -38,8 +40,9 @@ import nu.xom.Text;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-final public class ScriptElement extends Element {
-    private ScriptEngine my_engine;
+final public class ScriptElement extends Element implements Invocable{
+    private ScriptEngine my_engine = null;
+    private Invocable inv_engine = null;
     private final String myLang = "python";
     private static ThreadLocal builders = new ThreadLocal() {
 
@@ -71,8 +74,14 @@ final public class ScriptElement extends Element {
                 //not text
             }
         }
-
         return scriptStr;
+    }
+    public void setScriptString(String script) throws ScriptException{
+        this.removeChildren();
+        this.appendChild(script);
+        if (my_engine != null){
+           my_engine.eval(this.getScriptText());
+        }
     }
     
     /**
@@ -97,7 +106,29 @@ final public class ScriptElement extends Element {
      * Set the element's script engine
      * @param newScriptEngine 
      */
-    public void setScriptingEngine(ScriptEngine newScriptEngine){
+    public void setScriptingEngine(ScriptEngine newScriptEngine) throws ScriptException{
         this.my_engine = newScriptEngine;
+        my_engine.eval(this.getScriptText());
+        inv_engine = (Invocable) my_engine;
+    }
+
+    @Override
+    public Object invokeMethod(Object arg0, String arg1, Object... arg2) throws ScriptException, NoSuchMethodException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Object invokeFunction(String func, Object... arg) throws ScriptException, NoSuchMethodException {
+        return inv_engine.invokeFunction(func, arg);
+    }
+
+    @Override
+    public <T> T getInterface(Class<T> arg0) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public <T> T getInterface(Object arg0, Class<T> arg1) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

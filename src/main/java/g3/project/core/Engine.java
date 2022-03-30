@@ -47,6 +47,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -188,10 +190,8 @@ public class Engine implements Runnable {
                 gotoNextPage();
             }
         }
-
-        event.consume();
     }
-
+    
     private void handleButtonEvent(Event ev) {
         if (ev instanceof ActionEvent) {
             var aev = (ActionEvent) ev;
@@ -263,42 +263,40 @@ public class Engine implements Runnable {
     }
 
     public void drawShape(ShapeElement shape) {
-        Platform.runLater(() -> {
 
-            ArrayList<FontElement> font_blocks = new ArrayList<>();
-            FontProps fontProps;
-            String textString;
-            var size = shape.getSize();
-            var loc = shape.getLoc();
-            var shapeType = shape.getType();
-            var fill_op = shape.getFillColour();
-            Color fill;
-            if (fill_op.isPresent()) {
-                fill = fill_op.get();
-            } else {
-                fill = Color.WHITESMOKE;
-            }
-            var text_op = shape.getText();
-            if (text_op.isPresent()) {
-                font_blocks = text_op.get().getFontBlocks();
-            }
-
-            if (font_blocks.size() > 0) {
-                textString = font_blocks.get(0).getValue();
-                fontProps = font_blocks.get(0).getProperties();
-            } else {
-                fontProps = null;
-                textString = "";
-            }
-            if (size.isPresent() && loc.isPresent()) {
-                Platform.runLater(() -> {
-                    if (fontProps != null) {
-                        controller.updateShape(shape.getID(), size.get(), loc.get(), shapeType, fill, null, null, textString, fontProps);
-                    }
-                });
-            }
+        ArrayList<FontElement> font_blocks = new ArrayList<>();
+        FontProps fontProps;
+        String textString;
+        var size = shape.getSize();
+        var loc = shape.getLoc();
+        var shapeType = shape.getType();
+        var fill_op = shape.getFillColour();
+        Color fill;
+        if (fill_op.isPresent()) {
+            fill = fill_op.get();
+        } else {
+            fill = Color.WHITESMOKE;
         }
-        );
+        var text_op = shape.getText();
+        if (text_op.isPresent()) {
+            font_blocks = text_op.get().getFontBlocks();
+        }
+
+        if (font_blocks.size() > 0) {
+            textString = font_blocks.get(0).getValue();
+            fontProps = font_blocks.get(0).getProperties();
+        } else {
+            fontProps = null;
+            textString = "";
+        }
+        if (size.isPresent() && loc.isPresent()) {
+            Platform.runLater(() -> {
+                if (fontProps != null) {
+                    controller.updateShape(shape.getID(), size.get(), loc.get(), shapeType, fill, null, null, textString, fontProps);
+                }
+            });
+        }
+
     }
 
     /**
@@ -336,7 +334,7 @@ public class Engine implements Runnable {
     }
 
     public void gotoPage(PageElement page, Boolean store_history) {
-        if (store_history == true){
+        if (store_history == true) {
             navHistory.push(currentPageID); //Push previous to stack
         }
         Platform.runLater(() -> {
@@ -389,10 +387,14 @@ public class Engine implements Runnable {
                         .getEngineByName(ch_scr.getScriptLang());
                 //Attach the correct local bindings
                 new_scr_engine.setBindings(el.getScriptingBindings(), ScriptContext.ENGINE_SCOPE);
-                ch_scr.setScriptingEngine(new_scr_engine);
+                
+                try {
+                    ch_scr.setScriptingEngine(new_scr_engine);
+                } catch (ScriptException ex) {
+                    putMessage("Exception in script for: " + el.getID() + " is: \n" + ex.getMessage(), Boolean.TRUE);
+                }
             }
         }
-
     }
 
     private Optional<Tools> loadTools() {
@@ -412,7 +414,7 @@ public class Engine implements Runnable {
      */
     public void putMessage(String message, Boolean blocking) {
         if (blocking) {
-            //Not implemented
+            Platform.runLater(() -> controller.showBlockingMessage(message));
         } else {
             Platform.runLater(() -> controller.showNonBlockingMessage(message));
         }
