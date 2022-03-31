@@ -39,10 +39,10 @@ import g3.project.core.Engine;
 import g3.project.graphics.ExtShape;
 import g3.project.graphics.FontProps;
 import java.io.File;
-import java.util.HashMap;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
@@ -87,12 +87,17 @@ public final class MainController {
     /**
      * Scene graph nodes hashed by their ID.
      */
-    private HashMap<String, javafx.scene.Node> drawnElements;
+    private ConcurrentHashMap<String, javafx.scene.Node> drawnElements = new ConcurrentHashMap<>();
 
     /**
      * Cache image bytes by location.
      */
-    private HashMap<String, Image> loadedImages = new HashMap<>();
+    private ConcurrentHashMap<String, Image> loadedImages = new ConcurrentHashMap<>();
+
+    /**
+     * Loading image.
+     */
+    private Image loadingGif = null;
 
     /**
      * Timer for stuff.
@@ -376,14 +381,33 @@ public final class MainController {
      * @param path Image Path/URL/URI.
      */
     public void updateImage(final String id, final SizeObj size, final LocObj loc, final String path) {
-        Image im = null;
-        //Check if image is cached already.
+        /* Check if image is cached already. */
         if (!loadedImages.containsKey(path)) {
-            im = new Image(path);
-            loadedImages.put(path, im);
-        } else {
-            im = loadedImages.get(path);
+            /* Not cached */
+            if (path.contains("http")) { //Loading remote resource
+                updateImage(id, size, loc, loadingGif); //Show loading GIF
+                //Runnable to download and show image
+                Runnable imageDownloadRunnable = () -> {
+                    var im = new Image(path);
+                    loadedImages.put(path, im);
+                    Platform.runLater(() -> {
+                        /* Check if image should stll be visible */
+                        if (drawnElements.containsKey(id)) {
+                            updateImage(id, size, loc, path);
+                        }
+                    });
+                };
+                //Create and start thread for download
+                Thread imDownloadThread = new Thread(imageDownloadRunnable);
+                imDownloadThread.start();
+            } else {
+                /* Local resource */
+                loadedImages.put(path, new Image(path));
+            }
         }
+
+        var im = loadedImages.get(path);
+
         updateImage(id, size, loc, im);
     }
 
@@ -468,7 +492,9 @@ public final class MainController {
     public void initialize() {
         //this.scene = contentPane.getScene();
         File xmlFile = new File("exampledoc.xml");
-        drawnElements = new HashMap<>();
+        var loadingGifPath = "file:".concat(MainController.class.getResource("loading.gif").getPath());
+        loadingGif = new Image(loadingGifPath);
+
         engine = new Engine(this);
 
         darkMode = detector.isDark();
