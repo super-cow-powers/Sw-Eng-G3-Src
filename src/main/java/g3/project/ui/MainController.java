@@ -28,7 +28,6 @@
  */
 package g3.project.ui;
 
-import static javafx.application.Platform.exit;
 import javafx.event.*;
 import javafx.fxml.*;
 import javafx.scene.Scene;
@@ -37,70 +36,70 @@ import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import com.jthemedetecor.OsThemeDetector;
 import g3.project.core.Engine;
-import g3.project.elements.DocElement;
 import g3.project.graphics.ExtShape;
 import g3.project.graphics.FontProps;
-import g3.project.xmlIO.Ingestion;
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.geometry.Bounds;
-import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
-import javafx.geometry.Pos;
-import javafx.scene.Group;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 import javafx.scene.transform.Scale;
 import javafx.stage.FileChooser;
-import javafx.stage.Modality;
-import javafx.stage.Popup;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 import jfxtras.styles.jmetro.*;
-import nu.xom.Document;
-import nu.xom.ParsingException;
 
 /**
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class MainController {
+public final class MainController {
 
+    /**
+     * Detects dark/light theme.
+     */
     private final OsThemeDetector detector = OsThemeDetector.getDetector();
-    private Engine engine;
-    private Scene scene;
-
-    private Scale viewportScale = new Scale(1, 1);
-
-    //Scene graph nodes hashed by their ID
-    private HashMap<String, javafx.scene.Node> drawnElements;
-    //Cache image bytes by location
-    private HashMap<String, Image> loadedImages = new HashMap<>();
-
+    /**
+     * Is dark-mode enabled?
+     */
     private boolean darkMode = false;
 
-    private Timer timer = new Timer();
+    /**
+     * App's Engine.
+     */
+    private Engine engine;
+    /**
+     * Main scene.
+     */
+    private Scene scene;
+    /**
+     * Scale for zooming page.
+     */
+    private Scale viewportScale = new Scale(1, 1);
 
+    /**
+     * Scene graph nodes hashed by their ID.
+     */
+    private HashMap<String, javafx.scene.Node> drawnElements;
+
+    /**
+     * Cache image bytes by location.
+     */
+    private HashMap<String, Image> loadedImages = new HashMap<>();
+
+    /**
+     * Timer for stuff.
+     */
+    private Timer timer = new Timer();
+//CHECKSTYLE:OFF
+    //FXML bound objects
     @FXML
     private MenuBar menuBar;
 
@@ -124,8 +123,11 @@ public class MainController {
 
     @FXML
     private VBox pageVBox;
-
-    private final Long messageDuration = 6000l;
+//CHECKSTYLE:ON
+    /**
+     * Duration for to show a non-blocking message.
+     */
+    private static final Long MESSAGE_DURATION = 6000L;
 
     /**
      * Handle action related to "About" menu item.
@@ -138,7 +140,7 @@ public class MainController {
     }
 
     /**
-     * Handle action related to input
+     * Handle action related to input.
      *
      * @param event Input event.
      */
@@ -148,16 +150,28 @@ public class MainController {
         engine.offerEvent(event);
     }
 
+    /**
+     * Handle scroll event on page.
+     *
+     * @param event scroll event
+     */
     private void pageScrollEventHandler(final ScrollEvent event) {
-        if ((event.isControlDown() == true) && (event.getDeltaY() != 0)) {
+        final double deltaMult = 0.01;
+        //Check that ctrl is pressed, and there is a delta
+        if (event.isControlDown() && (event.getDeltaY() != 0)) {
             System.out.println("Delta:" + event.getDeltaY());
-            var scaleValue = pagePane.getScaleX() + (event.getDeltaY() * 0.01);
+            var scaleValue = pagePane.getScaleX() + (event.getDeltaY() * deltaMult);
             setViewScale(scaleValue);
         }
         engine.offerEvent(event);
     }
 
-    public void setViewScale(Double scaleValue) {
+    /**
+     * Set the scale-factor of the page/card.
+     *
+     * @param scaleValue Scale-factor to apply.
+     */
+    public void setViewScale(final Double scaleValue) {
         pagePane.setScaleX(scaleValue);
         pagePane.setScaleY(scaleValue);
         pageVBox.setMinHeight(pageVBox.getHeight() * scaleValue);
@@ -165,11 +179,21 @@ public class MainController {
         System.out.println("Scale: " + pageVBox.getScaleX());
     }
 
+    /**
+     * Handle click on exit menu item.
+     *
+     * @param event exit-click event.
+     */
     @FXML
     private void handleExitAction(final ActionEvent event) {
         System.out.print("Quitting\n");
     }
 
+    /**
+     * Handle user request to open new doc.
+     *
+     * @param event user-event.
+     */
     @FXML
     private void handleOpenNewDoc(final ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
@@ -181,54 +205,70 @@ public class MainController {
                 new FileChooser.ExtensionFilter("XML", "*.xml"),
                 new FileChooser.ExtensionFilter("SPRES", "*.spres")
         );
-        File new_file = fileChooser.showOpenDialog(pagePane.getScene().getWindow());
-        if (new_file != null) {
-            engine.offerNewDoc(new_file);
+        var newFile = fileChooser.showOpenDialog(pagePane.getScene().getWindow());
+        if (newFile != null) {
+            engine.offerNewDoc(newFile);
         }
     }
 
+    /**
+     * Handle all the exit stuff.
+     */
     public void gracefulExit() {
         engine.stop();
         timer.cancel();
         Platform.exit();
     }
 
+    /**
+     * Handle user action to toggle dark mode.
+     *
+     * @param event User action-event.
+     */
     @FXML
     private void handleToggleDarkModeAction(final ActionEvent event) {
         darkMode = !darkMode;
         toggleDarkMode();
     }
 
-    public void drawText(String text, Point2D pos) { //Test Method
+    /**
+     * TEST METHOD. Put plain text onto the screen.
+     *
+     * @param text Text to show.
+     * @param pos Position to show it.
+     */
+    public void drawText(final String text, final Point2D pos) {
+        //CHECKSTYLE:OFF
         Label l = new Label();
         l.setText(text);
         l.setFont(new Font(30));
         l.relocate(pos.getX(), pos.getY());
         pagePane.getChildren().add(l);
         System.out.println("g3.project.ui.MainController.drawText()");
+        //CHECKSTYLE:ON
     }
 
     /**
-     * Redraw shape on screen
+     * Redraw shape on screen.
      *
-     * @param ID
-     * @param size
-     * @param loc
-     * @param shapeType
-     * @param fillColour
-     * @param strokeColour
-     * @param strokeWidth
-     * @param textString
-     * @param textProps
+     * @param id Shape ID
+     * @param size Shape Size
+     * @param loc Shape Location
+     * @param shapeType Shape Type string
+     * @param fillColour Shape Fill Colour
+     * @param strokeColour Shape Stroke Colour
+     * @param strokeWidth Shape Stroke Width
+     * @param textString Shape Text String
+     * @param textProps Shape Text Properties
      */
-    public void updateShape(String ID, SizeObj size, LocObj loc, String shapeType, Color fillColour,
-            Color strokeColour, Double strokeWidth, String textString, FontProps textProps) {
-        ExtShape newShape = new ExtShape(shapeType, ID, size.getX(), size.getY(), fillColour, strokeColour, strokeWidth, textString, textProps);
+    public void updateShape(final String id, final SizeObj size, final LocObj loc, final String shapeType, final Color fillColour,
+            final Color strokeColour, final Double strokeWidth, final String textString, final FontProps textProps) {
+        ExtShape newShape = new ExtShape(shapeType, id, size.getX(), size.getY(), fillColour, strokeColour, strokeWidth, textString, textProps);
         newShape.setRotate(size.getRot());
-        if (drawnElements.containsKey(ID)) {
-            pagePane.getChildren().remove(drawnElements.get(ID));
+        if (drawnElements.containsKey(id)) {
+            pagePane.getChildren().remove(drawnElements.get(id));
         }
-        drawnElements.put(ID, newShape);
+        drawnElements.put(id, newShape);
         var start = loc.getStart().get();
         newShape.relocate(start.getX(), start.getY());
         newShape.setViewOrder(loc.getZ());
@@ -236,9 +276,13 @@ public class MainController {
     }
 
     /**
-     * Configure the page
+     * Configure the page/card.
+     *
+     * @param size Page size
+     * @param colour Page colour
+     * @param id Page ID
      */
-    public void configCard(Optional<SizeObj> size, Optional<Color> colour, String ID) {
+    public void configCard(final Optional<SizeObj> size, final Optional<Color> colour, final String id) {
         /*
         @todo Allow multiple pages
         @todo Resize scroll pane when the page is rotated
@@ -250,6 +294,7 @@ public class MainController {
             pagePane.setMinWidth(f.getX());
             pagePane.setRotate(f.getRot());
         });
+        //CHECKSTYLE:OFF
         colour.ifPresent(f -> {
             var col = String.format("#%02X%02X%02X",
                     (int) (f.getRed() * 255),
@@ -257,24 +302,36 @@ public class MainController {
                     (int) (f.getBlue() * 255));
             pagePane.setStyle("-fx-background-color: " + col);
         });
-        pagePane.setId(ID);
+        //CHECKSTYLE:ON
+        pagePane.setId(id);
     }
 
     /**
-     * Clear the page
+     * Clear the page/card.
      *
+     * @param id page to clear
+     * @todo: (Maybe) Support clearing specific cards.
      */
-    public void clearCard(String ID) {
+    public void clearCard(final String id) {
         pagePane.getChildren().clear();
         pagePane.setStyle("-fx-background-color: #FFFFFF");
         drawnElements.clear();
     }
 
-    public void addCardButton(String friendlyName, String ID, Integer number) {
+    /**
+     * Add navigation button for specified card/page.
+     *
+     * @param friendlyName Card human name.
+     * @param id Card ID.
+     * @param number Card sequence number.
+     */
+    public void addCardButton(final String friendlyName, final String id, final Integer number) {
         Button cardButton = new Button(friendlyName);
+        //CHECKSTYLE:OFF
         cardButton.setMaxSize(150, 50);
         cardButton.setMinSize(50, 50);
-        cardButton.setId(ID + "-jump-card-button");
+        //CHECKSTYLE:ON
+        cardButton.setId(id + "-jump-card-button");
         cardButton.setWrapText(false);
         cardButton.setOnAction(event -> {
             clearCard(pagePane.getId());
@@ -284,16 +341,24 @@ public class MainController {
     }
 
     /**
-     * Remove all card buttons
+     * Remove all card nav buttons.
      */
     public void clearCardButtons() {
         cardSelBox.getChildren().clear();
     }
 
-    public void addTool(String toolname, String toolID) {
+    /**
+     * Add tool to tool-list.
+     *
+     * @param toolname Name of tool.
+     * @param toolID Tool ID.
+     */
+    public void addTool(final String toolname, final String toolID) {
         Button toolButton = new Button(toolname);
+        //CHECKSTYLE:OFF
         toolButton.setMaxSize(75, 75);
         toolButton.setMinSize(50, 50);
+        //CHECKSTYLE:ON
         toolButton.setId(toolID);
         toolButton.setWrapText(false);
         toolButton.setOnAction(event -> {
@@ -302,27 +367,44 @@ public class MainController {
         toolPane.getChildren().add(toolButton);
     }
 
-    public void updateImage(String ID, SizeObj size, LocObj loc, String path) {
+    /**
+     * Show or update image on screen.
+     *
+     * @param id Image ID.
+     * @param size Image Size.
+     * @param loc Image Location.
+     * @param path Image Path/URL/URI.
+     */
+    public void updateImage(final String id, final SizeObj size, final LocObj loc, final String path) {
         Image im = null;
-        if (loadedImages.containsKey(path) == false) { //Caching images
+        //Check if image is cached already.
+        if (!loadedImages.containsKey(path)) {
             im = new Image(path);
             loadedImages.put(path, im);
         } else {
             im = loadedImages.get(path);
         }
-        updateImage(ID, size, loc, im);
+        updateImage(id, size, loc, im);
     }
 
-    private void updateImage(String ID, SizeObj size, LocObj loc, Image im) {
+    /**
+     * Show or update image on screen. Private - bypasses cache.
+     *
+     * @param id Image ID.
+     * @param size Image Size.
+     * @param loc Image Location.
+     * @param im JFX Image.
+     */
+    private void updateImage(final String id, final SizeObj size, final LocObj loc, final Image im) {
         ImageView imv = null;
-        if (drawnElements.containsKey(ID)) {
-            var im_el = drawnElements.get(ID);
-            if (im_el instanceof ImageView) {
-                imv = (ImageView) im_el;
+        if (drawnElements.containsKey(id)) {
+            var imEl = drawnElements.get(id);
+            if (imEl instanceof ImageView) {
+                imv = (ImageView) imEl;
             }
         } else {
             imv = new ImageView();
-            drawnElements.put(ID, imv);
+            drawnElements.put(id, imv);
             pagePane.getChildren().add(imv);
         }
 
@@ -352,7 +434,7 @@ public class MainController {
                 Platform.runLater(() -> clearNBMessage());
             }
         },
-                messageDuration);
+                MESSAGE_DURATION);
     }
 
     /**
