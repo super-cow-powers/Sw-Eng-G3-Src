@@ -132,7 +132,7 @@ public class VisualElement extends Element {
         var myDoc = this.getDocument();
         var myDocEl = (DocElement) (myDoc.getRootElement());
 
-        return id.isPresent() ? id.get() : myDocEl.NewUniqueID(this.getLocalName());
+        return id.isPresent() ? id.get() : myDocEl.getNewUniqueID(this.getLocalName());
     }
 
     /**

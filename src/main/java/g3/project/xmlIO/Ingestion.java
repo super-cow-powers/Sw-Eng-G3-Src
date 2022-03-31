@@ -56,7 +56,7 @@ public class Ingestion {
             if (doc != null) {
                 var root = doc.getRootElement();
                 if (root instanceof DocElement) {
-                    ((DocElement) doc.getRootElement()).SetBaseDir(xmPath);
+                    ((DocElement) doc.getRootElement()).setBaseDir(xmPath);
                 }
             }
         } catch (ParsingException ex) {//We're returning an optional

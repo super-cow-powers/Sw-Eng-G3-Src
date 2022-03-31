@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -37,7 +37,10 @@ import nu.xom.Element;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public class Tools extends Element {
-    
+
+    /**
+     * Create builder.
+     */
     private static ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
@@ -46,25 +49,41 @@ public class Tools extends Element {
 
     };
 
-    public Tools(String name) {
+    /**
+     * Constructor.
+     *
+     * @param name Tools element name.
+     */
+    public Tools(final String name) {
         super(name);
     }
-
-    public Tools(String name, String uri) {
+/**
+ * Constructor.
+ * @param name Tools element name.
+ * @param uri Tools element URI.
+ */
+    public Tools(final String name, final String uri) {
         super(name, uri);
     }
-
-    public Tools(Element element) {
+/**
+ * Constructor.
+ * @param element Tools Element.
+ */
+    public Tools(final Element element) {
         super(element);
     }
-    public ArrayList<Tool> getTools(){
-    ArrayList<Tool> list = new ArrayList<Tool>();
-    for (int i = 0; i < this.getChildCount(); i++) {
+/**
+ * Get list of available tools.
+ * @return ArrayList of tools.
+ */
+    public final ArrayList<Tool> getTools() {
+        ArrayList<Tool> list = new ArrayList<Tool>();
+        for (int i = 0; i < this.getChildCount(); i++) {
             var child = this.getChild(i);
             if (child instanceof Tool) {
-                list.add((Tool)child);
+                list.add((Tool) child);
             }
         }
-    return list;
+        return list;
     }
 }

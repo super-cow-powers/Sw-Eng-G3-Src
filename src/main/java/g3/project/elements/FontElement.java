@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -37,7 +37,8 @@ import nu.xom.*;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class FontElement extends Element {
+public final class FontElement extends Element {
+//CHECKSTYLE:OFF
 
     private static ThreadLocal builders = new ThreadLocal() {
 
@@ -47,78 +48,99 @@ public class FontElement extends Element {
 
     };
 
-    public FontElement(String name) {
+    public FontElement(final String name) {
         super(name);
     }
 
-    public FontElement(String name, String uri) {
+    public FontElement(final String name, String uri) {
         super(name, uri);
     }
 
-    public FontElement(Element element) {
+    public FontElement(final Element element) {
         super(element);
     }
+//CHECKSTYLE:ON
 
+    /**
+     * Get the element's font styling properties.
+     *
+     * @return FontProps properties.
+     */
     public FontProps getProperties() {
-        var us_a = this.getAttribute("underscore");
-        var bld_a = this.getAttribute("bold");
-        var it_a = this.getAttribute("italic");
-        var size_a = this.getAttribute("size");
-        var name_a = this.getAttribute("name");
-        var col_op = this.getCol();
+        final double defSize = 10d;
+        var usA = this.getAttribute("underscore");
+        var bldA = this.getAttribute("bold");
+        var itA = this.getAttribute("italic");
+        var sizeA = this.getAttribute("size");
+        var nameA = this.getAttribute("name");
+        var colOpt = this.getCol();
         Color col = Color.BLACK;
         boolean us = false;
         boolean bld = false;
         boolean it = false;
-        Double size = 10d;
+        var size = defSize;
         String name = "";
 
-        if (us_a != null) {
-            us = Boolean.parseBoolean(us_a.getValue());
+        if (usA != null) {
+            us = Boolean.parseBoolean(usA.getValue());
         }
-        if (bld_a != null) {
-            bld = Boolean.getBoolean(bld_a.getValue());
+        if (bldA != null) {
+            bld = Boolean.getBoolean(bldA.getValue());
         }
-        if (it_a != null) {
-            it = Boolean.getBoolean(it_a.getValue());
+        if (itA != null) {
+            it = Boolean.getBoolean(itA.getValue());
         }
-        if (size_a != null) {
-            size = Double.valueOf(size_a.getValue());
+        if (sizeA != null) {
+            size = Double.valueOf(sizeA.getValue());
         }
-        if (name_a != null) {
-            name = name_a.getValue();
+        if (nameA != null) {
+            name = nameA.getValue();
         }
-        if (col_op.isPresent()) {
-            col = col_op.get();
+        if (colOpt.isPresent()) {
+            col = colOpt.get();
         }
         return new FontProps(us, it, bld, size, name, col);
     }
 
+    /**
+     * Get font colour.
+     *
+     * @return Optional font colour.
+     */
     private Optional<Color> getCol() {
-        var col = Optional.ofNullable(this.getAttribute("colour"));
+        final int lenRGB = 6;
+        final int lenRGBA = 8;
+        var colA = Optional.ofNullable(this.getAttribute("colour"));
         /**
-         * @TODO: Find a nicer looking way of making this work Probably
+         * @todo: Find a nicer looking way of making this work Probably
          * containing more streams
          */
-        if (col.isPresent()) {
-            var col_str = col.get().getValue().replace("#", "");
+        if (colA.isPresent()) {
+            var colStr = colA.get().getValue().replace("#", "");
 
-            switch (col_str.length()) {
-                case 6:
+            switch (colStr.length()) {
+                case lenRGB:
+                    //CHECKSTYLE:OFF
                     return Optional.of(new Color(
-                            (double) Integer.valueOf(col_str.substring(0, 2), 16) / 255,
-                            (double) Integer.valueOf(col_str.substring(2, 4), 16) / 255,
-                            (double) Integer.valueOf(col_str.substring(4, 6), 16) / 255,
+                            (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
+                            (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
+                            (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
                             1.0d));
-                case 8:
+                    //CHECKSTYLE:ON
+                case lenRGBA:
+                    //CHECKSTYLE:OFF
                     return Optional.of(new Color(
-                            (double) Integer.valueOf(col_str.substring(0, 2), 16) / 255,
-                            (double) Integer.valueOf(col_str.substring(2, 4), 16) / 255,
-                            (double) Integer.valueOf(col_str.substring(4, 6), 16) / 255,
-                            (double) Integer.valueOf(col_str.substring(6, 8), 16) / 255));
-            }
-        }
-        return Optional.empty();
+                            (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
+                            (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
+                            (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
+                            (double) Integer.valueOf(colStr.substring(6, 8), 16) / 255));
+                    //CHECKSTYLE:ON
+                default:
+                    return Optional.empty();
 
+            }
+        } else { //No colour specified
+            return Optional.empty();
+        }
     }
 }

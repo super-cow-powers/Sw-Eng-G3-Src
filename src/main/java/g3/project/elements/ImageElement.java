@@ -86,8 +86,8 @@ public class ImageElement extends VisualElement {
                     String myDir = "";
 
                     if (baseDoc instanceof DocElement) {
-                        if (((DocElement) baseDoc).GetBaseDir().isPresent()) {
-                            myDir = ((DocElement) baseDoc).GetBaseDir().get();
+                        if (((DocElement) baseDoc).getBaseDir().isPresent()) {
+                            myDir = ((DocElement) baseDoc).getBaseDir().get();
                         }
                     }
                     String loc = null;

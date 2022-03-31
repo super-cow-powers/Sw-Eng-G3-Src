@@ -37,10 +37,14 @@ import nu.xom.*;
  *
  * @author david
  */
-public class DocElement extends Element {
+public final class DocElement extends Element {
 
-    private String containing_dir = null;
+    /**
+     * Directory containing this document (String).
+     */
+    private String containingDirStr = null;
 
+//CHECKSTYLE:OFF
     private static ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
@@ -49,31 +53,42 @@ public class DocElement extends Element {
 
     };
 
-    public DocElement(String name) {
+    public DocElement(final String name) {
         super(name);
     }
 
-    public DocElement(String name, String uri) {
+    public DocElement(final String name, String uri) {
         super(name, uri);
     }
 
-    public DocElement(Element element) {
+    public DocElement(final Element element) {
         super(element);
     }
 
-    public void SetBaseDir(String dir) {
-        containing_dir = dir;
+//CHECKSTYLE:ON
+    /**
+     * Set document base directory.
+     *
+     * @param dir Directory string.
+     */
+    public void setBaseDir(final String dir) {
+        containingDirStr = dir;
     }
 
-    public Optional<String> GetBaseDir() {
-        return Optional.ofNullable(containing_dir);
+    /**
+     * Get document base directory.
+     *
+     * @return Directory string.
+     */
+    public Optional<String> getBaseDir() {
+        return Optional.ofNullable(containingDirStr);
     }
 
     /**
      *
-     * @return Returns vector containing the Doc's pages
+     * @return ArrayList containing the Doc's pages
      */
-    public Optional<ArrayList<PageElement>> GetPages() {
+    public Optional<ArrayList<PageElement>> getPages() {
         ArrayList<PageElement> pages = null;
         for (int i = 0; i < this.getChildCount(); i++) {
             var node = this.getChild(i);
@@ -92,39 +107,44 @@ public class DocElement extends Element {
      * Return a new Unique ID for an element. The param is not really necessary,
      * but useful
      *
-     * @param idForType
+     * @param idForType Type of object (will be prefixed to returned ID).
      * @return New UID
      */
-    public String NewUniqueID(String idForType) {
+    public String getNewUniqueID(final String idForType) {
         Random rand = new Random();
         long time = System.currentTimeMillis();
         var timestr = String.valueOf(time);
-        var id_str = idForType.concat(timestr);
-        while (ValidateUniqueID(id_str) == false) {
+        var idStr = idForType.concat(timestr);
+        while (!validateUniqueID(idStr)) {
+            //CHECKSTYLE:OFF
             time = System.currentTimeMillis() - rand.nextInt(200000);
+            //CHECKSTYLE:ON
             timestr = String.valueOf(time);
-            id_str = idForType.concat(timestr);
+            idStr = idForType.concat(timestr);
         }
-        return id_str;
+        return idStr;
     }
 
     /**
-     * Validates if the given ID is unique or not
+     * Validates if the given ID is unique or not.
      *
-     * @param ID
+     * @param id ID to validate.
      * @return Validity
      */
-    public Boolean ValidateUniqueID(String ID) {
-
+    public Boolean validateUniqueID(final String id) {
+        /*
+        @todo: Implement!
+        */
         return true;
     }
-    
+
     /**
-     * Returns an element in the doc by its' ID
-     * @param ID
+     * Returns an element in the doc by its' ID.
+     *
+     * @param id ID of element.
      * @return Optional of Element
      */
-    public Optional<Element> GetElementByID(String ID){
+    public Optional<Element> getElementByID(final String id) {
         return Optional.empty();
     }
 

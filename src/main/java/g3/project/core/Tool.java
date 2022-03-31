@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -37,41 +37,73 @@ import nu.xom.Element;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public class Tool extends Element {
+
+    /**
+     * Create a builder.
+     */
     private static ThreadLocal builders = new ThreadLocal() {
-        
-         protected synchronized Object initialValue() {
-             return new Builder(new ToolsFactory());
-         }
-         
-     };
-    
-    
-    public Tool(String name) {
+
+        protected synchronized Object initialValue() {
+            return new Builder(new ToolsFactory());
+        }
+
+    };
+
+    /**
+     * Constructor.
+     *
+     * @param name Tool name.
+     */
+    public Tool(final String name) {
         super(name);
     }
 
-    
-    public Tool(String name, String uri) {
+    /**
+     * Constructor.
+     *
+     * @param name Tool name.
+     * @param uri Tool URI.
+     */
+    public Tool(final String name, final String uri) {
         super(name, uri);
     }
 
-    
-    public Tool(Element element) {
+    /**
+     * Constructor.
+     *
+     * @param element Tool Element.
+     */
+    public Tool(final Element element) {
         super(element);
     }
 
-    public String getName(){
+    /**
+     * Get tool name.
+     *
+     * @return Tool name string.
+     */
+    public final String getName() {
         var name = this.getAttribute("name");
         return name.getValue();
     }
-    
-    public String getID(){
-        var ID = this.getAttribute("ID");
-        return ID != null? ID.getValue(): "tool-null-id";
+
+    /**
+     * Get tool ID.
+     *
+     * @return Tool ID string.
+     */
+    public final String getID() {
+        var id = this.getAttribute("ID");
+        return id != null ? id.getValue() : "tool-null-id";
     }
-    
-    public String getScript(){
+
+    /**
+     * Get tool script string.
+     *
+     * @return script string.
+     */
+    public final String getScriptString() {
         var el = this.getChildElements("script").get(0);
-        return (el instanceof ScriptElement)? ((ScriptElement)el).getScriptText() : "";
+        return (el instanceof ScriptElement) ? ((ScriptElement) el).getScriptText() : "";
     }
 }

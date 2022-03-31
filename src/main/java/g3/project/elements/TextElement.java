@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -29,7 +29,6 @@
 package g3.project.elements;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import nu.xom.*;
 
 /**
@@ -37,41 +36,41 @@ import nu.xom.*;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public class TextElement extends Element {
+//CHECKSTYLE:OFF
     private static ThreadLocal builders = new ThreadLocal() {
-        
-         protected synchronized Object initialValue() {
-             return new Builder(new ElementFactory());
-         }
-         
-     };
-    
-    
+
+        protected synchronized Object initialValue() {
+            return new Builder(new ElementFactory());
+        }
+
+    };
+
     public TextElement(String name) {
         super(name);
     }
 
-    
     public TextElement(String name, String uri) {
         super(name, uri);
     }
 
-    
     public TextElement(Element element) {
         super(element);
     }
-    
+//CHECKSTYLE:ON
+
     /**
-     * Get all font blocks in this text section
-     * @return 
+     * Get all font blocks in this text section.
+     *
+     * @return ArrayList of font-blocks in section.
      */
-    public ArrayList<FontElement> getFontBlocks(){
+    public final ArrayList<FontElement> getFontBlocks() {
         var list = new ArrayList<FontElement>();
-        for(var ch : this.getChildElements()){
-            if (ch instanceof FontElement){
-                list.add((FontElement)ch);
+        for (var ch : this.getChildElements()) {
+            if (ch instanceof FontElement) {
+                list.add((FontElement) ch);
             }
         }
         return list;
     }
-    
+
 }

@@ -307,7 +307,7 @@ public final class Engine implements Runnable {
             if (child instanceof DocElement) {
                 currentDoc = (DocElement) child;
                 currentDoc
-                        .GetPages()
+                        .getPages()
                         .ifPresent(
                                 f -> {
                                     currentPages = f;
@@ -347,7 +347,7 @@ public final class Engine implements Runnable {
      * @param img Image to draw.
      */
     public void drawImage(final ImageElement img) {
-        var defXY = 20d;
+        final double defImgXY = 20d;
         var sourceOpt = img.getSourceLoc();
         var locOpt = img.getLoc();
         var sizeOpt = img.getSize();
@@ -358,7 +358,7 @@ public final class Engine implements Runnable {
                     ? locOpt.get()
                     : new LocObj(new Point2D(0, 0), null, null, 0d);
             var size = (sizeOpt.isPresent())
-                    ? sizeOpt.get() : new SizeObj(defXY, defXY, 0d);
+                    ? sizeOpt.get() : new SizeObj(defImgXY, defImgXY, 0d);
 
             controller.updateImage(id, size, loc, source);
         });
@@ -440,7 +440,7 @@ public final class Engine implements Runnable {
      * @param storeHistory Should I record it in history?
      */
     public void gotoPage(final Integer pageNum, final Boolean storeHistory) {
-        var pages = currentDoc.GetPages();
+        var pages = currentDoc.getPages();
         pages.ifPresent(f -> gotoPage(f.get(pageNum), storeHistory));
     }
 
