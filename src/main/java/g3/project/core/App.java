@@ -1,7 +1,6 @@
 package g3.project.core;
 
 import g3.project.ui.MainController;
-import java.io.File;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -9,46 +8,71 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import nu.xom.ParsingException;
-import g3.project.xmlIO.Ingestion;
 
 /**
- * JavaFX App
+ * JavaFX App.
  */
 public class App extends Application {
 
+    /**
+     * Main Scene.
+     */
     private static Scene scene;
+    /**
+     * Main UI controller.
+     */
     private static MainController mainUIController;
+    /**
+     * Default Window X Size.
+     */
+    private static final int DEF_WINDOW_X_SIZE = 900;
+    /**
+     * Default Window Y Size.
+     */
+    private static final int DEF_WINDOW_Y_SIZE = 600;
 
     @Override
-    public void start(Stage stage) throws IOException {
+    public final void start(final Stage stage) throws IOException {
         /*Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> {
             System.out.println("Handler caught exception: "+throwable.getMessage());
         });*/
-        scene = new Scene(loadFXML("main"), 900, 600);
+        scene = new Scene(loadFXML("main"), DEF_WINDOW_X_SIZE, DEF_WINDOW_Y_SIZE);
         stage.setScene(scene);
         stage.show();
     }
 
     @Override
-    public void stop() {
+    public final void stop() {
         System.out.println("Stage is closing");
         mainUIController.gracefulExit();
         // Save file
     }
 
-    static void setRoot(String fxml) throws IOException {
+    /**
+     * Set Root FXML doc.
+     * @param fxml FXML Document name.
+     * @throws IOException Couldn't load document.
+     */
+    static void setRoot(final String fxml) throws IOException {
         scene.setRoot(loadFXML(fxml));
     }
-
-    private static Parent loadFXML(String fxml) throws IOException {
+/**
+ * Load the named FXML document.
+ * @param fxml FXML Document name.
+ * @return JFX parent node.
+ * @throws IOException Couldn't load document.
+ */
+    private static Parent loadFXML(final String fxml) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
-        Parent fx_ld = fxmlLoader.load();
+        Parent fxld = fxmlLoader.load();
         mainUIController = (MainController) fxmlLoader.getController();
-        return fx_ld;
+        return fxld;
     }
-
-    public static void main(String[] args) {
+/**
+ * Main entry point.
+ * @param args Command-line arguments.
+ */
+    public static void main(final String[] args) {
         launch();
     }
 

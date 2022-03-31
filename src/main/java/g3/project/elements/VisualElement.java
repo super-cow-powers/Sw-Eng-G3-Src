@@ -110,7 +110,10 @@ public class VisualElement extends Element {
         var start = loc.getStart();
         var centre = loc.getCentre();
         var end = loc.getEnd();
-
+        
+        /**
+         * @todo Assign centre and end.
+         */
         start.ifPresent(s -> {
             this.addAttribute(new Attribute("x_orig", Double.toString(s.getX())));
             this.addAttribute(new Attribute("y_orig", Double.toString(s.getY())));
@@ -212,11 +215,13 @@ public class VisualElement extends Element {
                             1.0d));
                     //CHECKSTYLE:ON
                 case lenRGBA:
+                    //CHECKSTYLE:OFF
                     return Optional.of(new Color(
                             (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
                             (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
                             (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
                             (double) Integer.valueOf(colStr.substring(6, 8), 16) / 255));
+                    //CHECKSTYLE:ON
                 default:
             }
         }
@@ -225,22 +230,23 @@ public class VisualElement extends Element {
     }
 
     /**
-     * Get the local scope for this object
+     * Get the local scope for this object.
      *
-     * @return
+     * @return my Bindings.
      */
-    public Bindings getScriptingBindings() {
+    public final Bindings getScriptingBindings() {
         return elementScriptBindings;
     }
 
     /**
-     * Get the ScriptElement attached to this object
+     * Get the ScriptElement attached to this object.
+     * There should only be one element.
      *
-     * @return
+     * @return my (first) script element.
      */
-    public Optional<ScriptElement> getScriptEl() {
-        var ch_els = this.getChildElements();
-        for (var ch : ch_els) {
+    public final Optional<ScriptElement> getScriptEl() {
+        var chEls = this.getChildElements();
+        for (var ch : chEls) {
             if (ch instanceof ScriptElement) {
                 return Optional.of((ScriptElement) ch);
             }

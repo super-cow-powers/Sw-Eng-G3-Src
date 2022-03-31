@@ -28,7 +28,6 @@
  */
 package g3.project.elements;
 
-import java.net.URI;
 import java.util.Optional;
 import nu.xom.*;
 
@@ -38,6 +37,11 @@ import nu.xom.*;
  */
 public class ImageElement extends VisualElement {
 
+    /**
+     * Static method to return builder.
+     *
+     * @return builder
+     */
     private static ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
@@ -45,40 +49,58 @@ public class ImageElement extends VisualElement {
         }
 
     };
-
-    public ImageElement(String name) {
+/**
+ * Constructor.
+ * @param name Element name.
+ */
+    public ImageElement(final String name) {
         super(name);
     }
-
-    public ImageElement(String name, String uri) {
+/**
+ * Constructor.
+ * @param name Element name.
+ * @param uri Element URI.
+ */
+    public ImageElement(final String name, final String uri) {
         super(name, uri);
     }
-
-    public ImageElement(Element element) {
+/**
+ * Constructor.
+ * @param element Element.
+ */
+    public ImageElement(final Element element) {
         super(element);
     }
-
-    public Optional<String> getSourceLoc() {
-
+/**
+ * Get the image's source path or URL.
+ * @return Location string.
+ */
+    public final Optional<String> getSourceLoc() {
+        /**
+         * @todo check this is correct for a variety of inputs.
+         */
         return Optional.ofNullable(this.getAttribute("include_source")) //Get include_source attribute
                 .map(f -> f.getValue())
                 .map(f -> {
-                    var base_doc = this.getDocument().getRootElement();
-                    String my_dir = "";
+                    var baseDoc = this.getDocument().getRootElement();
+                    String myDir = "";
 
-                    if (base_doc instanceof DocElement) {
-                        if (((DocElement) base_doc).GetBaseDir().isPresent()) {
-                            my_dir = ((DocElement) base_doc).GetBaseDir().get();
+                    if (baseDoc instanceof DocElement) {
+                        if (((DocElement) baseDoc).GetBaseDir().isPresent()) {
+                            myDir = ((DocElement) baseDoc).GetBaseDir().get();
                         }
                     }
                     String loc = null;
 
-                    if (f.contains(":/") || f.startsWith("/")) {//Absolute Path
+                    if (f.contains(":/") || f.startsWith("/")) {
+                        //Must be an absolute Path
                         loc = f;
-                    } else if (f.startsWith(".")) {//Relative Path
-                        loc = my_dir.concat(f);
+                    } else if (f.startsWith(".")) {
+                        //Must be a relative Path
+                        loc = myDir.concat(f);
                     }
-                    if (!f.startsWith("http")){
+                    if (!f.startsWith("http")) {
+                        //Not a URL? Must be a file
                         loc = "file:".concat(loc);
                     }
                     return loc;

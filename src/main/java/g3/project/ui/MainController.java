@@ -237,11 +237,12 @@ public class MainController {
 
     /**
      * Configure the page
-     *
-     * @todo: Allow multiple pages
-     * @todo: Resize scroll pane when the page is rotated
      */
     public void configCard(Optional<SizeObj> size, Optional<Color> colour, String ID) {
+        /*
+        @todo Allow multiple pages
+        @todo Resize scroll pane when the page is rotated
+         */
         size.ifPresent(f -> {
             pagePane.setMaxHeight(f.getY());
             pagePane.setMinHeight(f.getY());
@@ -336,11 +337,12 @@ public class MainController {
         imv.setFitHeight(size.getY());
         imv.setFitWidth(size.getY());
 
-        
     }
+
     /**
      * Show a non-blocking message to the user
-     * @param message 
+     *
+     * @param message
      */
     public void showNonBlockingMessage(String message) {
         messageLabel.setText(message);
@@ -352,12 +354,12 @@ public class MainController {
         },
                 messageDuration);
     }
-    
+
     /**
      * Show a blocking message to the user
-     * 
+     *
      * @TODO Implement!!
-     * @param message 
+     * @param message
      */
     public void showBlockingMessage(String message) {
         showNonBlockingMessage(message);
@@ -407,7 +409,7 @@ public class MainController {
             engine.offerNewDoc(xmlFile);
         });
         pagePane.setOnScroll((e) -> pageScrollEventHandler(e)); //Scaling stuff
-        pageScroll.setOnKeyReleased((e)->engine.offerEvent(e)); //I'll get the engine to handle the keys
+        pageScroll.setOnKeyReleased((e) -> engine.offerEvent(e)); //I'll get the engine to handle the keys
 
         pageScroll.setPannable(true);
         pagePane.setEffect(new DropShadow());
