@@ -43,18 +43,41 @@ import nu.xom.Element;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public class VisualElement extends Element {
+
+    /**
+     * Script bindings for the element.
+     */
     private SimpleBindings elementScriptBindings = new SimpleBindings();
+    /**
+     * Clone of this object. Might not use it.
+     */
     private VisualElement scriptedClone;
-    
-    public VisualElement(String name) {
+
+    /**
+     * Constructor.
+     *
+     * @param name Element name
+     */
+    public VisualElement(final String name) {
         super(name);
     }
 
-    public VisualElement(String name, String uri) {
+    /**
+     * Constructor.
+     *
+     * @param name Element name
+     * @param uri Element URI
+     */
+    public VisualElement(final String name, final String uri) {
         super(name, uri);
     }
 
-    public VisualElement(Element element) {
+    /**
+     * Constructor.
+     *
+     * @param element Element
+     */
+    public VisualElement(final Element element) {
         super(element);
     }
 
@@ -62,8 +85,10 @@ public class VisualElement extends Element {
      * Get the object's X/Y location. Returns an Optional, which may contain
      * either the location or nothing. The caller can then determine the action
      * to take.
+     *
+     * @return Optional Location
      */
-    public Optional<LocObj> getLoc() {
+    public final Optional<LocObj> getLoc() {
         var x = Optional.ofNullable(this.getAttribute("x_orig"))
                 .map(f -> f.getValue())
                 .map(f -> Double.valueOf(f));
@@ -77,8 +102,11 @@ public class VisualElement extends Element {
 
     /**
      * Set the object's X/Y location. Returns the new location.
+     *
+     * @param loc Location to set
+     * @return Optional Set Location
      */
-    public Optional<LocObj> setLoc(LocObj loc) {
+    public final Optional<LocObj> setLoc(final LocObj loc) {
         var start = loc.getStart();
         var centre = loc.getCentre();
         var end = loc.getEnd();
@@ -89,46 +117,60 @@ public class VisualElement extends Element {
         });
         return this.getLoc();
     }
-    
+
     /**
-     * Returns the element's ID, or assigns it a new one if not present
+     * Returns the element's ID, or assigns it a new one if not present.
+     *
      * @return Unique ID
      */
     public final String getID() {
-        var ID = Optional.ofNullable(this.getAttribute("ID"))
+        var id = Optional.ofNullable(this.getAttribute("ID"))
                 .map(f -> f.getValue());
         var myDoc = this.getDocument();
         var myDocEl = (DocElement) (myDoc.getRootElement());
 
-        return ID.isPresent() ? ID.get() : myDocEl.NewUniqueID(this.getLocalName());
+        return id.isPresent() ? id.get() : myDocEl.NewUniqueID(this.getLocalName());
     }
 
-    public final String setID(String ID) {
-        this.addAttribute(new Attribute("ID", ID));
+    /**
+     * Set element ID.
+     *
+     * @param id ID to set
+     * @return Set ID
+     */
+    public final String setID(final String id) {
+        this.addAttribute(new Attribute("ID", id));
         return this.getID();
     }
 
     /**
      * Get the object's Z location. Default to 0 if not present.
+     *
+     * @return Z-index
      */
-    public Double getZInd() {
+    public final Double getZInd() {
         var ind = this.getAttribute("z_ind");
         return (ind != null) ? Double.valueOf(ind.getValue()) : 0;
     }
 
     /**
-     * Set the object's Z location. Returns the new location.
+     * Set the object's Z location. Returns set Z-index.
+     *
+     * @param z Index to set.
+     * @return Set index.
      */
-    public Double setZInd(Double z) {
+    public final Double setZInd(final Double z) {
         this.addAttribute(new Attribute("z_ind", Double.toString(z)));
         return this.getZInd();
     }
 
     /**
-     * Get the object's size. Returns an Optional, which may contain either the
+     * Get the object's size.Returns an Optional, which may contain either the
      * size or nothing. Rotation defaults to 0 if not present.
+     *
+     * @return Optional size
      */
-    public Optional<SizeObj> getSize() {
+    public final Optional<SizeObj> getSize() {
         var x = Optional.ofNullable(this.getAttribute("x_size_px"))
                 .map(f -> f.getValue())
                 .map(f -> Double.valueOf(f));
@@ -145,52 +187,62 @@ public class VisualElement extends Element {
                         rot.isPresent() ? rot.get() : 0))
                 : Optional.empty();
     }
-
-    public Optional<Color> getFillColour() {
+/**
+ * Get the element's fill colour.
+ * @return Optional colour.
+ */
+    public final Optional<Color> getFillColour() {
+        final int lenRGB = 6;
+        final int lenRGBA = 8;
         var col = Optional.ofNullable(this.getAttribute("fill"));
         /**
          * @TODO: Find a nicer looking way of making this work Probably
-         * containing more streams
+         * containing more streams.
          */
         if (col.isPresent()) {
-            var col_str = col.get().getValue().replace("#", "");
+            var colStr = col.get().getValue().replace("#", "");
 
-            switch (col_str.length()) {
-                case 6:
+            switch (colStr.length()) {
+                case lenRGB:
+                    //CHECKSTYLE:OFF
                     return Optional.of(new Color(
-                            (double) Integer.valueOf(col_str.substring(0, 2), 16) / 255,
-                            (double) Integer.valueOf(col_str.substring(2, 4), 16) / 255,
-                            (double) Integer.valueOf(col_str.substring(4, 6), 16) / 255,
+                            (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
+                            (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
+                            (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
                             1.0d));
-                case 8:
+                    //CHECKSTYLE:ON
+                case lenRGBA:
                     return Optional.of(new Color(
-                            (double) Integer.valueOf(col_str.substring(0, 2), 16) / 255,
-                            (double) Integer.valueOf(col_str.substring(2, 4), 16) / 255,
-                            (double) Integer.valueOf(col_str.substring(4, 6), 16) / 255,
-                            (double) Integer.valueOf(col_str.substring(6, 8), 16) / 255));
+                            (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
+                            (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
+                            (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
+                            (double) Integer.valueOf(colStr.substring(6, 8), 16) / 255));
+                default:
             }
         }
 
         return Optional.empty();
     }
-    
+
     /**
      * Get the local scope for this object
-     * @return 
+     *
+     * @return
      */
-    public Bindings getScriptingBindings(){
+    public Bindings getScriptingBindings() {
         return elementScriptBindings;
     }
-    
+
     /**
      * Get the ScriptElement attached to this object
-     * @return 
+     *
+     * @return
      */
-    public Optional<ScriptElement> getScriptEl(){
+    public Optional<ScriptElement> getScriptEl() {
         var ch_els = this.getChildElements();
-        for (var ch : ch_els){
-            if (ch instanceof ScriptElement){
-                return Optional.of((ScriptElement)ch);
+        for (var ch : ch_els) {
+            if (ch instanceof ScriptElement) {
+                return Optional.of((ScriptElement) ch);
             }
         }
         return Optional.empty();
