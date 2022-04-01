@@ -503,6 +503,13 @@ public final class Engine implements Runnable {
     }
 
     /**
+     * Set-up global script things.
+     */
+    private void setupScriptEngineMan() {
+        var globalBindings = scriptingEngineManager.getBindings();
+    }
+
+    /**
      * Process elements on a page.
      *
      * @param el Element
@@ -527,10 +534,13 @@ public final class Engine implements Runnable {
                 // Make a new script engine, with the specified language
                 var newScrEngine = scriptingEngineManager.
                         getEngineByName(chScr.getScriptLang());
-                // Attach the correct local bindings
-                newScrEngine.setBindings(el.getScriptingBindings(),
-                        ScriptContext.ENGINE_SCOPE);
+                var bindings = el.getScriptingBindings();
+                //Attach parent
+                el.getParentElementScriptingBindings().ifPresent(b -> bindings.setParent(b));
 
+                // Attach the local bindings
+                newScrEngine.setBindings(bindings,
+                        ScriptContext.ENGINE_SCOPE);
                 try {
                     chScr.setScriptingEngine(newScrEngine);
                 } catch (ScriptException ex) {

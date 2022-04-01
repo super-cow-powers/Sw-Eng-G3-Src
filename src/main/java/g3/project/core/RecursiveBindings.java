@@ -28,82 +28,84 @@
  */
 package g3.project.core;
 
-import g3.project.elements.ScriptElement;
-import nu.xom.Builder;
-import nu.xom.Element;
+import java.util.Optional;
+import javax.script.SimpleBindings;
 
 /**
+ * Recursive bindings will search current bindings, then parent bindings, etc,
+ * etc, for the item.
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class Tool extends Element {
+public final class RecursiveBindings extends SimpleBindings {
 
     /**
-     * Create a builder.
+     * Parent bindings.
      */
-    private static ThreadLocal builders = new ThreadLocal() {
+    private RecursiveBindings parent = null;
 
-        protected synchronized Object initialValue() {
-            return new Builder(new ToolsFactory());
+    /**
+     * Constructor.
+     */
+    public RecursiveBindings() {
+        super();
+    }
+
+    /**
+     * Set parent bindings.
+     *
+     * @param p Parent bindings.
+     */
+    public void setParent(final RecursiveBindings p) {
+        this.parent = p;
+    }
+
+    /**
+     * Do the local bindings contain the key?
+     *
+     * @param key Key to find.
+     * @return True if key is contained.
+     */
+    public boolean localContainsKey(final Object key) {
+        return super.containsKey(key);
+    }
+
+    /**
+     * Get key in local bindings.
+     *
+     * @param key key to retrieve.
+     * @return Optional object.
+     */
+    public Optional<Object> localGet(final Object key) {
+        return Optional.ofNullable(super.get(key));
+    }
+
+    @Override
+    public boolean containsKey(final Object key) {
+        if (localContainsKey(key)) { //Do I have it?
+            return true;
+        } else {
+            if (this.parent != null) { //Search up through
+                return this.parent.containsValue(key);
+            }
         }
-
-    };
-
-    /**
-     * Constructor.
-     *
-     * @param name Tool name.
-     */
-    public Tool(final String name) {
-        super(name);
+        /*
+         * I either don't have it,
+         * or I have no parent and no-one else had it
+         */
+        return false;
     }
 
-    /**
-     * Constructor.
-     *
-     * @param name Tool name.
-     * @param uri Tool URI.
-     */
-    public Tool(final String name, final String uri) {
-        super(name, uri);
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param element Tool Element.
-     */
-    public Tool(final Element element) {
-        super(element);
-    }
-
-    /**
-     * Get tool name.
-     *
-     * @return Tool name string.
-     */
-    public final String getName() {
-        var name = this.getAttribute("name");
-        return name.getValue();
-    }
-
-    /**
-     * Get tool ID.
-     *
-     * @return Tool ID string.
-     */
-    public final String getID() {
-        var id = this.getAttribute("ID");
-        return id != null ? id.getValue() : "tool-null-id";
-    }
-
-    /**
-     * Get tool script string.
-     *
-     * @return script string.
-     */
-    public final String getScriptString() {
-        var el = this.getChildElements("script").get(0);
-        return (el instanceof ScriptElement) ? ((ScriptElement) el).getScriptString() : "";
+    @Override
+    public Object get​(final Object key) {
+        if (localGet(key).isPresent()) { //Do I have it?
+            return localGet(key).get();
+        } else {
+            if (this.parent != null) { //Search up through
+                return this.parent.get(key);
+            }
+        }
+        //I have no parent and no-one else had it.
+        return null;
     }
 }
