@@ -29,7 +29,9 @@
 package g3.project.elements;
 
 import javax.script.Invocable;
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import nu.xom.Builder;
 import nu.xom.Element;
@@ -81,7 +83,7 @@ public final class ScriptElement extends Element implements Invocable {
      *
      * @return Script String.
      */
-    public String getScriptString() {
+    private String getScriptString() {
         String scriptStr = "";
         for (int i = 0; i < this.getChildCount(); i++) {
             var child = this.getChild(i);
@@ -104,8 +106,18 @@ public final class ScriptElement extends Element implements Invocable {
         this.removeChildren();
         this.appendChild(script);
         if (myScriptEngine != null) {
-            myScriptEngine.eval(this.getScriptString());
+            reloadScript();
         }
+    }
+
+    /**
+     * Reload the element's script.
+     *
+     * @throws ScriptException Failed eval.
+     */
+    public void reloadScript() throws ScriptException {
+        myScriptEngine.getBindings(ScriptContext.ENGINE_SCOPE).clear();
+        myScriptEngine.eval(this.getScriptString());
     }
 
     /**
@@ -130,17 +142,33 @@ public final class ScriptElement extends Element implements Invocable {
     /**
      * Set the element's script engine.
      *
-     * @param newScriptEngine Engine to use.
+     * @param scriptEngineMan Global engine manager.
      * @throws ScriptException Failed eval.
      */
-    public void setScriptingEngine(final ScriptEngine newScriptEngine) throws ScriptException {
-        this.myScriptEngine = newScriptEngine;
-        myScriptEngine.eval(this.getScriptString());
+    public void initScriptingEngine(final ScriptEngineManager scriptEngineMan) throws ScriptException {
+        var newScrEngine = scriptEngineMan.
+                getEngineByName(this.getScriptLang());
+
+        this.myScriptEngine = newScrEngine;
+        var parentEl = (Scriptable) this.getParent();
+        var bindings = parentEl.getScriptingBindings();
+        //Attach parent bindings
+        var obsbind = parentEl.getParentElementScriptingBindings();
+        parentEl.getParentElementScriptingBindings().ifPresent(b -> bindings.setParent(b));
+
+        // Attach the local bindings
+        newScrEngine.setBindings(bindings,
+                ScriptContext.ENGINE_SCOPE);
+
+        var scr = this.getScriptString();
+        myScriptEngine.eval(scr);
+        myScriptEngine.eval("print(\"hello\")");
         invScriptEngine = (Invocable) myScriptEngine;
     }
 
     /**
      * Invoke function in script.
+     *
      * @param func Function name String.
      * @param arg Argument to pass.
      * @return Function Return value.

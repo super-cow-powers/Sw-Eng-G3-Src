@@ -20,6 +20,7 @@ Any value defined here will override the pom.xml file value but is only applicab
         <word>Invocable</word>
         <word>its'</word>
         <word>param</word>
+        <word>Scriptable</word>
         <word>Unsuspend</word>
     </spellchecker-wordlist>
 </project-shared-configuration>

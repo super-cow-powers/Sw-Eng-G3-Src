@@ -28,42 +28,36 @@
  */
 package g3.project.elements;
 
-import nu.xom.*;
+import g3.project.core.RecursiveBindings;
+import java.util.Optional;
 
 /**
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public final class ElementFactory extends NodeFactory {
+public interface Scriptable {
 
-    @Override
-    public Element startMakingElement(final String name, final String namespaceURI) {
-        switch (name.toLowerCase()) {
-            case "base:document":
-                return new DocElement(name, namespaceURI);
-            case "base:page":
-                return new PageElement(name, namespaceURI);
-            case "base:shape":
-                return new ShapeElement(name, namespaceURI);
-            case "base:image":
-                return new ImageElement(name, namespaceURI);
-            case "base:playable":
-                return new PlayableElement(name, namespaceURI);
-            case "base:table":
-                return new TableElement(name, namespaceURI);
-            case "base:text":
-                return new TextElement(name, namespaceURI);
-            case "base:stroke":
-                return new StrokeElement(name, namespaceURI);
-            case "base:font":
-                return new FontElement(name, namespaceURI);
-            case "ext:script":
-                return new ScriptElement(name, namespaceURI);
-            case "script":
-                return new ScriptElement(name, namespaceURI);
-            default:
-                return new Element(name, namespaceURI);
-        }
+    /**
+     * Get the local scope for this object.
+     *
+     * @return my Bindings.
+     */
+    RecursiveBindings getScriptingBindings();
 
-    }
+    /**
+     * Get Local Script Bindings of parent node, if parent node is another
+     * Scriptable element.
+     *
+     * @return Optional Bindings
+     */
+    Optional<RecursiveBindings> getParentElementScriptingBindings();
+
+    /**
+     * Get the ScriptElement attached to this object. There should only be one
+     * element.
+     *
+     * @return my (first) script element.
+     */
+    Optional<ScriptElement> getScriptEl();
+
 }

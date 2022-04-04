@@ -28,6 +28,7 @@
  */
 package g3.project.elements;
 
+import g3.project.core.RecursiveBindings;
 import java.util.Optional;
 import java.util.ArrayList;
 import java.util.Random;
@@ -37,12 +38,17 @@ import nu.xom.*;
  *
  * @author david
  */
-public final class DocElement extends Element {
+public final class DocElement extends Element implements Scriptable {
 
     /**
      * Directory containing this document (String).
      */
     private String containingDirStr = null;
+
+    /**
+     * Script bindings for the element.
+     */
+    private RecursiveBindings elementScriptBindings = new RecursiveBindings();
 
 //CHECKSTYLE:OFF
     private static ThreadLocal builders = new ThreadLocal() {
@@ -134,7 +140,7 @@ public final class DocElement extends Element {
     public Boolean validateUniqueID(final String id) {
         /*
         @todo: Implement!
-        */
+         */
         return true;
     }
 
@@ -148,4 +154,41 @@ public final class DocElement extends Element {
         return Optional.empty();
     }
 
+    @Override
+    public RecursiveBindings getScriptingBindings() {
+        return elementScriptBindings;
+    }
+
+    /**
+     * Get Local Script Bindings of parent node, if parent node is another
+     * Scriptable element.
+     *
+     * @return Optional Bindings
+     */
+    @Override
+    public Optional<RecursiveBindings> getParentElementScriptingBindings() {
+        var parent = this.getParent();
+        if (parent instanceof Scriptable) {
+            return Optional.of(((Scriptable) parent).getScriptingBindings());
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Get the ScriptElement attached to this object. There should only be one
+     * element.
+     *
+     * @return my (first) script element.
+     */
+    @Override
+    public Optional<ScriptElement> getScriptEl() {
+        var chEls = this.getChildElements();
+        for (var ch : chEls) {
+            if (ch instanceof ScriptElement) {
+                return Optional.of((ScriptElement) ch);
+            }
+        }
+        return Optional.empty();
+    }
 }

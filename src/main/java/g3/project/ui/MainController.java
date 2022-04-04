@@ -40,9 +40,11 @@ import g3.project.graphics.ExtShape;
 import g3.project.graphics.FontProps;
 import java.io.File;
 import java.util.Optional;
-import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
@@ -100,9 +102,9 @@ public final class MainController {
     private Image loadingGif = null;
 
     /**
-     * Timer for stuff.
+     * Message Clear Scheduler.
      */
-    private Timer timer = new Timer();
+    private final ScheduledExecutorService msgClearScheduler = Executors.newSingleThreadScheduledExecutor();
 //CHECKSTYLE:OFF
     //FXML bound objects
     @FXML
@@ -441,32 +443,40 @@ public final class MainController {
     }
 
     /**
-     * Show a non-blocking message to the user
+     * Show a non-blocking message to the user.
      *
-     * @param message
+     * @param message message to show.
      */
-    public void showNonBlockingMessage(String message) {
+    public void showNonBlockingMessage(final String message) {
+        clearNBMessage();
         messageLabel.setText(message);
         messageLabel.setOpacity(1d);
-        timer.schedule(new TimerTask() {
+        msgClearScheduler.schedule(new TimerTask() {
             public void run() {
                 Platform.runLater(() -> clearNBMessage());
             }
         },
-                MESSAGE_DURATION);
+                MESSAGE_DURATION,
+                TimeUnit.MILLISECONDS);
     }
 
     /**
-     * Show a blocking message to the user
+     * Show a blocking message to the user.
      *
      * @TODO Implement!!
-     * @param message
+     * @param message message to show.
      */
-    public void showBlockingMessage(String message) {
+    public void showBlockingMessage(final String message) {
         showNonBlockingMessage(message);
     }
 
+    /**
+     * Clear non-blocking message area.
+     */
     private void clearNBMessage() {
+        if (!msgClearScheduler.isShutdown()) {
+            msgClearScheduler.shutdown();
+        }
         FadeTransition ft = new FadeTransition(Duration.millis(500), messageLabel);
         ft.setFromValue(1d);
         ft.setToValue(0d);

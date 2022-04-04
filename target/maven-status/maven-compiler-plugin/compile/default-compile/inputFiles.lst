@@ -1,5 +1,6 @@
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/ui/LocObj.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/ui/SizeObj.java
+/home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/Scriptable.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/PageElement.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/TableElement.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/ImageElement.java
@@ -17,6 +18,7 @@
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/core/Cursor.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/graphics/FontProps.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/FontElement.java
+/home/david/NetBeansProjects/project-core/src/main/java/g3/project/core/RecursiveBindings.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/DocElement.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/ShapeElement.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/core/ToolsFactory.java

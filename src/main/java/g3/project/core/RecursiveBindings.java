@@ -42,7 +42,7 @@ public final class RecursiveBindings extends SimpleBindings {
     /**
      * Parent bindings.
      */
-    private RecursiveBindings parent = null;
+    private Optional<RecursiveBindings> parentBindings = Optional.empty();
 
     /**
      * Constructor.
@@ -57,7 +57,7 @@ public final class RecursiveBindings extends SimpleBindings {
      * @param p Parent bindings.
      */
     public void setParent(final RecursiveBindings p) {
-        this.parent = p;
+        this.parentBindings = Optional.of(p);
     }
 
     /**
@@ -85,8 +85,8 @@ public final class RecursiveBindings extends SimpleBindings {
         if (localContainsKey(key)) { //Do I have it?
             return true;
         } else {
-            if (this.parent != null) { //Search up through
-                return this.parent.containsValue(key);
+            if (this.parentBindings.isPresent()) { //Search up through
+                return this.parentBindings.get().containsKey(key);
             }
         }
         /*
@@ -101,8 +101,8 @@ public final class RecursiveBindings extends SimpleBindings {
         if (localGet(key).isPresent()) { //Do I have it?
             return localGet(key).get();
         } else {
-            if (this.parent != null) { //Search up through
-                return this.parent.get(key);
+            if (this.parentBindings.isPresent()) { //Search up through
+                return this.parentBindings.get().get(key);
             }
         }
         //I have no parent and no-one else had it.

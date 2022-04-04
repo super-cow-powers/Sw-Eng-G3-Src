@@ -34,7 +34,6 @@ import g3.project.ui.SizeObj;
 import java.util.Optional;
 import javafx.geometry.Point2D;
 import javafx.scene.paint.Color;
-import javax.script.Bindings;
 import nu.xom.Attribute;
 import nu.xom.Element;
 
@@ -42,7 +41,7 @@ import nu.xom.Element;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class VisualElement extends Element {
+public class VisualElement extends Element implements Scriptable{
 
     /**
      * Script bindings for the element.
@@ -236,20 +235,22 @@ public class VisualElement extends Element {
      *
      * @return my Bindings.
      */
+    @Override
     public final RecursiveBindings getScriptingBindings() {
         return elementScriptBindings;
     }
 
     /**
      * Get Local Script Bindings of parent node, if parent node is another
-     * Visual element.
+     * Scriptable element.
      *
      * @return Optional Bindings
      */
+    @Override
     public final Optional<RecursiveBindings> getParentElementScriptingBindings() {
         var parent = this.getParent();
-        if (parent instanceof VisualElement) {
-            return Optional.of(((VisualElement) parent).getScriptingBindings());
+        if (parent instanceof Scriptable) {
+            return Optional.of(((Scriptable) parent).getScriptingBindings());
         } else {
             return Optional.empty();
         }
@@ -261,6 +262,7 @@ public class VisualElement extends Element {
      *
      * @return my (first) script element.
      */
+    @Override
     public final Optional<ScriptElement> getScriptEl() {
         var chEls = this.getChildElements();
         for (var ch : chEls) {
