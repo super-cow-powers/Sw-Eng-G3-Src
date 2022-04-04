@@ -44,6 +44,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
@@ -102,9 +103,15 @@ public final class MainController {
     private Image loadingGif = null;
 
     /**
-     * Message Clear Scheduler.
+     * Task Scheduler.
      */
-    private final ScheduledExecutorService msgClearScheduler = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService executorSvc = Executors.newSingleThreadScheduledExecutor();
+
+    /**
+     * Non-blocking message clear future.
+     */
+    private ScheduledFuture nbMessageClearFuture;
+
 //CHECKSTYLE:OFF
     //FXML bound objects
     @FXML
@@ -135,6 +142,10 @@ public final class MainController {
      * Duration for to show a non-blocking message.
      */
     private static final Long MESSAGE_DURATION = 6000L;
+    /**
+     * Duration message fade.
+     */
+    private static final Double NBMESSAGE_FADE_MS = 500d;
 
     /**
      * Handle action related to "About" menu item.
@@ -448,12 +459,12 @@ public final class MainController {
      * @param message message to show.
      */
     public void showNonBlockingMessage(final String message) {
-        clearNBMessage();
+        clearNBMessage(0);
         messageLabel.setText(message);
         messageLabel.setOpacity(1d);
-        msgClearScheduler.schedule(new TimerTask() {
+        nbMessageClearFuture = executorSvc.schedule(new TimerTask() {
             public void run() {
-                Platform.runLater(() -> clearNBMessage());
+                Platform.runLater(() -> clearNBMessage(NBMESSAGE_FADE_MS));
             }
         },
                 MESSAGE_DURATION,
@@ -472,20 +483,28 @@ public final class MainController {
 
     /**
      * Clear non-blocking message area.
+     *
+     * @param msFade Fade Duration in mS.
      */
-    private void clearNBMessage() {
-        if (!msgClearScheduler.isShutdown()) {
-            msgClearScheduler.shutdown();
+    private void clearNBMessage(final double msFade) {
+        if (nbMessageClearFuture == null) {
+            return;
         }
-        FadeTransition ft = new FadeTransition(Duration.millis(500), messageLabel);
+        if (!nbMessageClearFuture.isDone()) {
+            nbMessageClearFuture.cancel(true);
+        }
+        FadeTransition ft = new FadeTransition(Duration.millis(msFade), messageLabel);
         ft.setFromValue(1d);
         ft.setToValue(0d);
         ft.play();
     }
 
+    /**
+     * Toggle dark mode.
+     */
     private void toggleDarkMode() {
         Style style;
-        if (darkMode == true) {
+        if (darkMode) {
             style = Style.DARK;
         } else {
             style = Style.LIGHT;
@@ -494,6 +513,9 @@ public final class MainController {
         //containerPane.getStylesheets().add(style.getStyleStylesheetURL());
     }
 
+    /**
+     * Initialise the main UI.
+     */
     public void initialize() {
         //this.scene = contentPane.getScene();
         File xmlFile = new File("exampledoc.xml");
