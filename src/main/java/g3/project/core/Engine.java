@@ -59,12 +59,8 @@ import nu.xom.Element;
 /**
  * @author david
  */
-public final class Engine implements Runnable {
+public final class Engine extends Threaded {
 
-    /**
-     * Thread I'm to run on.
-     */
-    private Thread engineThread;
     /**
      * XML IO.
      */
@@ -93,14 +89,7 @@ public final class Engine implements Runnable {
      * Factory/manager for all script engines.
      */
     private ScriptEngineManager scriptingEngineManager;
-    /**
-     * Am I running?
-     */
-    private final AtomicBoolean running = new AtomicBoolean(false);
-    /**
-     * Am I suspended?
-     */
-    private final AtomicBoolean suspended = new AtomicBoolean(false);
+
     /**
      * Is the UI available?
      */
@@ -127,24 +116,8 @@ public final class Engine implements Runnable {
      * @param uiController Ref to the main UI controller.
      */
     public Engine(final MainController uiController) {
+        super();
         this.controller = uiController;
-    }
-
-    /**
-     * Start the Engine.
-     */
-    public void start() {
-        engineThread = new Thread(this);
-        engineThread.start();
-        running.set(true);
-    }
-
-    /**
-     * Stop the engine.
-     */
-    public void stop() {
-        running.set(false);
-        unsuspend();
     }
 
     /**
@@ -172,17 +145,6 @@ public final class Engine implements Runnable {
     public void offerNewDoc(final File xmlFile) {
         docQueue.offer(xmlFile);
         unsuspend();
-    }
-
-    /**
-     * Unsuspend engine if required.
-     */
-    private synchronized void unsuspend() {
-        // Trigger notify if suspended
-        if (suspended.get()) {
-            suspended.set(false);
-            notify();
-        }
     }
 
     @Override

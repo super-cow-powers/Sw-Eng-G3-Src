@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -28,10 +28,70 @@
  */
 package g3.project.network;
 
+import g3.project.core.Threaded;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import javafx.event.Event;
+
 /**
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class NetThing {
-    
+public final class NetThing extends Threaded {
+
+    public NetThing() {
+        super();
+    }
+
+    /**
+     * Event queue from input sources.
+     */
+    private final BlockingQueue<Event> txEventQueue
+            = new LinkedBlockingQueue<Event>();
+
+    /**
+     * Event queue from input sources.
+     */
+    private final BlockingQueue<Event> rxEventQueue = null;
+
+    /**
+     * Send an event to the net.
+     *
+     * @param event Event to send.
+     */
+    public void sendEvent(final Event event) {
+        txEventQueue.offer(event);
+        unsuspend();
+    }
+
+    @Override
+    public void run() {
+        //Wait till running properly
+        while (!(running.get())) {
+        }
+        //Post-construction Setup goes here
+        //...
+        while (running.get()) {
+            //Main thread dispatch loop
+            try {
+                if (!txEventQueue.isEmpty()) { // New event to send
+
+                } else {
+                    suspended.set(true);
+                }
+
+                while (suspended.get()) { // Suspend
+                    synchronized (this) {
+                        wait();
+                    }
+                }
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            }
+        }
+        cleanup();
+        System.out.println("Net-thing is going down NOW.");
+        return;
+    }
+
 }
