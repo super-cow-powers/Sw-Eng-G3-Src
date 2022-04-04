@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software
+ *   be used to endorse or promote products derived from this software 
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -26,45 +26,12 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package g3.project.elements;
-
-import java.util.Optional;
-import nu.xom.*;
+package g3.project.network;
 
 /**
  *
- * @author David Miall <dm1306@york.ac.uk>
+ * @author David Miall<dm1306@york.ac.uk>
  */
-public class PageElement extends VisualElement {
-
-    private static ThreadLocal builders = new ThreadLocal() {
-
-        protected synchronized Object initialValue() {
-            return new Builder(new ElementFactory());
-        }
-
-    };
-
-    public PageElement(String name) {
-        super(name);
-    }
-
-    public PageElement(String name, String uri) {
-        super(name, uri);
-    }
-
-    public PageElement(Element element) {
-        super(element);
-    }
-
-    public Optional<String> getTitle() {
-        var title = this.getAttribute("title");
-        return (title != null) ? Optional.of(title.getValue()) : Optional.empty();
-    }
-
-    public Optional<String> setTitle(String name) {
-        this.addAttribute(new Attribute("title", name));
-        return getTitle();
-    }
-
+public class NetThing {
+    
 }
