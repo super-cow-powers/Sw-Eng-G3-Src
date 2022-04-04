@@ -40,8 +40,6 @@ import g3.project.graphics.ExtShape;
 import g3.project.graphics.FontProps;
 import java.io.File;
 import java.util.Optional;
-import java.util.TimerTask;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -235,7 +233,6 @@ public final class MainController {
      */
     public void gracefulExit() {
         engine.stop();
-        timer.cancel();
         Platform.exit();
     }
 

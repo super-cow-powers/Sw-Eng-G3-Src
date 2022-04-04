@@ -193,7 +193,7 @@ public final class Engine extends Threaded {
                 ex.printStackTrace();
             }
         }
-
+        cleanup();
         System.out.println("Engine is going down NOW.");
         return;
     }
