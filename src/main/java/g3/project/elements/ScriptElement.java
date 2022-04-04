@@ -28,6 +28,14 @@
  */
 package g3.project.elements;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -41,7 +49,7 @@ import nu.xom.Text;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public final class ScriptElement extends Element implements Invocable {
+public final class ScriptElement extends Element implements Invocable, Includable {
 
     /**
      * Script engine to run element's script.
@@ -84,13 +92,27 @@ public final class ScriptElement extends Element implements Invocable {
      * @return Script String.
      */
     private String getScriptString() {
+        var scrFilePath = this.getSourceLoc();
         String scriptStr = "";
-        for (int i = 0; i < this.getChildCount(); i++) {
-            var child = this.getChild(i);
-            if (child instanceof Text) {
-                scriptStr = scriptStr.concat(child.getValue());
-            } else {
-                //not text
+        if (scrFilePath.isEmpty()) {
+            //No source file, must be inline
+            for (int i = 0; i < this.getChildCount(); i++) {
+                var child = this.getChild(i);
+                if (child instanceof Text) {
+                    scriptStr = scriptStr.concat(child.getValue());
+                } else {
+                    //not text
+                }
+            }
+        } else {
+
+            try {
+                var reader = new BufferedReader(new FileReader(scrFilePath.get()));
+                var lines = reader.lines();
+                scriptStr = lines.collect(Collectors.joining());
+                reader.close();
+            } catch (IOException ex) {
+                Logger.getLogger(ScriptElement.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         return scriptStr;
@@ -103,8 +125,10 @@ public final class ScriptElement extends Element implements Invocable {
      * @throws ScriptException Failed eval.
      */
     public void setScriptString(final String script) throws ScriptException {
-        this.removeChildren();
-        this.appendChild(script);
+        if (this.getSourceLoc().isEmpty()) {
+            this.removeChildren();
+            this.appendChild(script);
+        }
         if (myScriptEngine != null) {
             reloadScript();
         }
@@ -164,6 +188,44 @@ public final class ScriptElement extends Element implements Invocable {
         myScriptEngine.eval(scr);
         myScriptEngine.eval("print(\"hello\")");
         invScriptEngine = (Invocable) myScriptEngine;
+    }
+
+    /**
+     * Get the script's source path or URL.
+     *
+     * @return Location string.
+     */
+    @Override
+    public Optional<String> getSourceLoc() {
+        /**
+         * @todo check this is correct for a variety of inputs.
+         */
+        return Optional.ofNullable(this.getAttribute("include_source")) //Get include_source attribute
+                .map(f -> f.getValue())
+                .map(f -> {
+                    var baseDoc = this.getDocument().getRootElement();
+                    String myDir = "";
+
+                    if (baseDoc instanceof DocElement) {
+                        if (((DocElement) baseDoc).getBaseDir().isPresent()) {
+                            myDir = ((DocElement) baseDoc).getBaseDir().get();
+                        }
+                    }
+                    String loc = null;
+
+                    if (f.contains(":/") || f.startsWith("/")) {
+                        //Must be an absolute Path
+                        loc = f;
+                    } else if (f.startsWith(".")) {
+                        //Must be a relative Path
+                        loc = myDir.concat(f);
+                    }
+                    if (!f.startsWith("http")) {
+                        //Not a URL? Must be a file
+                        loc = "file:".concat(loc);
+                    }
+                    return loc;
+                });
     }
 
     /**

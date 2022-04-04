@@ -46,11 +46,14 @@ public class Ingestion {
 
     }
 
-    /* Return the fully parsed representation of the XML doc */
-    public Optional<Document> parseDocXML(File xmlFile) {
+    /** 
+     * Return the fully parsed representation of the XML doc.
+     * @param xmlFile file for XML.
+     */
+    public final Optional<Document> parseDocXML(File xmlFile) {
         Builder parser = new Builder(new ElementFactory());
         Document doc = null;
-        var xmPath = xmlFile.getAbsoluteFile().getParent()+"/";
+        var xmPath = xmlFile.getAbsoluteFile().getParent() + "/";
         try {
             doc = parser.build(xmlFile);
             if (doc != null) {
