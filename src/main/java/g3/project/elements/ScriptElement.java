@@ -109,7 +109,7 @@ public final class ScriptElement extends Element implements Invocable, Includabl
             try {
                 var reader = new BufferedReader(new FileReader(scrFilePath.get()));
                 var lines = reader.lines();
-                scriptStr = lines.collect(Collectors.joining());
+                scriptStr = lines.collect(Collectors.joining("\n"));
                 reader.close();
             } catch (IOException ex) {
                 Logger.getLogger(ScriptElement.class.getName()).log(Level.SEVERE, null, ex);
