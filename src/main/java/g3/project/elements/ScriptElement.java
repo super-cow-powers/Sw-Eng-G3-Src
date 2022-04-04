@@ -91,7 +91,7 @@ public final class ScriptElement extends Element implements Invocable, Includabl
      *
      * @return Script String.
      */
-    private String getScriptString() {
+    public String getScriptString() {
         var scrFilePath = this.getSourceLoc();
         String scriptStr = "";
         if (scrFilePath.isEmpty()) {

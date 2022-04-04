@@ -39,6 +39,9 @@ import javafx.event.Event;
  */
 public final class NetThing extends Threaded {
 
+    /**
+     * Constructor.
+     */
     public NetThing() {
         super();
     }
@@ -52,7 +55,8 @@ public final class NetThing extends Threaded {
     /**
      * Event queue from input sources.
      */
-    private final BlockingQueue<Event> rxEventQueue = null;
+    private final BlockingQueue<Event> rxEventQueue
+            = new LinkedBlockingQueue<Event>();
 
     /**
      * Send an event to the net.
@@ -62,6 +66,15 @@ public final class NetThing extends Threaded {
     public void sendEvent(final Event event) {
         txEventQueue.offer(event);
         unsuspend();
+    }
+
+    /**
+     * Get the RX queue.
+     *
+     * @return blocking queue for events.
+     */
+    public BlockingQueue<Event> getRxQueue() {
+        return rxEventQueue;
     }
 
     @Override
@@ -89,7 +102,6 @@ public final class NetThing extends Threaded {
                 ex.printStackTrace();
             }
         }
-        cleanup();
         System.out.println("Net-thing is going down NOW.");
         return;
     }

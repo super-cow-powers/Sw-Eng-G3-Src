@@ -42,20 +42,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public abstract class Threaded implements Runnable {
 
     /**
-     * Task Scheduler.
-     */
-    private final ScheduledExecutorService executorSvc = Executors.newSingleThreadScheduledExecutor();
-    /**
-     * Force-kill thread future.
-     */
-    private ScheduledFuture forceStopFuture;
-
-    /**
-     * Force-kill delay in mS
-     */
-    private static final long FORCE_KILL_DELAY = 2000L;
-
-    /**
      * Thread I'm to run on.
      */
     protected Thread myThread;
@@ -80,17 +66,11 @@ public abstract class Threaded implements Runnable {
     }
 
     /**
-     * Request stop thread activity. Will kill thread if unresponsive after
+     * Request stop thread activity.
      */
     public final void stop() {
         running.set(false);
         unsuspend();
-        forceStopFuture = executorSvc.schedule(() -> {
-            myThread.interrupt();
-        },
-                FORCE_KILL_DELAY,
-                TimeUnit.MILLISECONDS);
-
     }
 
     /**
@@ -101,15 +81,6 @@ public abstract class Threaded implements Runnable {
         if (suspended.get()) {
             suspended.set(false);
             notify();
-        }
-    }
-
-    /**
-     * Cleanup things.
-     */
-    protected final void cleanup() {
-        if (forceStopFuture != null) {
-            forceStopFuture.cancel(true);
         }
     }
 

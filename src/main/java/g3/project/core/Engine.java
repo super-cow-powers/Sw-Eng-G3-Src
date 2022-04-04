@@ -33,6 +33,7 @@ import g3.project.elements.DocElement;
 import g3.project.elements.PageElement;
 import g3.project.elements.VisualElement;
 import g3.project.graphics.FontProps;
+import g3.project.network.NetThing;
 import g3.project.ui.LocObj;
 import g3.project.ui.MainController;
 import g3.project.ui.SizeObj;
@@ -65,6 +66,11 @@ public final class Engine extends Threaded {
      * XML IO.
      */
     private final Ingestion ingest = new Ingestion();
+    /**
+     * Network Comms.
+     */
+    private final NetThing netComms = new NetThing();
+
     /**
      * List of tools.
      */
@@ -155,7 +161,8 @@ public final class Engine extends Threaded {
 
         while (!(running.get())) {
         }
-
+        //Start network thing
+        netComms.start();
         // Load in the tools
         loadTools()
                 .ifPresentOrElse(
@@ -193,7 +200,7 @@ public final class Engine extends Threaded {
                 ex.printStackTrace();
             }
         }
-        cleanup();
+        netComms.stop();
         System.out.println("Engine is going down NOW.");
         return;
     }
