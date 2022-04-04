@@ -40,7 +40,6 @@ import g3.project.graphics.ExtShape;
 import g3.project.graphics.FontProps;
 import java.io.File;
 import java.util.Optional;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -234,7 +233,7 @@ public final class MainController {
      */
     public void gracefulExit() {
         engine.stop();
-        timer.cancel();
+        executorSvc.shutdown();
         Platform.exit();
     }
 
@@ -462,10 +461,8 @@ public final class MainController {
         clearNBMessage(0);
         messageLabel.setText(message);
         messageLabel.setOpacity(1d);
-        nbMessageClearFuture = executorSvc.schedule(new TimerTask() {
-            public void run() {
+        nbMessageClearFuture = executorSvc.schedule(() -> {
                 Platform.runLater(() -> clearNBMessage(NBMESSAGE_FADE_MS));
-            }
         },
                 MESSAGE_DURATION,
                 TimeUnit.MILLISECONDS);

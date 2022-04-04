@@ -33,6 +33,7 @@ import g3.project.elements.DocElement;
 import g3.project.elements.PageElement;
 import g3.project.elements.VisualElement;
 import g3.project.graphics.FontProps;
+import g3.project.network.NetThing;
 import g3.project.ui.LocObj;
 import g3.project.ui.MainController;
 import g3.project.ui.SizeObj;
@@ -59,16 +60,17 @@ import nu.xom.Element;
 /**
  * @author david
  */
-public final class Engine implements Runnable {
+public final class Engine extends Threaded {
 
-    /**
-     * Thread I'm to run on.
-     */
-    private Thread engineThread;
     /**
      * XML IO.
      */
     private final Ingestion ingest = new Ingestion();
+    /**
+     * Network Comms.
+     */
+    private final NetThing netComms = new NetThing();
+
     /**
      * List of tools.
      */
@@ -93,14 +95,7 @@ public final class Engine implements Runnable {
      * Factory/manager for all script engines.
      */
     private ScriptEngineManager scriptingEngineManager;
-    /**
-     * Am I running?
-     */
-    private final AtomicBoolean running = new AtomicBoolean(false);
-    /**
-     * Am I suspended?
-     */
-    private final AtomicBoolean suspended = new AtomicBoolean(false);
+
     /**
      * Is the UI available?
      */
@@ -127,24 +122,8 @@ public final class Engine implements Runnable {
      * @param uiController Ref to the main UI controller.
      */
     public Engine(final MainController uiController) {
+        super();
         this.controller = uiController;
-    }
-
-    /**
-     * Start the Engine.
-     */
-    public void start() {
-        engineThread = new Thread(this);
-        engineThread.start();
-        running.set(true);
-    }
-
-    /**
-     * Stop the engine.
-     */
-    public void stop() {
-        running.set(false);
-        unsuspend();
     }
 
     /**
@@ -174,17 +153,6 @@ public final class Engine implements Runnable {
         unsuspend();
     }
 
-    /**
-     * Unsuspend engine if required.
-     */
-    private synchronized void unsuspend() {
-        // Trigger notify if suspended
-        if (suspended.get()) {
-            suspended.set(false);
-            notify();
-        }
-    }
-
     @Override
     @SuppressWarnings("empty-statement")
     public void run() {
@@ -193,7 +161,8 @@ public final class Engine implements Runnable {
 
         while (!(running.get())) {
         }
-
+        //Start network thing
+        netComms.start();
         // Load in the tools
         loadTools()
                 .ifPresentOrElse(
@@ -231,7 +200,7 @@ public final class Engine implements Runnable {
                 ex.printStackTrace();
             }
         }
-
+        netComms.stop();
         System.out.println("Engine is going down NOW.");
         return;
     }

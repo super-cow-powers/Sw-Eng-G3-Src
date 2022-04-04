@@ -26,45 +26,68 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package g3.project.elements;
+package g3.project.core;
 
-import java.util.Optional;
-import nu.xom.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
- * @author David Miall <dm1306@york.ac.uk>
+ * @author David Miall<dm1306@york.ac.uk>
  */
-public class PageElement extends VisualElement {
+public abstract class Threaded implements Runnable {
 
-    private static ThreadLocal builders = new ThreadLocal() {
+    /**
+     * Thread I'm to run on.
+     */
+    protected Thread myThread;
 
-        protected synchronized Object initialValue() {
-            return new Builder(new ElementFactory());
+    /**
+     * Am I running?
+     */
+    protected final AtomicBoolean running = new AtomicBoolean(false);
+
+    /**
+     * Am I suspended?
+     */
+    protected final AtomicBoolean suspended = new AtomicBoolean(false);
+
+    /**
+     * Request start thread activity.
+     */
+    public final void start() {
+        myThread = new Thread(this);
+        myThread.start();
+        running.set(true);
+    }
+
+    /**
+     * Request stop thread activity.
+     */
+    public final void stop() {
+        running.set(false);
+        unsuspend();
+    }
+
+    /**
+     * Unsuspend thread.
+     */
+    protected final synchronized void unsuspend() {
+        // Trigger notify if suspended
+        if (suspended.get()) {
+            suspended.set(false);
+            notify();
         }
-
-    };
-
-    public PageElement(String name) {
-        super(name);
     }
 
-    public PageElement(String name, String uri) {
-        super(name, uri);
-    }
-
-    public PageElement(Element element) {
-        super(element);
-    }
-
-    public Optional<String> getTitle() {
-        var title = this.getAttribute("title");
-        return (title != null) ? Optional.of(title.getValue()) : Optional.empty();
-    }
-
-    public Optional<String> setTitle(String name) {
-        this.addAttribute(new Attribute("title", name));
-        return getTitle();
-    }
+    /**
+     * Run stuff.
+     */
+    @Override
+    public abstract void run();
 
 }

@@ -35,7 +35,7 @@ import nu.xom.*;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class ImageElement extends VisualElement {
+public class ImageElement extends VisualElement implements Includable {
 
     /**
      * Static method to return builder.
@@ -49,32 +49,41 @@ public class ImageElement extends VisualElement {
         }
 
     };
-/**
- * Constructor.
- * @param name Element name.
- */
+
+    /**
+     * Constructor.
+     *
+     * @param name Element name.
+     */
     public ImageElement(final String name) {
         super(name);
     }
-/**
- * Constructor.
- * @param name Element name.
- * @param uri Element URI.
- */
+
+    /**
+     * Constructor.
+     *
+     * @param name Element name.
+     * @param uri Element URI.
+     */
     public ImageElement(final String name, final String uri) {
         super(name, uri);
     }
-/**
- * Constructor.
- * @param element Element.
- */
+
+    /**
+     * Constructor.
+     *
+     * @param element Element.
+     */
     public ImageElement(final Element element) {
         super(element);
     }
-/**
- * Get the image's source path or URL.
- * @return Location string.
- */
+
+    /**
+     * Get the image's source path or URL.
+     *
+     * @return Location string.
+     */
+    @Override
     public final Optional<String> getSourceLoc() {
         /**
          * @todo check this is correct for a variety of inputs.
