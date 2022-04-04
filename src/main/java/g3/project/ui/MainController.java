@@ -233,6 +233,7 @@ public final class MainController {
      */
     public void gracefulExit() {
         engine.stop();
+        executorSvc.shutdown();
         Platform.exit();
     }
 
