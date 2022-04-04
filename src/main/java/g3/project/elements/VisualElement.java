@@ -28,13 +28,12 @@
  */
 package g3.project.elements;
 
+import g3.project.core.RecursiveBindings;
 import g3.project.ui.LocObj;
 import g3.project.ui.SizeObj;
 import java.util.Optional;
 import javafx.geometry.Point2D;
 import javafx.scene.paint.Color;
-import javax.script.Bindings;
-import javax.script.SimpleBindings;
 import nu.xom.Attribute;
 import nu.xom.Element;
 
@@ -42,12 +41,12 @@ import nu.xom.Element;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class VisualElement extends Element {
+public class VisualElement extends Element implements Scriptable{
 
     /**
      * Script bindings for the element.
      */
-    private SimpleBindings elementScriptBindings = new SimpleBindings();
+    private RecursiveBindings elementScriptBindings = new RecursiveBindings();
     /**
      * Clone of this object. Might not use it.
      */
@@ -110,7 +109,7 @@ public class VisualElement extends Element {
         var start = loc.getStart();
         var centre = loc.getCentre();
         var end = loc.getEnd();
-        
+
         /**
          * @todo Assign centre and end.
          */
@@ -190,16 +189,18 @@ public class VisualElement extends Element {
                         rot.isPresent() ? rot.get() : 0))
                 : Optional.empty();
     }
-/**
- * Get the element's fill colour.
- * @return Optional colour.
- */
+
+    /**
+     * Get the element's fill colour.
+     *
+     * @return Optional colour.
+     */
     public final Optional<Color> getFillColour() {
         final int lenRGB = 6;
         final int lenRGBA = 8;
         var col = Optional.ofNullable(this.getAttribute("fill"));
         /**
-         * @TODO: Find a nicer looking way of making this work Probably
+         * @todo: Find a nicer looking way of making this work Probably
          * containing more streams.
          */
         if (col.isPresent()) {
@@ -213,7 +214,7 @@ public class VisualElement extends Element {
                             (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
                             (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
                             1.0d));
-                    //CHECKSTYLE:ON
+                //CHECKSTYLE:ON
                 case lenRGBA:
                     //CHECKSTYLE:OFF
                     return Optional.of(new Color(
@@ -221,7 +222,7 @@ public class VisualElement extends Element {
                             (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
                             (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
                             (double) Integer.valueOf(colStr.substring(6, 8), 16) / 255));
-                    //CHECKSTYLE:ON
+                //CHECKSTYLE:ON
                 default:
             }
         }
@@ -234,16 +235,34 @@ public class VisualElement extends Element {
      *
      * @return my Bindings.
      */
-    public final Bindings getScriptingBindings() {
+    @Override
+    public final RecursiveBindings getScriptingBindings() {
         return elementScriptBindings;
     }
 
     /**
-     * Get the ScriptElement attached to this object.
-     * There should only be one element.
+     * Get Local Script Bindings of parent node, if parent node is another
+     * Scriptable element.
+     *
+     * @return Optional Bindings
+     */
+    @Override
+    public final Optional<RecursiveBindings> getParentElementScriptingBindings() {
+        var parent = this.getParent();
+        if (parent instanceof Scriptable) {
+            return Optional.of(((Scriptable) parent).getScriptingBindings());
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Get the ScriptElement attached to this object. There should only be one
+     * element.
      *
      * @return my (first) script element.
      */
+    @Override
     public final Optional<ScriptElement> getScriptEl() {
         var chEls = this.getChildElements();
         for (var ch : chEls) {

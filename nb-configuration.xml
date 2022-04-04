@@ -16,8 +16,11 @@ Any value defined here will override the pom.xml file value but is only applicab
         <netbeans.hint.license>bsd_1</netbeans.hint.license>
     </properties>
     <spellchecker-wordlist xmlns="http://www.netbeans.org/ns/spellchecker-wordlist/1">
+        <word>eval</word>
+        <word>Invocable</word>
         <word>its'</word>
         <word>param</word>
+        <word>Scriptable</word>
         <word>Unsuspend</word>
     </spellchecker-wordlist>
 </project-shared-configuration>

@@ -26,84 +26,38 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package g3.project.core;
+package g3.project.elements;
 
-import g3.project.elements.ScriptElement;
-import nu.xom.Builder;
-import nu.xom.Element;
+import g3.project.core.RecursiveBindings;
+import java.util.Optional;
 
 /**
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class Tool extends Element {
+public interface Scriptable {
 
     /**
-     * Create a builder.
-     */
-    private static ThreadLocal builders = new ThreadLocal() {
-
-        protected synchronized Object initialValue() {
-            return new Builder(new ToolsFactory());
-        }
-
-    };
-
-    /**
-     * Constructor.
+     * Get the local scope for this object.
      *
-     * @param name Tool name.
+     * @return my Bindings.
      */
-    public Tool(final String name) {
-        super(name);
-    }
+    RecursiveBindings getScriptingBindings();
 
     /**
-     * Constructor.
+     * Get Local Script Bindings of parent node, if parent node is another
+     * Scriptable element.
      *
-     * @param name Tool name.
-     * @param uri Tool URI.
+     * @return Optional Bindings
      */
-    public Tool(final String name, final String uri) {
-        super(name, uri);
-    }
+    Optional<RecursiveBindings> getParentElementScriptingBindings();
 
     /**
-     * Constructor.
+     * Get the ScriptElement attached to this object. There should only be one
+     * element.
      *
-     * @param element Tool Element.
+     * @return my (first) script element.
      */
-    public Tool(final Element element) {
-        super(element);
-    }
+    Optional<ScriptElement> getScriptEl();
 
-    /**
-     * Get tool name.
-     *
-     * @return Tool name string.
-     */
-    public final String getName() {
-        var name = this.getAttribute("name");
-        return name.getValue();
-    }
-
-    /**
-     * Get tool ID.
-     *
-     * @return Tool ID string.
-     */
-    public final String getID() {
-        var id = this.getAttribute("ID");
-        return id != null ? id.getValue() : "tool-null-id";
-    }
-
-    /**
-     * Get tool script string.
-     *
-     * @return script string.
-     */
-    public final String getScriptString() {
-        var el = this.getChildElements("script").get(0);
-        return (el instanceof ScriptElement) ? ((ScriptElement) el).getScriptString() : "";
-    }
 }

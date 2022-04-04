@@ -52,7 +52,6 @@ import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
-import javax.script.ScriptContext;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import nu.xom.Element;
@@ -326,9 +325,20 @@ public final class Engine implements Runnable {
                                 controller.addCardButton(title, id, ind);
                             });
                 }
+
                 // Initialise ID for first page
                 currentPageID = currentPages.get(0).getID();
                 this.gotoPage(currentPageID, true);
+                //Init Document global scripts
+                currentDoc.getScriptEl().ifPresent(s -> {
+                    try {
+                        s.initScriptingEngine(scriptingEngineManager);
+                    } catch (ScriptException ex) {
+                        putMessage(
+                                "Exception in document script: "
+                                + ex.getMessage(), Boolean.TRUE);
+                    }
+                });
 
             } else {
                 putMessage("Malformed Doc - not Doc Element!", true);
@@ -503,6 +513,13 @@ public final class Engine implements Runnable {
     }
 
     /**
+     * Set-up global script things.
+     */
+    private void setupScriptEngineMan() {
+        var globalBindings = scriptingEngineManager.getBindings();
+    }
+
+    /**
      * Process elements on a page.
      *
      * @param el Element
@@ -525,14 +542,8 @@ public final class Engine implements Runnable {
             } else if (ch instanceof ScriptElement) { // Is the child a script?
                 var chScr = ((ScriptElement) ch);
                 // Make a new script engine, with the specified language
-                var newScrEngine = scriptingEngineManager.
-                        getEngineByName(chScr.getScriptLang());
-                // Attach the correct local bindings
-                newScrEngine.setBindings(el.getScriptingBindings(),
-                        ScriptContext.ENGINE_SCOPE);
-
                 try {
-                    chScr.setScriptingEngine(newScrEngine);
+                    chScr.initScriptingEngine(scriptingEngineManager);
                 } catch (ScriptException ex) {
                     putMessage(
                             "Exception in script for: " + el.getID() + " is: "

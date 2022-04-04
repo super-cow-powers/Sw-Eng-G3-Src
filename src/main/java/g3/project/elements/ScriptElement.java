@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -29,9 +29,10 @@
 package g3.project.elements;
 
 import javax.script.Invocable;
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import javax.script.SimpleScriptContext;
 import nu.xom.Builder;
 import nu.xom.Element;
 import nu.xom.Text;
@@ -40,10 +41,22 @@ import nu.xom.Text;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-final public class ScriptElement extends Element implements Invocable{
-    private ScriptEngine my_engine = null;
-    private Invocable inv_engine = null;
+public final class ScriptElement extends Element implements Invocable {
+
+    /**
+     * Script engine to run element's script.
+     */
+    private ScriptEngine myScriptEngine = null;
+    /**
+     * Invocable form of script engine.
+     */
+    private Invocable invScriptEngine = null;
+    /**
+     * Script's language.
+     */
     private final String myLang = "python";
+
+    //CHECKSTYLE:OFF
     private static ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
@@ -63,8 +76,14 @@ final public class ScriptElement extends Element implements Invocable{
     public ScriptElement(Element element) {
         super(element);
     }
+    //CHECKSTYLE:ON
 
-    public String getScriptText() {
+    /**
+     * Get script string.
+     *
+     * @return Script String.
+     */
+    private String getScriptString() {
         String scriptStr = "";
         for (int i = 0; i < this.getChildCount(); i++) {
             var child = this.getChild(i);
@@ -76,50 +95,95 @@ final public class ScriptElement extends Element implements Invocable{
         }
         return scriptStr;
     }
-    public void setScriptString(String script) throws ScriptException{
+
+    /**
+     * Set script String.
+     *
+     * @param script String representation of script.
+     * @throws ScriptException Failed eval.
+     */
+    public void setScriptString(final String script) throws ScriptException {
         this.removeChildren();
         this.appendChild(script);
-        if (my_engine != null){
-           my_engine.eval(this.getScriptText());
+        if (myScriptEngine != null) {
+            reloadScript();
         }
     }
-    
+
     /**
-     * Get the language used for the script
-     * Currently only supporting Python
+     * Reload the element's script.
+     *
+     * @throws ScriptException Failed eval.
+     */
+    public void reloadScript() throws ScriptException {
+        myScriptEngine.getBindings(ScriptContext.ENGINE_SCOPE).clear();
+        myScriptEngine.eval(this.getScriptString());
+    }
+
+    /**
+     * Get the language used for the script Currently only supporting Python.
+     *
      * @return String of language name
      */
-    public String getScriptLang(){
+    public String getScriptLang() {
         return myLang;
     }
-    
+
     /**
-     * Not currently supported
+     * Not currently supported.
+     *
      * @param lang language name string
      * @return set language name string
      */
-    public String setScriptLang(String lang){
+    public String setScriptLang(final String lang) {
         return myLang;
     }
-    
+
     /**
-     * Set the element's script engine
-     * @param newScriptEngine 
+     * Set the element's script engine.
+     *
+     * @param scriptEngineMan Global engine manager.
+     * @throws ScriptException Failed eval.
      */
-    public void setScriptingEngine(ScriptEngine newScriptEngine) throws ScriptException{
-        this.my_engine = newScriptEngine;
-        my_engine.eval(this.getScriptText());
-        inv_engine = (Invocable) my_engine;
+    public void initScriptingEngine(final ScriptEngineManager scriptEngineMan) throws ScriptException {
+        var newScrEngine = scriptEngineMan.
+                getEngineByName(this.getScriptLang());
+
+        this.myScriptEngine = newScrEngine;
+        var parentEl = (Scriptable) this.getParent();
+        var bindings = parentEl.getScriptingBindings();
+        //Attach parent bindings
+        var obsbind = parentEl.getParentElementScriptingBindings();
+        parentEl.getParentElementScriptingBindings().ifPresent(b -> bindings.setParent(b));
+
+        // Attach the local bindings
+        newScrEngine.setBindings(bindings,
+                ScriptContext.ENGINE_SCOPE);
+
+        var scr = this.getScriptString();
+        myScriptEngine.eval(scr);
+        myScriptEngine.eval("print(\"hello\")");
+        invScriptEngine = (Invocable) myScriptEngine;
     }
 
+    /**
+     * Invoke function in script.
+     *
+     * @param func Function name String.
+     * @param arg Argument to pass.
+     * @return Function Return value.
+     * @throws ScriptException Failed eval.
+     * @throws NoSuchMethodException Failed to find function.
+     */
+    @Override
+    public Object invokeFunction(final String func, final Object... arg) throws ScriptException, NoSuchMethodException {
+        return invScriptEngine.invokeFunction(func, arg);
+    }
+
+    //CHECKSTYLE:OFF
     @Override
     public Object invokeMethod(Object arg0, String arg1, Object... arg2) throws ScriptException, NoSuchMethodException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Object invokeFunction(String func, Object... arg) throws ScriptException, NoSuchMethodException {
-        return inv_engine.invokeFunction(func, arg);
     }
 
     @Override
@@ -131,4 +195,5 @@ final public class ScriptElement extends Element implements Invocable{
     public <T> T getInterface(Object arg0, Class<T> arg1) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+    //CHECKSTYLE:ON
 }
