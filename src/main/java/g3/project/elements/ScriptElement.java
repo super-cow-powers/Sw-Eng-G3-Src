@@ -28,6 +28,8 @@
  */
 package g3.project.elements;
 
+import g3.project.core.Cursor;
+import g3.project.ui.SizeObj;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -39,7 +41,6 @@ import java.util.stream.Collectors;
 import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import nu.xom.Builder;
 import nu.xom.Element;
@@ -53,8 +54,10 @@ public final class ScriptElement extends Element implements Invocable, Includabl
 
     /**
      * Script engine to run element's script.
+     *
+     * WARNING: This is a global, shared object!!!
      */
-    private ScriptEngine myScriptEngine = null;
+    private ScriptEngine globalScriptEngine = null;
     /**
      * Invocable form of script engine.
      */
@@ -129,7 +132,7 @@ public final class ScriptElement extends Element implements Invocable, Includabl
             this.removeChildren();
             this.appendChild(script);
         }
-        if (myScriptEngine != null) {
+        if (globalScriptEngine != null) {
             reloadScript();
         }
     }
@@ -140,8 +143,35 @@ public final class ScriptElement extends Element implements Invocable, Includabl
      * @throws ScriptException Failed eval.
      */
     public void reloadScript() throws ScriptException {
-        myScriptEngine.getBindings(ScriptContext.ENGINE_SCOPE).clear();
-        myScriptEngine.eval(this.getScriptString());
+        var parentEl = (Scriptable) this.getParent();
+        var bindings = parentEl.getScriptingBindings();
+        parentEl.getScriptingBindings().clear();
+        try {
+            attachMyBindings();
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(ScriptElement.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        globalScriptEngine.eval(this.getScriptString());
+
+    }
+
+    /**
+     * Attach the correct bindings to the engine.
+     * @throws ClassNotFoundException Class of parent element not found.
+     */
+    private void attachMyBindings() throws ClassNotFoundException {
+        var parentEl = (Scriptable) this.getParent();
+        var bindings = parentEl.getScriptingBindings();
+        //Expose the element to the engine
+        Class<?> elClass = Class.forName(parentEl.getRealType());
+        Class<?> elClassb = parentEl.getClass();
+        parentEl.getScriptingBindings().put("this", elClass.cast(parentEl));
+        //Attach parent bindings
+        var obsbind = parentEl.getParentElementScriptingBindings();
+        parentEl.getParentElementScriptingBindings().ifPresent(b -> bindings.setParent(b));
+
+        globalScriptEngine.setBindings(bindings,
+                ScriptContext.ENGINE_SCOPE);
     }
 
     /**
@@ -166,28 +196,19 @@ public final class ScriptElement extends Element implements Invocable, Includabl
     /**
      * Set the element's script engine.
      *
-     * @param scriptEngineMan Global engine manager.
+     * @param scriptEngine Script Engine.
      * @throws ScriptException Failed eval.
      */
-    public void initScriptingEngine(final ScriptEngineManager scriptEngineMan) throws ScriptException {
-        var newScrEngine = scriptEngineMan.
-                getEngineByName(this.getScriptLang());
+    public void initScriptingEngine(final ScriptEngine scriptEngine) throws ScriptException {
+        var engineLang = scriptEngine.getFactory().getLanguageName();
+        if (engineLang != myLang) {
+            throw new ScriptException("Wrong Language!");
+        }
 
-        this.myScriptEngine = newScrEngine;
-        var parentEl = (Scriptable) this.getParent();
-        var bindings = parentEl.getScriptingBindings();
-        //Attach parent bindings
-        var obsbind = parentEl.getParentElementScriptingBindings();
-        parentEl.getParentElementScriptingBindings().ifPresent(b -> bindings.setParent(b));
-
-        // Attach the local bindings
-        newScrEngine.setBindings(bindings,
-                ScriptContext.ENGINE_SCOPE);
-
-        var scr = this.getScriptString();
-        myScriptEngine.eval(scr);
-        myScriptEngine.eval("print(\"hello\")");
-        invScriptEngine = (Invocable) myScriptEngine;
+        this.globalScriptEngine = scriptEngine;
+        reloadScript();
+        globalScriptEngine.eval("print(\"hello\")");
+        invScriptEngine = (Invocable) globalScriptEngine;
     }
 
     /**
@@ -239,6 +260,11 @@ public final class ScriptElement extends Element implements Invocable, Includabl
      */
     @Override
     public Object invokeFunction(final String func, final Object... arg) throws ScriptException, NoSuchMethodException {
+        try {
+            attachMyBindings();
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(ScriptElement.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return invScriptEngine.invokeFunction(func, arg);
     }
 

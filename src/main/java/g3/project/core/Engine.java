@@ -40,6 +40,7 @@ import g3.project.ui.SizeObj;
 import g3.project.xmlIO.Ingestion;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.BlockingQueue;
@@ -53,6 +54,7 @@ import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
+import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import nu.xom.Element;
@@ -95,6 +97,8 @@ public final class Engine extends Threaded {
      * Factory/manager for all script engines.
      */
     private ScriptEngineManager scriptingEngineManager;
+
+    private HashMap<String, ScriptEngine> knownScriptEngines = new HashMap<>();
 
     /**
      * Is the UI available?
@@ -257,6 +261,24 @@ public final class Engine extends Threaded {
     }
 
     /**
+     * Get a script engine for the specified language.
+     *
+     * @param lang language.
+     * @return engine.
+     */
+    private ScriptEngine getScriptEngine(final String lang) {
+        ScriptEngine engine;
+
+        if (knownScriptEngines.containsKey(lang)) {
+            engine = knownScriptEngines.get(lang);
+        } else {
+            engine = scriptingEngineManager.getEngineByName(lang);
+            knownScriptEngines.put(lang, engine);
+        }
+        return engine;
+    }
+
+    /**
      * Parse a new XML document.
      *
      * @param xmlFile Doc to parse
@@ -300,8 +322,9 @@ public final class Engine extends Threaded {
                 this.gotoPage(currentPageID, true);
                 //Init Document global scripts
                 currentDoc.getScriptEl().ifPresent(s -> {
+                    var lang = s.getScriptLang();
                     try {
-                        s.initScriptingEngine(scriptingEngineManager);
+                        s.initScriptingEngine(getScriptEngine(lang));
                     } catch (ScriptException ex) {
                         putMessage(
                                 "Exception in document script: "
@@ -512,7 +535,7 @@ public final class Engine extends Threaded {
                 var chScr = ((ScriptElement) ch);
                 // Make a new script engine, with the specified language
                 try {
-                    chScr.initScriptingEngine(scriptingEngineManager);
+                    chScr.initScriptingEngine(getScriptEngine(chScr.getScriptLang()));
                 } catch (ScriptException ex) {
                     putMessage(
                             "Exception in script for: " + el.getID() + " is: "
@@ -546,6 +569,7 @@ public final class Engine extends Threaded {
      * @param blocking Should I block the User?
      */
     public void putMessage(final String message, final Boolean blocking) {
+        System.out.println("Message: " + message);
         if (blocking) {
             Platform.runLater(() -> controller.showBlockingMessage(message));
         } else {

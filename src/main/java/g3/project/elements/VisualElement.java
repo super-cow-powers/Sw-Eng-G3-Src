@@ -41,7 +41,7 @@ import nu.xom.Element;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class VisualElement extends Element implements Scriptable{
+public class VisualElement extends Element implements Scriptable {
 
     /**
      * Script bindings for the element.
@@ -271,6 +271,11 @@ public class VisualElement extends Element implements Scriptable{
             }
         }
         return Optional.empty();
+    }
+
+    @Override
+    public final String getRealType() {
+        return this.getClass().getName();
     }
 
 }

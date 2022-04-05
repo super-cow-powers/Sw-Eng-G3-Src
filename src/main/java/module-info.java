@@ -12,7 +12,11 @@ module g3.project.core {
     requires org.fxmisc.richtext;
     requires org.fxmisc.undo;
     
-    opens g3.project.core to javafx.fxml;
+    opens g3.project.core to javafx.fxml, jython.slim;
+    opens g3.project.elements to jython.slim;
     opens g3.project.ui to javafx.fxml;
     exports g3.project.core;
+    exports g3.project.elements;
+    exports g3.project.ui;
+    exports g3.project.network;
 }

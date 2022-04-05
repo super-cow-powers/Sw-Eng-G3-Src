@@ -191,4 +191,9 @@ public final class DocElement extends Element implements Scriptable {
         }
         return Optional.empty();
     }
+    
+    @Override
+    public final String getRealType() {
+        return this.getClass().getName();
+    }
 }
