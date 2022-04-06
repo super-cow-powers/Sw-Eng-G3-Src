@@ -104,6 +104,6 @@ public class Tool extends Element {
      */
     public final String getScriptString() {
         var el = this.getChildElements("script").get(0);
-        return (el instanceof ScriptElement) ? ((ScriptElement) el).getScriptString() : "";
+        return (el instanceof ScriptElement) ? ((ScriptElement) el).getInlineScriptString() : "";
     }
 }

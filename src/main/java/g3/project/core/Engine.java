@@ -37,8 +37,9 @@ import g3.project.network.NetThing;
 import g3.project.ui.LocObj;
 import g3.project.ui.MainController;
 import g3.project.ui.SizeObj;
-import g3.project.xmlIO.Ingestion;
+import g3.project.xmlIO.Io;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
@@ -46,6 +47,8 @@ import java.util.Stack;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -67,11 +70,22 @@ public final class Engine extends Threaded {
     /**
      * XML IO.
      */
-    private final Ingestion ingest = new Ingestion();
+    private Io docIO;
+
     /**
-     * Network Comms.
+     * Tools IO.
+     */
+    private Io toolIO;
+
+    /**
+     * Network Communications module.
      */
     private final NetThing netComms = new NetThing();
+
+    /**
+     * Scripting Engine Controller.
+     */
+    private Scripting scriptingEngine;
 
     /**
      * List of tools.
@@ -93,12 +107,6 @@ public final class Engine extends Threaded {
      * Navigation history stack.
      */
     private final Stack<String> navHistory = new Stack<>();
-    /**
-     * Factory/manager for all script engines.
-     */
-    private ScriptEngineManager scriptingEngineManager;
-
-    private HashMap<String, ScriptEngine> knownScriptEngines = new HashMap<>();
 
     /**
      * Is the UI available?
@@ -157,16 +165,24 @@ public final class Engine extends Threaded {
         unsuspend();
     }
 
+    /**
+     * Returns the current Document IO object.
+     *
+     * @return doc IO.
+     */
+    public Io getDocIO() {
+        return docIO;
+    }
+
     @Override
     @SuppressWarnings("empty-statement")
     public void run() {
-        // Init script engine manager
-        scriptingEngineManager = new ScriptEngineManager();
 
         while (!(running.get())) {
         }
         //Start network thing
         netComms.start();
+        scriptingEngine = new Scripting("python", this);
         // Load in the tools
         loadTools()
                 .ifPresentOrElse(
@@ -261,31 +277,13 @@ public final class Engine extends Threaded {
     }
 
     /**
-     * Get a script engine for the specified language.
-     *
-     * @param lang language.
-     * @return engine.
-     */
-    private ScriptEngine getScriptEngine(final String lang) {
-        ScriptEngine engine;
-
-        if (knownScriptEngines.containsKey(lang)) {
-            engine = knownScriptEngines.get(lang);
-        } else {
-            engine = scriptingEngineManager.getEngineByName(lang);
-            knownScriptEngines.put(lang, engine);
-        }
-        return engine;
-    }
-
-    /**
      * Parse a new XML document.
      *
      * @param xmlFile Doc to parse
      */
     private void parseNewDoc(final File xmlFile) { // Load a new doc
-
-        var parsed = ingest.parseDocXML(xmlFile);
+        docIO = new Io(xmlFile);
+        var parsed = docIO.getDoc();
         if (parsed.isPresent()) {
             Platform.runLater(
                     () -> {
@@ -320,17 +318,12 @@ public final class Engine extends Threaded {
                 // Initialise ID for first page
                 currentPageID = currentPages.get(0).getID();
                 this.gotoPage(currentPageID, true);
-                //Init Document global scripts
-                currentDoc.getScriptEl().ifPresent(s -> {
-                    var lang = s.getScriptLang();
-                    try {
-                        s.initScriptingEngine(getScriptEngine(lang));
-                    } catch (ScriptException ex) {
-                        putMessage(
-                                "Exception in document script: "
-                                + ex.getMessage(), Boolean.TRUE);
-                    }
-                });
+                try {
+                    //Init Document global scripts
+                    scriptingEngine.evalElement(currentDoc);
+                } catch (ScriptException | IOException ex) {
+                    Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+                }
 
             } else {
                 putMessage("Malformed Doc - not Doc Element!", true);
@@ -505,13 +498,6 @@ public final class Engine extends Threaded {
     }
 
     /**
-     * Set-up global script things.
-     */
-    private void setupScriptEngineMan() {
-        var globalBindings = scriptingEngineManager.getBindings();
-    }
-
-    /**
      * Process elements on a page.
      *
      * @param el Element
@@ -525,22 +511,19 @@ public final class Engine extends Threaded {
         } else if (el instanceof ShapeElement) {
             this.drawShape((ShapeElement) el);
         }
-
+        //If element is scriptable, evaluate it.
+        if (el instanceof Scriptable) {
+            try {
+                scriptingEngine.evalElement(el);
+            } catch (ScriptException | IOException ex) {
+                Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
         // Then recurse the children
         for (int i = 0; i < el.getChildCount(); i++) {
             var ch = el.getChild(i);
             if (ch instanceof VisualElement) {
                 processEls((VisualElement) ((Element) ch));
-            } else if (ch instanceof ScriptElement) { // Is the child a script?
-                var chScr = ((ScriptElement) ch);
-                // Make a new script engine, with the specified language
-                try {
-                    chScr.initScriptingEngine(getScriptEngine(chScr.getScriptLang()));
-                } catch (ScriptException ex) {
-                    putMessage(
-                            "Exception in script for: " + el.getID() + " is: "
-                            + ex.getMessage(), Boolean.TRUE);
-                }
             }
         }
     }
@@ -552,8 +535,8 @@ public final class Engine extends Threaded {
      */
     private Optional<Tools> loadTools() {
         var toolsXMLPath = Engine.class.getResource("tools.xml").getPath();
-        var parsedDoc = ingest.
-                parseGenericXML(new File(toolsXMLPath), new ToolsFactory());
+        toolIO = new Io(new File(toolsXMLPath), new ToolsFactory());
+        var parsedDoc = toolIO.getDoc();
         var root
                 = parsedDoc
                         .filter(d -> d.getRootElement() instanceof Tools)

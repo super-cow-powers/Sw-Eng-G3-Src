@@ -79,6 +79,19 @@ public class ImageElement extends VisualElement implements Includable {
     }
 
     /**
+     * Constructor with Source location.
+     *
+     * @param name Element name.
+     * @param uri Element URI.
+     * @param sourcePath Source Path.
+     */
+    public ImageElement(final String name, final String uri, final String sourcePath) {
+        super(name, uri);
+        var sourceAttr = new Attribute(INCLUDE_ATTR, sourcePath);
+        this.addAttribute(sourceAttr);
+    }
+
+    /**
      * Get the image's source path or URL.
      *
      * @return Location string.
@@ -88,7 +101,7 @@ public class ImageElement extends VisualElement implements Includable {
         /**
          * @todo check this is correct for a variety of inputs.
          */
-        return Optional.ofNullable(this.getAttribute("include_source")) //Get include_source attribute
+        return Optional.ofNullable(this.getAttribute(INCLUDE_ATTR)) //Get include_source attribute
                 .map(f -> f.getValue())
                 .map(f -> {
                     var baseDoc = this.getDocument().getRootElement();

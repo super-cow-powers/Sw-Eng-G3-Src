@@ -64,6 +64,5 @@ public final class ElementFactory extends NodeFactory {
             default:
                 return new Element(name, namespaceURI);
         }
-
     }
 }

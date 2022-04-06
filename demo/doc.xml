@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <base:document xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:ext='http://PWS_Exts' xmlns:base='http://PWS_Base' xsi:schemaLocation='http://PWS_Base https://raw.githubusercontent.com/super-cow-powers/sweng_21_PWS/master/PWS.xsd http://PWS_Exts https://raw.githubusercontent.com/super-cow-powers/sweng_21_PWS/master/my_exts.xsd'>
-  <ext:script>def printa(arg):
-      print("printa "+arg)
-</ext:script>
+  <ext:script include_source="./scripts/doc.py"/>
     <base:page x_orig="0" y_orig="0" z_ind="0" fill="#AABBCCFF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-0" disp_duration_s="40" show_after_s="0" title="Start">
 
         <base:shape fill="#A2A2A2FF" x_orig="100" y_orig="300" z_ind="0" x_size_px="400" y_size_px="120" rot_angle="0" ID="tb-0" disp_duration_s="10" show_after_s="5" type="textbox">
@@ -16,15 +14,9 @@
     </base:page>
 
     <base:page x_orig="0" y_orig="0" z_ind="0" fill="#AABBCCFF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-1" disp_duration_s="40" show_after_s="0" title="Welcome">
-      <ext:script>def printb(arg):
-      print("printb "+arg)
-</ext:script>
+      <ext:script include_source="./scripts/page-1.py"/>
 <base:shape fill="#DBA092FF" x_orig="100" y_orig="300" z_ind="0" x_size_px="600" y_size_px="60" rot_angle="0" ID="tb-1" disp_duration_s="10" show_after_s="5" type="textbox">
-  <ext:script>import g3.project.elements.ShapeElement
-import g3.project.elements.VisualElement
-printb("hello")
-print("Hello from " + this.getID())
-</ext:script>
+  <ext:script include_source="./scripts/tb-0.py"/>
             <base:text>
                 <base:font colour="#FFFFFFFF" underscore="false" size="55">Welcome to our talk.</base:font>
             </base:text>
@@ -60,7 +52,7 @@ print("Hello from " + this.getID())
             </base:text>
         </base:shape>
 		
-        <base:image include_source="./pass.jpg" x_orig="300" y_orig="200" z_ind="0" x_size_px="400" y_size_px="400" rot_angle="22" ID="im0" disp_duration_s="40" show_after_s="0" />
+        <base:image include_source="./images/pass.jpg" x_orig="300" y_orig="200" z_ind="0" x_size_px="400" y_size_px="400" rot_angle="22" ID="im0" disp_duration_s="40" show_after_s="0" />
 
     </base:page>
     
@@ -71,8 +63,8 @@ print("Hello from " + this.getID())
             </base:text>
         </base:shape>
 		
-        <base:image include_source="./pass.jpg" x_orig="300" y_orig="200" z_ind="0" x_size_px="400" y_size_px="400" rot_angle="22" ID="im1" disp_duration_s="40" show_after_s="0" />
-        <base:image include_source="./pic1.jpg" x_orig="300" y_orig="200" z_ind="-1" x_size_px="400" y_size_px="400" rot_angle="-22" ID="im2" disp_duration_s="40" show_after_s="0" />
+        <base:image include_source="./images/pass.jpg" x_orig="300" y_orig="200" z_ind="0" x_size_px="400" y_size_px="400" rot_angle="22" ID="im1" disp_duration_s="40" show_after_s="0" />
+        <base:image include_source="./images/pic1.jpg" x_orig="300" y_orig="200" z_ind="-1" x_size_px="400" y_size_px="400" rot_angle="-22" ID="im2" disp_duration_s="40" show_after_s="0" />
     </base:page>
     
     <base:page x_orig="0" y_orig="0" z_ind="0" fill="#AABBCCFF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-6" disp_duration_s="40" show_after_s="0" title="3">
@@ -82,18 +74,18 @@ print("Hello from " + this.getID())
             </base:text>
         </base:shape>
 		
-        <base:image include_source="./hist.jpg" x_orig="50" y_orig="100" z_ind="0" x_size_px="400" y_size_px="400" rot_angle="0" ID="im3" disp_duration_s="40" show_after_s="0" />
+        <base:image include_source="./images/hist.jpg" x_orig="50" y_orig="100" z_ind="0" x_size_px="400" y_size_px="400" rot_angle="0" ID="im3" disp_duration_s="40" show_after_s="0" />
     </base:page>
 	
     <base:page x_orig="0" y_orig="0" z_ind="0" fill="#AABBCCFF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-blah" disp_duration_s="40" show_after_s="0" title="4">
 
-        <base:image include_source="./blah.jpg" x_orig="250" y_orig="100" z_ind="0" x_size_px="500" y_size_px="500" rot_angle="0" ID="blah" disp_duration_s="40" show_after_s="0" />
+        <base:image include_source="./images/blah.jpg" x_orig="250" y_orig="100" z_ind="0" x_size_px="500" y_size_px="500" rot_angle="0" ID="blah" disp_duration_s="40" show_after_s="0" />
 
     </base:page>
     
     <base:page x_orig="0" y_orig="0" z_ind="0" fill="#AABBCCFF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-blah-b" disp_duration_s="40" show_after_s="0" title="5">
 
-        <base:image include_source="./blah.jpg" x_orig="250" y_orig="100" z_ind="2" x_size_px="500" y_size_px="500" rot_angle="0" ID="im4" disp_duration_s="40" show_after_s="0" />
+        <base:image include_source="./images/blah.jpg" x_orig="250" y_orig="100" z_ind="2" x_size_px="500" y_size_px="500" rot_angle="0" ID="im4" disp_duration_s="40" show_after_s="0" />
         <base:shape fill="#DBA092BB" x_orig="150" y_orig="275" z_ind="-1" x_size_px="700" y_size_px="60" rot_angle="0" ID="tb-6" disp_duration_s="10" show_after_s="5" type="textbox">
             <base:text>
                 <base:font colour="#000000FF" underscore="true" size="50">Wait - That's not a Lolcat!</base:font>
@@ -103,7 +95,7 @@ print("Hello from " + this.getID())
 	
     <base:page x_orig="0" y_orig="0" z_ind="0" fill="#AABBCCFF" x_size_px="960" y_size_px="600" rot_angle="0" ID="page-blah-c" disp_duration_s="40" show_after_s="0" title="6">
 
-        <base:image include_source="./blah.jpg" x_orig="250" y_orig="100" z_ind="2" x_size_px="500" y_size_px="500" rot_angle="0" ID="im4" disp_duration_s="40" show_after_s="0" />
+        <base:image include_source="./images/blah.jpg" x_orig="250" y_orig="100" z_ind="2" x_size_px="500" y_size_px="500" rot_angle="0" ID="im4" disp_duration_s="40" show_after_s="0" />
         <base:shape fill="#DBA092BB" x_orig="150" y_orig="275" z_ind="-1" x_size_px="700" y_size_px="60" rot_angle="0" ID="tb-6" disp_duration_s="10" show_after_s="5" type="textbox">
             <base:text>
                 <base:font colour="#000000FF" underscore="true" size="50">Wait - That's not a Lolcat!</base:font>
@@ -130,7 +122,7 @@ print("Hello from " + this.getID())
             </base:text>
         </base:shape>
 		
-        <base:image include_source="./graphic.jpg" x_orig="300" y_orig="200" z_ind="0" x_size_px="400" y_size_px="400" rot_angle="0" ID="im-graph" disp_duration_s="40" show_after_s="0" />
+        <base:image include_source="./images/graphic.jpg" x_orig="300" y_orig="200" z_ind="0" x_size_px="400" y_size_px="400" rot_angle="0" ID="im-graph" disp_duration_s="40" show_after_s="0" />
     </base:page>
     
     
