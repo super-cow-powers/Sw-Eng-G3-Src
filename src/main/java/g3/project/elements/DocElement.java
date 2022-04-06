@@ -28,10 +28,12 @@
  */
 package g3.project.elements;
 
+import g3.project.core.Engine;
 import g3.project.core.RecursiveBindings;
 import java.util.Optional;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.function.Consumer;
 import nu.xom.*;
 
 /**
@@ -44,6 +46,12 @@ public final class DocElement extends Element implements Scriptable {
      * Directory containing this document (String).
      */
     private String containingDirStr = null;
+
+    /**
+     * Change callback.
+     */
+    private Consumer<VisualElement> updateCallback = (f) -> {
+    };
 
     /**
      * Script bindings for the element.
@@ -79,6 +87,24 @@ public final class DocElement extends Element implements Scriptable {
      */
     public void setBaseDir(final String dir) {
         containingDirStr = dir;
+    }
+
+    /**
+     * Set change callback.
+     *
+     * @param func Notifier Function.
+     */
+    public void setChangeCallback(final Consumer<VisualElement> func) {
+        updateCallback = func;
+    }
+
+    /**
+     * Get the change callback.
+     *
+     * @return change callback.
+     */
+    public Consumer<VisualElement> getChangeCallback() {
+        return updateCallback;
     }
 
     /**
@@ -191,7 +217,7 @@ public final class DocElement extends Element implements Scriptable {
         }
         return Optional.empty();
     }
-    
+
     @Override
     public final String getRealType() {
         return this.getClass().getName();

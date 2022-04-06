@@ -294,6 +294,9 @@ public final class Engine extends Threaded {
             var child = parsed.get().getChild(0);
             if (child instanceof DocElement) {
                 currentDoc = (DocElement) child;
+                currentDoc.setChangeCallback(
+                        el -> this.redrawEl(el));
+
                 currentDoc
                         .getPages()
                         .ifPresent(
@@ -502,15 +505,9 @@ public final class Engine extends Threaded {
      *
      * @param el Element
      */
-    private void processEls(final VisualElement el) {
+    public void processEls(final VisualElement el) {
         // Do whatever you're going to do with this node…
-        /*if (el instanceof PageElement) {
-        } else*/
-        if (el instanceof ImageElement) {
-            this.drawImage((ImageElement) el);
-        } else if (el instanceof ShapeElement) {
-            this.drawShape((ShapeElement) el);
-        }
+        redrawEl(el);
         //If element is scriptable, evaluate it.
         if (el instanceof Scriptable) {
             try {
@@ -525,6 +522,14 @@ public final class Engine extends Threaded {
             if (ch instanceof VisualElement) {
                 processEls((VisualElement) ((Element) ch));
             }
+        }
+    }
+
+    public void redrawEl(final VisualElement el) {
+        if (el instanceof ImageElement) {
+            this.drawImage((ImageElement) el);
+        } else if (el instanceof ShapeElement) {
+            this.drawShape((ShapeElement) el);
         }
     }
 

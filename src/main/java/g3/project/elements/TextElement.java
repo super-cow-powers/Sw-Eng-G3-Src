@@ -57,6 +57,12 @@ public class TextElement extends Element implements Includable {
     public TextElement(Element element) {
         super(element);
     }
+    
+    public TextElement(String name, String uri, String textString) {
+        super(name, uri);
+        var fontBlock = new FontElement("base:font", uri, textString);
+        this.appendChild(fontBlock);
+    }
 //CHECKSTYLE:ON
 
     /**

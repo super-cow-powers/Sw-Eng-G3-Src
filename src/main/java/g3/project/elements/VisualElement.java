@@ -28,6 +28,7 @@
  */
 package g3.project.elements;
 
+import g3.project.core.Engine;
 import g3.project.core.RecursiveBindings;
 import g3.project.ui.LocObj;
 import g3.project.ui.SizeObj;
@@ -47,6 +48,12 @@ public class VisualElement extends Element implements Scriptable {
      * Script bindings for the element.
      */
     private RecursiveBindings elementScriptBindings = new RecursiveBindings();
+
+    /**
+     * Ref to the engine.
+     */
+    private Optional<Engine> engine = Optional.empty();
+
     /**
      * Clone of this object. Might not use it.
      */
@@ -117,6 +124,7 @@ public class VisualElement extends Element implements Scriptable {
             this.addAttribute(new Attribute("x_orig", Double.toString(s.getX())));
             this.addAttribute(new Attribute("y_orig", Double.toString(s.getY())));
         });
+        hasUpdated();
         return this.getLoc();
     }
 
@@ -142,6 +150,7 @@ public class VisualElement extends Element implements Scriptable {
      */
     public final String setID(final String id) {
         this.addAttribute(new Attribute("ID", id));
+        hasUpdated();
         return this.getID();
     }
 
@@ -163,6 +172,7 @@ public class VisualElement extends Element implements Scriptable {
      */
     public final Double setZInd(final Double z) {
         this.addAttribute(new Attribute("z_ind", Double.toString(z)));
+        hasUpdated();
         return this.getZInd();
     }
 
@@ -276,6 +286,17 @@ public class VisualElement extends Element implements Scriptable {
     @Override
     public final String getRealType() {
         return this.getClass().getName();
+    }
+    
+    /**
+     * Element has changed/updated.
+     * Notify the engine.
+     */
+    protected void hasUpdated(){
+        var root = this.getDocument().getRootElement();
+        if (root instanceof DocElement){
+            ((DocElement)root).getChangeCallback().accept(this);
+        }
     }
 
 }
