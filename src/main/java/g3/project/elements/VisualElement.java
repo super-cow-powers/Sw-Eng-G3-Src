@@ -241,6 +241,21 @@ public class VisualElement extends Element implements Scriptable {
     }
 
     /**
+     * Set the fill colour.
+     *
+     * @param colourString RGB or RGBA string.
+     * @throws Exception Bad colour string.
+     */
+    public final void setFillColour(final String colourString) throws Exception {
+        if (!colourString.startsWith("#")) {
+            throw new Exception("Bad Colour String");
+        }
+        var colAttr = new Attribute("fill", colourString);
+        this.addAttribute(colAttr);
+        hasUpdated();
+    }
+
+    /**
      * Get the local scope for this object.
      *
      * @return my Bindings.
@@ -287,15 +302,14 @@ public class VisualElement extends Element implements Scriptable {
     public final String getRealType() {
         return this.getClass().getName();
     }
-    
+
     /**
-     * Element has changed/updated.
-     * Notify the engine.
+     * Element has changed/updated. Notify the engine.
      */
-    protected void hasUpdated(){
+    protected final void hasUpdated() {
         var root = this.getDocument().getRootElement();
-        if (root instanceof DocElement){
-            ((DocElement)root).getChangeCallback().accept(this);
+        if (root instanceof DocElement) {
+            ((DocElement) root).getChangeCallback().accept(this);
         }
     }
 
