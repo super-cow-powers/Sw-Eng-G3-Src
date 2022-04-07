@@ -158,16 +158,14 @@ public final class DocElement extends Element implements Scriptable {
     }
 
     /**
-     * Validates if the given ID is unique or not.
+     * Validates if the given ID is unique or not. The element it will be
+     * attached to must NOT already be in the doc!
      *
      * @param id ID to validate.
      * @return Validity
      */
     public Boolean validateUniqueID(final String id) {
-        /*
-        @todo: Implement!
-         */
-        return true;
+        return getElementByID(id).isEmpty();
     }
 
     /**
@@ -176,7 +174,18 @@ public final class DocElement extends Element implements Scriptable {
      * @param id ID of element.
      * @return Optional of Element
      */
-    public Optional<Element> getElementByID(final String id) {
+    public Optional<VisualElement> getElementByID(final String id) {
+        /*
+        @todo: Make faster
+         */
+        for (var el : this.getChildElements()) {
+            if (el instanceof VisualElement) {
+                var elOp = ((VisualElement) el).getByID(id);
+                if (elOp.isPresent()) {
+                    return elOp; //Found it
+                }
+            }
+        }
         return Optional.empty();
     }
 

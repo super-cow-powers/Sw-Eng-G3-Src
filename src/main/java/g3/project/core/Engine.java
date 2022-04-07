@@ -56,6 +56,8 @@ import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -233,18 +235,46 @@ public final class Engine extends Threaded {
     private void handleEvent(final Event event) {
         System.out.println("g3.project.core.Engine.handleEvent()");
         System.out.println(event);
-        var evTgt = event.getTarget();
-        if (evTgt instanceof Button) {
+        var evSrc = event.getSource();
+        if (evSrc instanceof Button) {
             handleButtonEvent(event);
+        } else if (evSrc instanceof javafx.scene.Node) {
+            routeElementEvent(event);
         } else if (event instanceof KeyEvent) {
             var kev = (KeyEvent) event;
-
-            if (kev.getCode() == KeyCode.LEFT) {
-                gotoPrevPage();
-            } else if (kev.getCode() == KeyCode.RIGHT) {
-                gotoNextPage();
-            }
+            handleKeyEvent(kev);
         }
+    }
+
+    /**
+     * Route an event on an element to the correct place.
+     *
+     * @param ev event.
+     */
+    private void routeElementEvent(final Event ev) {
+        var evType = ev.getEventType();
+        var evSrc = (javafx.scene.Node) ev.getSource();
+        var elOpt = currentDoc.getElementByID(evSrc.getId());
+
+        if (evType == MouseEvent.MOUSE_CLICKED) {
+            var mev = (MouseEvent) ev;
+
+            elOpt.ifPresent(el -> elementClicked(el, mev.getButton(), mev.getX(), mev.getY()));
+        } else {
+            System.out.println("Unsupported Element Event: " + ev);
+        }
+    }
+
+    /**
+     * Handle a click on an element.
+     *
+     * @param el Element.
+     * @param button Mouse Button pressed.
+     * @param x_loc X Location.
+     * @param y_loc Y Location.
+     */
+    private void elementClicked(final VisualElement el, MouseButton button, Double x_loc, Double y_loc) {
+        scriptingEngine.execElementClick(el, button.name(), x_loc, y_loc);
     }
 
     /**
@@ -255,9 +285,9 @@ public final class Engine extends Threaded {
     private void handleButtonEvent(final Event ev) {
         if (ev instanceof ActionEvent) {
             var aev = (ActionEvent) ev;
-            var target = aev.getTarget();
-            if (target instanceof Button) {
-                handleNavButtonEvent(aev, (Button) target);
+            var source = (Button) aev.getSource();
+            if (source.getId().contains("-jump-card-button")) {
+                handleNavButtonEvent(aev, source);
             }
         }
     }
@@ -273,6 +303,21 @@ public final class Engine extends Threaded {
         if (((Button) target).getId().contains("-jump-card-button")) {
             var id = ((Button) target).getId().replace("-jump-card-button", "");
             this.gotoPage(id, true);
+        }
+    }
+
+    /**
+     * Handle a key-press event.
+     *
+     * @param kev key event.
+     */
+    private void handleKeyEvent(final KeyEvent kev) {
+        switch (kev.getCode()) {
+            case LEFT:
+                gotoPrevPage();
+            case RIGHT:
+                gotoNextPage();
+            default:
         }
     }
 

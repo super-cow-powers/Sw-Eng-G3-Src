@@ -33,6 +33,9 @@ import g3.project.xmlIO.Io;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -43,6 +46,8 @@ import javax.script.ScriptException;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public final class Scripting {
+
+    private static final String CLICK_FN = "onClick";
 
     /**
      * Factory/manager for all script engines.
@@ -107,6 +112,29 @@ public final class Scripting {
                 scrEngine.eval(new String(b, StandardCharsets.UTF_8));
             } else {
                 throw new IOException("Couldn't open script file");
+            }
+        }
+    }
+
+    /**
+     * Execute element's onClick function.
+     *
+     * @param element Element to use.
+     * @param button_name Mouse button name.
+     * @param x_loc x location.
+     * @param y_loc y location.
+     */
+    public void execElementClick(final Scriptable element, final String button_name, final Double x_loc, final Double y_loc) {
+        var scrElOpt = element.getScriptEl();
+        if (scrElOpt.isPresent()) {
+            var scrEl = scrElOpt.get();
+            var lang = scrEl.getScriptLang();
+            var engine = getScriptEngine(lang);
+            engine.setBindings(element.getScriptingBindings(), ScriptContext.ENGINE_SCOPE);
+            try {
+                ((Invocable) engine).invokeFunction(CLICK_FN, button_name, x_loc, y_loc);
+            } catch (ScriptException | NoSuchMethodException ex) {
+                Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }

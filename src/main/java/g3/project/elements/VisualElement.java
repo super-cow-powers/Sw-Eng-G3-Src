@@ -256,6 +256,28 @@ public class VisualElement extends Element implements Scriptable {
     }
 
     /**
+     * Returns the referred element, if this is it or it is a child of this.
+     *
+     * @param id Element to find.
+     * @return Optional referred element.
+     */
+    public final Optional<VisualElement> getByID(final String id) {
+        if (this.getID() == id) {
+            return Optional.of(this);
+        } else {
+            for (Element el : this.getChildElements()) {
+                if (el instanceof VisualElement) {
+                    var elOp = ((VisualElement) el).getByID(id);
+                    if (elOp.isPresent()) {
+                        return elOp; //Found it
+                    }
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
      * Get the local scope for this object.
      *
      * @return my Bindings.

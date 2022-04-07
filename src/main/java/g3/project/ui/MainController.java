@@ -47,7 +47,10 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ListChangeListener.Change;
 import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -163,9 +166,13 @@ public final class MainController {
      */
     @FXML
     private void handleEvent(final InputEvent event) {
-        System.out.println("g3.project.ui.MainController.handleKeyInput()");
+        event.consume(); //Don't pass to elements below!
         engine.offerEvent(event);
     }
+    /**
+     * Event handler for input events.
+     */
+    private final EventHandler<InputEvent> handleInput = evt->handleEvent(evt);
 
     /**
      * Handle scroll event on page.
@@ -280,6 +287,7 @@ public final class MainController {
      */
     public void updateShape(final String id, final SizeObj size, final LocObj loc, final String shapeType, final Color fillColour,
             final Color strokeColour, final Double strokeWidth, final String textString, final FontProps textProps) {
+
         ExtShape newShape = new ExtShape(shapeType, id, size.getX(), size.getY(), fillColour, strokeColour, strokeWidth, textString, textProps);
         newShape.setRotate(size.getRot());
         if (drawnElements.containsKey(id)) {
@@ -444,6 +452,7 @@ public final class MainController {
             var start = loc.getStart().get();
             imv.relocate(start.getX(), start.getY());
         }
+        imv.setId(id);
         imv.setViewOrder(loc.getZ());
         imv.setRotate(size.getRot());
         imv.setPreserveRatio(true);
@@ -462,7 +471,7 @@ public final class MainController {
         messageLabel.setText(message);
         messageLabel.setOpacity(1d);
         nbMessageClearFuture = executorSvc.schedule(() -> {
-                Platform.runLater(() -> clearNBMessage(NBMESSAGE_FADE_MS));
+            Platform.runLater(() -> clearNBMessage(NBMESSAGE_FADE_MS));
         },
                 MESSAGE_DURATION,
                 TimeUnit.MILLISECONDS);
@@ -521,7 +530,26 @@ public final class MainController {
         loadingGif = new Image(loadingGifPath);
 
         engine = new Engine(this);
+        pagePane.addEventHandler(MouseEvent.MOUSE_CLICKED, handleInput);
+        pagePane.setViewOrder(-1);
+        pagePane.getChildren()
+                .addListener((Change<? extends Node> c) -> {
+                    while (c.next()) {
+                        if (c.wasPermutated()) {
+                            for (int i = c.getFrom(); i < c.getTo(); ++i) {
+                                //permutate
+                            }
+                        } else if (c.wasUpdated()) {
+                            //update item
+                        } else {
 
+                            for (Node addedNode : c.getAddedSubList()) {
+                                addedNode.addEventHandler(MouseEvent.MOUSE_CLICKED, handleInput);
+                            }
+                        }
+                    }
+                });
+        
         darkMode = detector.isDark();
         detector.registerListener(isDark -> {
             Platform.runLater(() -> {
