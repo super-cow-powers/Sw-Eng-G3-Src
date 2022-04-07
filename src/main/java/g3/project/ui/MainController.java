@@ -38,6 +38,7 @@ import com.jthemedetecor.OsThemeDetector;
 import g3.project.core.Engine;
 import g3.project.graphics.ExtShape;
 import g3.project.graphics.FontProps;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -172,7 +173,7 @@ public final class MainController {
     /**
      * Event handler for input events.
      */
-    private final EventHandler<InputEvent> handleInput = evt->handleEvent(evt);
+    private final EventHandler<InputEvent> handleInput = evt -> handleEvent(evt);
 
     /**
      * Handle scroll event on page.
@@ -220,6 +221,13 @@ public final class MainController {
      */
     @FXML
     private void handleOpenNewDoc(final ActionEvent event) {
+        showDocPicker();
+    }
+    
+    /**
+     * Shows a new-doc file picker, then loads selected doc.
+     */
+    public void showDocPicker(){
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open New Stack");
         fileChooser.setInitialDirectory(
@@ -407,7 +415,13 @@ public final class MainController {
             updateImage(id, size, loc, loadingGif); //Show loading GIF
             //Runnable to load then show image
             Runnable imageLoaderRunnable = () -> {
-                var im = new Image(path);
+                Image im;
+                var resOpt = engine.getDocIO().getResource(path);
+                if (resOpt.isPresent()) {
+                    im = new Image(new ByteArrayInputStream(resOpt.get()));
+                } else {
+                    im = loadingGif;
+                }
                 loadedImages.put(path, im);
                 Platform.runLater(() -> {
                     /* Check if image should stll be visible */
@@ -524,10 +538,10 @@ public final class MainController {
      */
     public void initialize() {
         //this.scene = contentPane.getScene();
-        File xmlFile = new File("exampledoc.xml");
-        var loadingGifPath = "file:".concat(MainController.class
-                .getResource("loading.gif").getPath());
-        loadingGif = new Image(loadingGifPath);
+
+        var loadingGifStr = MainController.class
+                .getResourceAsStream("loading.gif");
+        loadingGif = new Image(loadingGifStr);
 
         engine = new Engine(this);
         pagePane.addEventHandler(MouseEvent.MOUSE_CLICKED, handleInput);
@@ -549,7 +563,7 @@ public final class MainController {
                         }
                     }
                 });
-        
+
         darkMode = detector.isDark();
         detector.registerListener(isDark -> {
             Platform.runLater(() -> {
@@ -567,7 +581,6 @@ public final class MainController {
                 });
         Platform.runLater(() -> { //Run when initialised
             engine.start();
-            engine.offerNewDoc(xmlFile);
         });
         pagePane.setOnScroll((e) -> pageScrollEventHandler(e)); //Scaling stuff
         pageScroll.setOnKeyReleased((e) -> engine.offerEvent(e)); //I'll get the engine to handle the keys

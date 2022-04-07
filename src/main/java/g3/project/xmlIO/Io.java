@@ -30,9 +30,12 @@ package g3.project.xmlIO;
 
 import g3.project.elements.DocElement;
 import g3.project.elements.ElementFactory;
+import g3.project.ui.MainController;
 import java.util.Optional;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
@@ -72,6 +75,18 @@ public final class Io {
     }
 
     /**
+     * Create new IO and parse project doc from InputStream.
+     *
+     * @param docIs Stream.
+     * @param dir Containing dir.
+     */
+    public Io(final InputStream docIs, final String dir) {
+        dirPathString = dir;
+        myFile = null;
+        myDoc = parseDocXML(docIs);
+    }
+
+    /**
      * Create new IO and parse the custom doc.
      *
      * @param xmlFile File.
@@ -98,9 +113,12 @@ public final class Io {
      * @param path Resource path.
      * @return Optional resource bytes.
      */
-    public Optional<byte[]> getResource(final String path) {
-        var uriString = pathToURI(path); //Ensure path is correct URI
+    public synchronized Optional<byte[]> getResource(final String path) {
+        if (dirPathString == "internal_ui") {
+            return getInternalResource(path, MainController.class);
+        }
 
+        var uriString = pathToURI(path); //Ensure path is correct URI
         try {
             var uri = new URI(uriString);
             var is = uri.toURL().openStream();
@@ -109,6 +127,24 @@ public final class Io {
             Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
         }
         return Optional.empty();
+    }
+
+    /**
+     * Get an internal resource.
+     *
+     * @param path resource to get.
+     * @param resourceClass Class it is in.
+     * @return
+     */
+    private Optional<byte[]> getInternalResource(final String path, final Class resourceClass) {
+        byte[] bytes = null;
+        try {
+            bytes = resourceClass.getResourceAsStream(path)
+                    .readAllBytes();
+        } catch (IOException | NullPointerException ex) {
+            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return Optional.ofNullable(bytes);
     }
 
     /**
@@ -140,10 +176,34 @@ public final class Io {
      * @return Optional doc.
      */
     private Optional<Document> parseDocXML(final File xmlFile) {
+        //var stream = new FileInputStream(xmlFile);
         Builder parser = new Builder(new ElementFactory());
         Document doc = null;
         try {
             doc = parser.build(xmlFile);
+            if (doc != null) {
+                var root = doc.getRootElement();
+                if (root instanceof DocElement) {
+                    ((DocElement) doc.getRootElement()).setBaseDir(dirPathString);
+                }
+            }
+        } catch (ParsingException | IOException ex) { //We're returning an optional
+            ex.printStackTrace();   //So I'm not throwing this out of the method
+        }
+        return Optional.ofNullable(doc);
+    }
+
+    /**
+     * Return the fully parsed representation of the XML doc.
+     *
+     * @param xmlStream streamed XML.
+     * @return Optional doc.
+     */
+    private Optional<Document> parseDocXML(final InputStream xmlStream) {
+        Builder parser = new Builder(new ElementFactory());
+        Document doc = null;
+        try {
+            doc = parser.build(xmlStream);
             if (doc != null) {
                 var root = doc.getRootElement();
                 if (root instanceof DocElement) {

@@ -40,6 +40,7 @@ import g3.project.ui.SizeObj;
 import g3.project.xmlIO.Io;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
@@ -62,6 +63,7 @@ import javafx.scene.paint.Color;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import nu.xom.Document;
 import nu.xom.Element;
 
 /**
@@ -185,6 +187,11 @@ public final class Engine extends Threaded {
         //Start network thing
         netComms.start();
         scriptingEngine = new Scripting("python", this);
+        //Load the start screen
+        var startXmlStream = MainController.class
+                .getResourceAsStream("start_screen.xml");
+        parseNewDoc(startXmlStream);
+        
         // Load in the tools
         loadTools()
                 .ifPresentOrElse(
@@ -270,11 +277,11 @@ public final class Engine extends Threaded {
      *
      * @param el Element.
      * @param button Mouse Button pressed.
-     * @param x_loc X Location.
-     * @param y_loc Y Location.
+     * @param xLoc X Location.
+     * @param yLoc Y Location.
      */
-    private void elementClicked(final VisualElement el, MouseButton button, Double x_loc, Double y_loc) {
-        scriptingEngine.execElementClick(el, button.name(), x_loc, y_loc);
+    private void elementClicked(final VisualElement el, final MouseButton button, final Double xLoc, final Double yLoc) {
+        scriptingEngine.execElementClick(el, button.name(), xLoc, yLoc);
     }
 
     /**
@@ -330,58 +337,81 @@ public final class Engine extends Threaded {
         docIO = new Io(xmlFile);
         var parsed = docIO.getDoc();
         if (parsed.isPresent()) {
-            Platform.runLater(
-                    () -> {
-                        controller.clearCardButtons();
-                        controller.clearCard("");
-                        controller.setViewScale(1d);
-                    });
-            var child = parsed.get().getChild(0);
-            if (child instanceof DocElement) {
-                currentDoc = (DocElement) child;
-                currentDoc.setChangeCallback(
-                        el -> this.redrawEl(el));
-
-                currentDoc
-                        .getPages()
-                        .ifPresent(
-                                f -> {
-                                    currentPages = f;
-                                });
-                // Add buttons for each page
-                var it = currentPages.listIterator();
-                while (it.hasNext()) {
-                    var ind = it.nextIndex();
-                    var page = it.next();
-                    Platform.runLater(
-                            () -> {
-                                var tiopt = page.getTitle();
-                                var id = page.getID();
-                                var title = tiopt.isPresent() ? tiopt.get() : id;
-
-                                controller.addCardButton(title, id, ind);
-                            });
-                }
-
-                // Initialise ID for first page
-                currentPageID = currentPages.get(0).getID();
-                this.gotoPage(currentPageID, true);
-                try {
-                    //Init Document global scripts
-                    scriptingEngine.evalElement(currentDoc);
-                } catch (ScriptException | IOException ex) {
-                    Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
-                }
-
-            } else {
-                putMessage("Malformed Doc - not Doc Element!", true);
-                // Looks like doc is malformed
-            }
-            System.out.println("New document loaded");
+            initDoc(parsed.get());
         } else {
             putMessage("Doc parse error", true);
             // Oops, couldn't parse initial doc.
         }
+    }
+    /**
+     * Parse an (currently internal) XML document from stream.
+     *
+     * @param docStream Doc to parse
+     */
+    private void parseNewDoc(final InputStream docStream) {
+        docIO = new Io(docStream, "internal_ui");
+        var parsed = docIO.getDoc();
+        if (parsed.isPresent()) {
+            initDoc(parsed.get());
+        } else {
+            putMessage("Doc parse error", true);
+            // Oops, couldn't parse initial doc.
+        }
+    }
+
+    /**
+     * Initialise/load doc.
+     * @param doc doc to init.
+     */
+    private void initDoc(final Document doc) {
+        Platform.runLater(
+                () -> {
+                    controller.clearCardButtons();
+                    controller.clearCard("");
+                    controller.setViewScale(1d);
+                });
+        var child = doc.getChild(0);
+        if (child instanceof DocElement) {
+            currentDoc = (DocElement) child;
+            currentDoc.setChangeCallback(
+                    el -> this.redrawEl(el));
+
+            currentDoc
+                    .getPages()
+                    .ifPresent(
+                            f -> {
+                                currentPages = f;
+                            });
+            // Add buttons for each page
+            var it = currentPages.listIterator();
+            while (it.hasNext()) {
+                var ind = it.nextIndex();
+                var page = it.next();
+                Platform.runLater(
+                        () -> {
+                            var tiopt = page.getTitle();
+                            var id = page.getID();
+                            var title = tiopt.isPresent() ? tiopt.get() : id;
+
+                            controller.addCardButton(title, id, ind);
+                        });
+            }
+
+            // Initialise ID for first page
+            currentPageID = currentPages.get(0).getID();
+            this.gotoPage(currentPageID, true);
+            try {
+                //Init Document global scripts
+                scriptingEngine.evalElement(currentDoc);
+            } catch (ScriptException | IOException ex) {
+                Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+        } else {
+            putMessage("Malformed Doc - not Doc Element!", true);
+            // Looks like doc is malformed
+        }
+        System.out.println("New document loaded");
     }
 
     /**
@@ -608,5 +638,12 @@ public final class Engine extends Threaded {
         } else {
             Platform.runLater(() -> controller.showNonBlockingMessage(message));
         }
+    }
+    
+    /**
+     * Request the UI to show a doc chooser.
+     */
+    public void showDocChooser(){
+        Platform.runLater(() -> controller.showDocPicker());
     }
 }

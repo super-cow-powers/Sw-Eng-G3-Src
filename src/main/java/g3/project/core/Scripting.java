@@ -75,6 +75,8 @@ public final class Scripting {
     public Scripting(final String defaultLang, final Engine globalEngine) {
         // Init script engine manager
         scriptingEngineManager = new ScriptEngineManager();
+        var globals = scriptingEngineManager.getBindings();
+        globals.put("engine", globalEngine);
         engine = globalEngine;
         getScriptEngine(defaultLang); //pre-init a script engijne.
     }
