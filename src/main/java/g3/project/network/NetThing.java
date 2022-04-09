@@ -29,8 +29,14 @@
 package g3.project.network;
 
 import g3.project.core.Threaded;
+
+import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.crypto.SealedObject;
+
 import javafx.event.Event;
 
 /**
@@ -45,6 +51,21 @@ public final class NetThing extends Threaded {
     public NetThing() {
         super();
     }
+
+    /**
+     * Client Session
+     */
+    private Client client;
+
+    /**
+     * Server Session
+     */
+    private Server server;
+
+    /**
+     * Am I the Host?
+     */
+    private AtomicBoolean isHost;
 
     /**
      * Event queue from input sources.
@@ -83,6 +104,26 @@ public final class NetThing extends Threaded {
         while (!(running.get())) {
         }
         //Post-construction Setup goes here
+        client = new Client();
+        if (isHost.get()) {
+            server = new Server();
+            try {
+                server.acceptConnection();
+                client.connectToServer();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                server.acceptConnection();
+                client.connectToServer();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+
         //...
         while (running.get()) {
             //Main thread dispatch loop
@@ -102,8 +143,41 @@ public final class NetThing extends Threaded {
                 ex.printStackTrace();
             }
         }
+
+        try {
+            server.closeConnection();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         System.out.println("Net-thing is going down NOW.");
         return;
+    }
+
+    private void txEvent() throws IOException {
+        try {
+            // encrypt event
+            var updateTx = client.encryption(txEventQueue.take());
+            // send event
+            client.sendObjectToServer(updateTx);
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    private Event rxEvent() throws IOException {
+        try {
+            // receive event
+            var eventLine = client.readObjectFromServer();
+            // decrypt event
+            var updateRx = client.decryption(eventLine);
+            return (Event)updateRx;
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }
