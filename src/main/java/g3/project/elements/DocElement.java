@@ -46,7 +46,12 @@ public final class DocElement extends Element implements Scriptable {
      * Directory containing this document (String).
      */
     private String containingDirStr = null;
-
+    
+    /**
+     * Doc validation errors.
+     */
+    private ArrayList<String> validationErrors = new ArrayList<>();
+    
     /**
      * Change callback.
      */
@@ -116,6 +121,18 @@ public final class DocElement extends Element implements Scriptable {
         return Optional.ofNullable(containingDirStr);
     }
 
+    /**
+     * Set doc validation errors.
+     * @param errors validation errors.
+     */
+    public void setValidationErrors(final ArrayList<String> errors){
+        validationErrors = errors;
+    }
+    
+    public ArrayList<String> getValidationErrors(){
+        return validationErrors;
+    }
+    
     /**
      *
      * @return ArrayList containing the Doc's pages

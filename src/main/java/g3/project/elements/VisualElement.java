@@ -43,7 +43,9 @@ import nu.xom.Element;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public class VisualElement extends Element implements Scriptable {
-
+    static public final String BASE_URI = "http://PWS_Base";
+    static public final String EXT_URI = "http://PWS_Exts"; 
+    
     /**
      * Script bindings for the element.
      */

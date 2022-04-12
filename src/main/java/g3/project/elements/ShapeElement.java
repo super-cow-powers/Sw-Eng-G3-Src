@@ -77,13 +77,13 @@ public class ShapeElement extends VisualElement {
         return Optional.ofNullable(text);
     }
 
-    public void setText(String textString) {
+    public final void setText(String textString) {
         for (var ch : this.getChildElements()) {
             if (ch instanceof TextElement) {
                 ch.detach();
             }
         }
-        var text = new TextElement("base:text", this.getBaseURI(), textString);
+        var text = new TextElement("base:text", BASE_URI, textString);
         this.appendChild(text);
         hasUpdated();
     }

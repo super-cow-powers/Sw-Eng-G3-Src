@@ -370,9 +370,13 @@ public final class Engine extends Threaded {
                     controller.clearCard("");
                     controller.setViewScale(1d);
                 });
-        var child = doc.getChild(0);
+        var child = doc.getRootElement();
         if (child instanceof DocElement) {
             currentDoc = (DocElement) child;
+            var valErrs = currentDoc.getValidationErrors();
+            for (var err : valErrs){
+                System.out.println(err);
+            }
             currentDoc.setChangeCallback(
                     el -> this.redrawEl(el));
 

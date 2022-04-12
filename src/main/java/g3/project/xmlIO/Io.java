@@ -34,13 +34,19 @@ import g3.project.ui.MainController;
 import java.util.Optional;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nu.xom.*;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
+
 
 /**
  *
@@ -170,27 +176,67 @@ public final class Io {
     }
 
     /**
+     * Get an XOM compatible parser, which is either validating or
+     * non-validating.
+     *
+     * @param validate Validate or not.
+     * @return Parser.
+     */
+    private XMLReader getParser(final Boolean validate) {
+        XMLReader xerces = null;
+        try {
+            xerces = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
+            xerces.setFeature("http://apache.org/xml/features/validation/schema", validate);
+        } catch (SAXException ex) {
+            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return xerces;
+    }
+
+    /**
      * Return the fully parsed representation of the XML doc.
      *
      * @param xmlFile file for XML.
      * @return Optional doc.
      */
     private Optional<Document> parseDocXML(final File xmlFile) {
-        //var stream = new FileInputStream(xmlFile);
-        Builder parser = new Builder(new ElementFactory());
-        Document doc = null;
-        try {
+
+        /*
+            SAXParser p;
+            Builder parser;
+            try {
+            p = getParser(true);
+            parser = new Builder(p.getXMLReader(), true, new ElementFactory());
+            } catch (ParserConfigurationException | SAXException ex) {
+            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            return Optional.empty();
+            }
+            
+            
+            Document doc = null;
+            try {
             doc = parser.build(xmlFile);
             if (doc != null) {
-                var root = doc.getRootElement();
-                if (root instanceof DocElement) {
-                    ((DocElement) doc.getRootElement()).setBaseDir(dirPathString);
-                }
+            var root = doc.getRootElement();
+            if (root instanceof DocElement) {
+            ((DocElement) doc.getRootElement()).setBaseDir(dirPathString);
             }
-        } catch (ParsingException | IOException ex) { //We're returning an optional
+            }
+            } catch (ValidityException vex){
+            doc = vex.getDocument();
+            } catch (ParsingException | IOException ex) { //We're returning an optional
             ex.printStackTrace();   //So I'm not throwing this out of the method
+            }
+            return Optional.ofNullable(doc);
+         */
+        try {
+            var doc = parseDocXML(new FileInputStream(xmlFile));
+            return doc;
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return Optional.ofNullable(doc);
+
+        return Optional.empty();
     }
 
     /**
@@ -200,7 +246,10 @@ public final class Io {
      * @return Optional doc.
      */
     private Optional<Document> parseDocXML(final InputStream xmlStream) {
-        Builder parser = new Builder(new ElementFactory());
+        Builder parser;
+
+        parser = new Builder(getParser(true), true, new ElementFactory());
+
         Document doc = null;
         try {
             doc = parser.build(xmlStream);
@@ -209,6 +258,17 @@ public final class Io {
                 if (root instanceof DocElement) {
                     ((DocElement) doc.getRootElement()).setBaseDir(dirPathString);
                 }
+            }
+        } catch (ValidityException vex) { //Some sort of Schema failure.
+            doc = vex.getDocument();
+            var root = doc.getRootElement();
+            if (root instanceof DocElement) {
+                DocElement docEl = (DocElement) root;
+                var errList = new ArrayList<String>();
+                for (int i = 0; i < vex.getErrorCount(); i++) {
+                    errList.add(vex.getValidityError(i));
+                }
+                docEl.setValidationErrors(errList);
             }
         } catch (ParsingException | IOException ex) { //We're returning an optional
             ex.printStackTrace();   //So I'm not throwing this out of the method
