@@ -37,24 +37,29 @@ import g3.project.network.NetThing;
 import g3.project.ui.LocObj;
 import g3.project.ui.MainController;
 import g3.project.ui.SizeObj;
-import g3.project.xmlIO.Ingestion;
+import g3.project.xmlIO.Io;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import nu.xom.Document;
 import nu.xom.Element;
 
 /**
@@ -65,11 +70,22 @@ public final class Engine extends Threaded {
     /**
      * XML IO.
      */
-    private final Ingestion ingest = new Ingestion();
+    private Io docIO;
+
     /**
-     * Network Comms.
+     * Tools IO.
+     */
+    private Io toolIO;
+
+    /**
+     * Network Communications module.
      */
     private final NetThing netComms = new NetThing(this);
+
+    /**
+     * Scripting Engine Controller.
+     */
+    private Scripting scriptingEngine;
 
     /**
      * List of tools.
@@ -91,10 +107,6 @@ public final class Engine extends Threaded {
      * Navigation history stack.
      */
     private final Stack<String> navHistory = new Stack<>();
-    /**
-     * Factory/manager for all script engines.
-     */
-    private ScriptEngineManager scriptingEngineManager;
 
     /**
      * Is the UI available?
@@ -111,6 +123,13 @@ public final class Engine extends Threaded {
      */
     private final BlockingQueue<File> docQueue
             = new LinkedBlockingQueue<File>();
+
+    /**
+     * Out of thread call queue.
+     */
+    private final BlockingQueue<Runnable> callQueue
+            = new LinkedBlockingQueue<>();
+
     /**
      * Ref to the UI controller.
      */
@@ -134,6 +153,15 @@ public final class Engine extends Threaded {
     }
 
     /**
+     * Is the engine allowed to draw to the UI?
+     *
+     * @return state.
+     */
+    public Boolean drawingAllowed() {
+        return uiAvailable.get();
+    }
+
+    /**
      * Send an event to the engine.
      *
      * @param event Event to send.
@@ -153,41 +181,63 @@ public final class Engine extends Threaded {
         unsuspend();
     }
 
+    /**
+     * Returns the current Document IO object.
+     *
+     * @return doc IO.
+     */
+    public Io getDocIO() {
+        return docIO;
+    }
+
     @Override
     @SuppressWarnings("empty-statement")
     public void run() {
-        // Init script engine manager
-        scriptingEngineManager = new ScriptEngineManager();
 
         while (!(running.get())) {
         }
-        //Start network thing
-        netComms.start();
-        // Load in the tools
-        loadTools()
-                .ifPresentOrElse(
-                        t -> myTools = t.getTools(),
-                        () -> {
-                            myTools = new ArrayList<Tool>();
-                            Platform.runLater(() -> controller.
-                            showNonBlockingMessage("Failed Loading"
-                                    + " Tools!"));
-                        });
-        // Add tool buttons
-        var iterTool = myTools.iterator();
-        while (iterTool.hasNext()) {
-            var currentTool = iterTool.next();
-            Platform.runLater(() -> controller.
-                    addTool(currentTool.getName(), currentTool.getID()));
+        try {
+            //Start network thing
+            netComms.start();
+            scriptingEngine = new Scripting("python", this);
+            //Load the start screen
+            var startXmlStream = MainController.class
+                    .getResourceAsStream("start_screen.xml");
+            parseNewDoc(startXmlStream);
+
+            // Load in the tools
+            loadTools()
+                    .ifPresentOrElse(
+                            t -> myTools = t.getTools(),
+                            () -> {
+                                myTools = new ArrayList<Tool>();
+                                Platform.runLater(() -> controller.
+                                showNonBlockingMessage("Failed Loading"
+                                        + " Tools!"));
+                            });
+            // Add tool buttons
+            var iterTool = myTools.iterator();
+            while (iterTool.hasNext()) {
+                var currentTool = iterTool.next();
+                Platform.runLater(() -> controller.
+                        addTool(currentTool.getName(), currentTool.getID()));
+            }
+        } catch (Exception ex) {
+            //Something went wrong. Couldn't start.
+            ex.printStackTrace();
+            netComms.stop();
+            return;
         }
         // Quit if running flag set to false
         while (running.get()) {
             try {
-                if (!docQueue.isEmpty()) { // New doc request?
+                if (!docQueue.isEmpty()) { //New doc request?
                     parseNewDoc(docQueue.take());
-                } else if (!eventQueue.isEmpty()) { // New event?
+                } else if (!eventQueue.isEmpty()) { //New event?
                     handleEvent(eventQueue.take());
-                } else {
+                } else if (!callQueue.isEmpty()) { //Out-of-thread call request
+                    callQueue.take().run();
+                } else { //Nothing to do. Suspend
                     suspended.set(true);
                 }
 
@@ -196,7 +246,8 @@ public final class Engine extends Threaded {
                         wait();
                     }
                 }
-            } catch (InterruptedException ex) {
+            } catch (Exception ex) {
+                //Something went wrong.
                 ex.printStackTrace();
             }
         }
@@ -213,18 +264,46 @@ public final class Engine extends Threaded {
     private void handleEvent(final Event event) {
         System.out.println("g3.project.core.Engine.handleEvent()");
         System.out.println(event);
-        var evTgt = event.getTarget();
-        if (evTgt instanceof Button) {
+        var evSrc = event.getSource();
+        if (evSrc instanceof Button) {
             handleButtonEvent(event);
+        } else if (evSrc instanceof javafx.scene.Node) {
+            routeElementEvent(event);
         } else if (event instanceof KeyEvent) {
             var kev = (KeyEvent) event;
-
-            if (kev.getCode() == KeyCode.LEFT) {
-                gotoPrevPage();
-            } else if (kev.getCode() == KeyCode.RIGHT) {
-                gotoNextPage();
-            }
+            handleKeyEvent(kev);
         }
+    }
+
+    /**
+     * Route an event on an element to the correct place.
+     *
+     * @param ev event.
+     */
+    private void routeElementEvent(final Event ev) {
+        var evType = ev.getEventType();
+        var evSrc = (javafx.scene.Node) ev.getSource();
+        var elOpt = currentDoc.getElementByID(evSrc.getId());
+
+        if (evType == MouseEvent.MOUSE_CLICKED) {
+            var mev = (MouseEvent) ev;
+
+            elOpt.ifPresent(el -> elementClicked(el, mev.getButton(), mev.getX(), mev.getY()));
+        } else {
+            System.out.println("Unsupported Element Event: " + ev);
+        }
+    }
+
+    /**
+     * Handle a click on an element.
+     *
+     * @param el Element.
+     * @param button Mouse Button pressed.
+     * @param xLoc X Location.
+     * @param yLoc Y Location.
+     */
+    private void elementClicked(final VisualElement el, final MouseButton button, final Double xLoc, final Double yLoc) {
+        scriptingEngine.execElementClick(el, button.name(), xLoc, yLoc);
     }
 
     /**
@@ -235,9 +314,9 @@ public final class Engine extends Threaded {
     private void handleButtonEvent(final Event ev) {
         if (ev instanceof ActionEvent) {
             var aev = (ActionEvent) ev;
-            var target = aev.getTarget();
-            if (target instanceof Button) {
-                handleNavButtonEvent(aev, (Button) target);
+            var source = (Button) aev.getSource();
+            if (source.getId().contains("-jump-card-button")) {
+                handleNavButtonEvent(aev, source);
             }
         }
     }
@@ -257,67 +336,110 @@ public final class Engine extends Threaded {
     }
 
     /**
+     * Handle a key-press event.
+     *
+     * @param kev key event.
+     */
+    private void handleKeyEvent(final KeyEvent kev) {
+        switch (kev.getCode()) {
+            case LEFT:
+                gotoPrevPage();
+            case RIGHT:
+                gotoNextPage();
+            default:
+        }
+    }
+
+    /**
      * Parse a new XML document.
      *
      * @param xmlFile Doc to parse
      */
     private void parseNewDoc(final File xmlFile) { // Load a new doc
-
-        var parsed = ingest.parseDocXML(xmlFile);
+        docIO = new Io(xmlFile);
+        var parsed = docIO.getDoc();
         if (parsed.isPresent()) {
-            Platform.runLater(
-                    () -> {
-                        controller.clearCardButtons();
-                        controller.clearCard("");
-                        controller.setViewScale(1d);
-                    });
-            var child = parsed.get().getChild(0);
-            if (child instanceof DocElement) {
-                currentDoc = (DocElement) child;
-                currentDoc
-                        .getPages()
-                        .ifPresent(
-                                f -> {
-                                    currentPages = f;
-                                });
-                // Add buttons for each page
-                var it = currentPages.listIterator();
-                while (it.hasNext()) {
-                    var ind = it.nextIndex();
-                    var page = it.next();
-                    Platform.runLater(
-                            () -> {
-                                var tiopt = page.getTitle();
-                                var id = page.getID();
-                                var title = tiopt.isPresent() ? tiopt.get() : id;
-
-                                controller.addCardButton(title, id, ind);
-                            });
-                }
-
-                // Initialise ID for first page
-                currentPageID = currentPages.get(0).getID();
-                this.gotoPage(currentPageID, true);
-                //Init Document global scripts
-                currentDoc.getScriptEl().ifPresent(s -> {
-                    try {
-                        s.initScriptingEngine(scriptingEngineManager);
-                    } catch (ScriptException ex) {
-                        putMessage(
-                                "Exception in document script: "
-                                + ex.getMessage(), Boolean.TRUE);
-                    }
-                });
-
-            } else {
-                putMessage("Malformed Doc - not Doc Element!", true);
-                // Looks like doc is malformed
-            }
-            System.out.println("New document loaded");
+            initDoc(parsed.get());
         } else {
             putMessage("Doc parse error", true);
             // Oops, couldn't parse initial doc.
         }
+    }
+
+    /**
+     * Parse an (currently internal) XML document from stream.
+     *
+     * @param docStream Doc to parse
+     */
+    private void parseNewDoc(final InputStream docStream) {
+        docIO = new Io(docStream, "internal_ui");
+        var parsed = docIO.getDoc();
+        if (parsed.isPresent()) {
+            initDoc(parsed.get());
+        } else {
+            putMessage("Doc parse error", true);
+            // Oops, couldn't parse initial doc.
+        }
+    }
+
+    /**
+     * Initialise/load doc.
+     *
+     * @param doc doc to init.
+     */
+    private void initDoc(final Document doc) {
+        Platform.runLater(
+                () -> {
+                    controller.clearCardButtons();
+                    controller.clearCard("");
+                    controller.setViewScale(1d);
+                });
+        var child = doc.getRootElement();
+        if (child instanceof DocElement) {
+            currentDoc = (DocElement) child;
+            var valErrs = currentDoc.getValidationErrors();
+            for (var err : valErrs) {
+                System.out.println(err);
+            }
+            currentDoc.setChangeCallback(
+                    el -> this.redrawEl(el));
+
+            currentDoc
+                    .getPages()
+                    .ifPresent(
+                            f -> {
+                                currentPages = f;
+                            });
+            // Add buttons for each page
+            var it = currentPages.listIterator();
+            while (it.hasNext()) {
+                var ind = it.nextIndex();
+                var page = it.next();
+                Platform.runLater(
+                        () -> {
+                            var tiopt = page.getTitle();
+                            var id = page.getID();
+                            var title = tiopt.isPresent() ? tiopt.get() : id;
+
+                            controller.addCardButton(title, id, ind);
+                        });
+            }
+
+            // Initialise ID for first page
+            currentPageID = currentPages.get(0).getID();
+            this.gotoPage(currentPageID, true);
+            try {
+                //Init Document global scripts
+                scriptingEngine.evalElement(currentDoc);
+            } catch (ScriptException | IOException ex) {
+                Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+        } else {
+            putMessage("Malformed Doc - not Doc Element!", true);
+            // Looks like doc is malformed
+        }
+        System.out.println("New document loaded");
     }
 
     /**
@@ -326,6 +448,13 @@ public final class Engine extends Threaded {
      * @param img Image to draw.
      */
     public void drawImage(final ImageElement img) {
+        /*
+        Enforce thread boundary!
+         */
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> drawImage(img));
+            return;
+        }
         final double defImgXY = 20d;
         var sourceOpt = img.getSourceLoc();
         var locOpt = img.getLoc();
@@ -349,7 +478,10 @@ public final class Engine extends Threaded {
      * @param shape Shape to draw.
      */
     public void drawShape(final ShapeElement shape) {
-
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> drawShape(shape));
+            return;
+        }
         ArrayList<FontElement> fontBlocks = new ArrayList<>();
         FontProps fontProps;
         String textString;
@@ -398,6 +530,10 @@ public final class Engine extends Threaded {
      * Go to next sequential page.
      */
     public void gotoNextPage() {
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> gotoNextPage());
+            return;
+        }
         var currentCard = getPageIndex(currentPageID);
         if (currentCard < currentPages.size() - 1) {
             currentCard++;
@@ -409,6 +545,10 @@ public final class Engine extends Threaded {
      * Go to last visited page.
      */
     public void gotoPrevPage() {
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> gotoPrevPage());
+            return;
+        }
         this.gotoPage(navHistory.pop(), false);
     }
 
@@ -419,6 +559,10 @@ public final class Engine extends Threaded {
      * @param storeHistory Should I record it in history?
      */
     public void gotoPage(final Integer pageNum, final Boolean storeHistory) {
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> gotoPage(pageNum, storeHistory));
+            return;
+        }
         var pages = currentDoc.getPages();
         pages.ifPresent(f -> gotoPage(f.get(pageNum), storeHistory));
     }
@@ -430,6 +574,10 @@ public final class Engine extends Threaded {
      * @param storeHistory Should I record it in history?
      */
     public void gotoPage(final String pageID, final Boolean storeHistory) {
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> gotoPage(pageID, storeHistory));
+            return;
+        }
         var it = currentPages.iterator();
         while (it.hasNext()) {
             var page = it.next();
@@ -447,6 +595,10 @@ public final class Engine extends Threaded {
      * @param storeHistory Should I record it in history?
      */
     public void gotoPage(final PageElement page, final Boolean storeHistory) {
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> gotoPage(page, storeHistory));
+            return;
+        }
         if (storeHistory) {
             navHistory.push(currentPageID); // Push previous to stack
         }
@@ -482,43 +634,48 @@ public final class Engine extends Threaded {
     }
 
     /**
-     * Set-up global script things.
-     */
-    private void setupScriptEngineMan() {
-        var globalBindings = scriptingEngineManager.getBindings();
-    }
-
-    /**
      * Process elements on a page.
      *
      * @param el Element
      */
-    private void processEls(final VisualElement el) {
-        // Do whatever you're going to do with this node…
-        /*if (el instanceof PageElement) {
-        } else*/
-        if (el instanceof ImageElement) {
-            this.drawImage((ImageElement) el);
-        } else if (el instanceof ShapeElement) {
-            this.drawShape((ShapeElement) el);
+    public void processEls(final VisualElement el) {
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> processEls(el));
+            return;
         }
-
+        // Do whatever you're going to do with this node…
+        redrawEl(el);
+        //If element is scriptable, evaluate it.
+        if (el instanceof Scriptable) {
+            try {
+                scriptingEngine.evalElement(el);
+            } catch (ScriptException | IOException ex) {
+                Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
         // Then recurse the children
         for (int i = 0; i < el.getChildCount(); i++) {
             var ch = el.getChild(i);
             if (ch instanceof VisualElement) {
                 processEls((VisualElement) ((Element) ch));
-            } else if (ch instanceof ScriptElement) { // Is the child a script?
-                var chScr = ((ScriptElement) ch);
-                // Make a new script engine, with the specified language
-                try {
-                    chScr.initScriptingEngine(scriptingEngineManager);
-                } catch (ScriptException ex) {
-                    putMessage(
-                            "Exception in script for: " + el.getID() + " is: "
-                            + ex.getMessage(), Boolean.TRUE);
-                }
             }
+        }
+    }
+
+    /**
+     * Re/draws a Visual element.
+     *
+     * @param el Visual Element.
+     */
+    public void redrawEl(final VisualElement el) {
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> redrawEl(el));
+            return;
+        }
+        if (el instanceof ImageElement) {
+            this.drawImage((ImageElement) el);
+        } else if (el instanceof ShapeElement) {
+            this.drawShape((ShapeElement) el);
         }
     }
 
@@ -529,8 +686,8 @@ public final class Engine extends Threaded {
      */
     private Optional<Tools> loadTools() {
         var toolsXMLPath = Engine.class.getResource("tools.xml").getPath();
-        var parsedDoc = ingest.
-                parseGenericXML(new File(toolsXMLPath), new ToolsFactory());
+        toolIO = new Io(new File(toolsXMLPath), new ToolsFactory());
+        var parsedDoc = toolIO.getDoc();
         var root
                 = parsedDoc
                         .filter(d -> d.getRootElement() instanceof Tools)
@@ -546,10 +703,26 @@ public final class Engine extends Threaded {
      * @param blocking Should I block the User?
      */
     public void putMessage(final String message, final Boolean blocking) {
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> putMessage(message, blocking));
+            return;
+        }
+        System.out.println("Message: " + message);
         if (blocking) {
             Platform.runLater(() -> controller.showBlockingMessage(message));
         } else {
             Platform.runLater(() -> controller.showNonBlockingMessage(message));
         }
+    }
+
+    /**
+     * Request the UI to show a doc chooser.
+     */
+    public void showDocChooser() {
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> showDocChooser());
+            return;
+        }
+        Platform.runLater(() -> controller.showDocPicker());
     }
 }

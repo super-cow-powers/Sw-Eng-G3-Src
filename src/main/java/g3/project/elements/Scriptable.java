@@ -60,4 +60,11 @@ public interface Scriptable {
      */
     Optional<ScriptElement> getScriptEl();
 
+    /**
+     * Return the type of the element.
+     *
+     * @return Type-name
+     */
+    String getRealType();
+
 }

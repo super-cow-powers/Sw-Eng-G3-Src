@@ -29,6 +29,8 @@
 package g3.project.core;
 
 import g3.project.elements.ScriptElement;
+import g3.project.elements.Scriptable;
+import java.util.Optional;
 import nu.xom.Builder;
 import nu.xom.Element;
 
@@ -36,7 +38,7 @@ import nu.xom.Element;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class Tool extends Element {
+public class Tool extends Element implements Scriptable {
 
     /**
      * Create a builder.
@@ -97,13 +99,23 @@ public class Tool extends Element {
         return id != null ? id.getValue() : "tool-null-id";
     }
 
-    /**
-     * Get tool script string.
-     *
-     * @return script string.
-     */
-    public final String getScriptString() {
-        var el = this.getChildElements("script").get(0);
-        return (el instanceof ScriptElement) ? ((ScriptElement) el).getScriptString() : "";
+    @Override
+    public RecursiveBindings getScriptingBindings() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Optional<RecursiveBindings> getParentElementScriptingBindings() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Optional<ScriptElement> getScriptEl() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public String getRealType() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

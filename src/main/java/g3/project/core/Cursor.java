@@ -33,4 +33,10 @@ package g3.project.core;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public class Cursor {
+    public Cursor(){   
+    }
+    
+    public String getStuff(){
+        return "string";
+    }
 }

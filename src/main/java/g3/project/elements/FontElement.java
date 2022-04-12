@@ -59,6 +59,11 @@ public final class FontElement extends Element {
     public FontElement(final Element element) {
         super(element);
     }
+    
+    public FontElement(final String name, String uri, String textString) {
+        super(name, uri);
+        this.insertChild(textString, 0); //Add text
+    }
 //CHECKSTYLE:ON
 
     /**

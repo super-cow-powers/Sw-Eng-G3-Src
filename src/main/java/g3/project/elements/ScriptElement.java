@@ -28,19 +28,18 @@
  */
 package g3.project.elements;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import nu.xom.Attribute;
 import nu.xom.Builder;
 import nu.xom.Element;
 import nu.xom.Text;
@@ -49,12 +48,24 @@ import nu.xom.Text;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public final class ScriptElement extends Element implements Invocable, Includable {
+public final class ScriptElement extends Element implements Includable {
+
+    /**
+     * Default language.
+     */
+    private static final String DEF_LANG = "python";
+
+    /**
+     * Language attribute.
+     */
+    private static final String LANG_ATTR = "language";
 
     /**
      * Script engine to run element's script.
+     *
+     * WARNING: This is a global, shared object!!!
      */
-    private ScriptEngine myScriptEngine = null;
+    private ScriptEngine globalScriptEngine = null;
     /**
      * Invocable form of script engine.
      */
@@ -63,6 +74,11 @@ public final class ScriptElement extends Element implements Invocable, Includabl
      * Script's language.
      */
     private final String myLang = "python";
+
+    /**
+     * Script is inline?
+     */
+    private Boolean inlineScript;
 
     //CHECKSTYLE:OFF
     private static ThreadLocal builders = new ThreadLocal() {
@@ -84,64 +100,22 @@ public final class ScriptElement extends Element implements Invocable, Includabl
     public ScriptElement(Element element) {
         super(element);
     }
-    //CHECKSTYLE:ON
+//CHECKSTYLE:ON
 
     /**
-     * Get script string.
+     * Constructor with script.
      *
-     * @return Script String.
+     * @param name Element name.
+     * @param uri Element URI.
+     * @param scriptPath Path to script.
+     * @param scriptLang Script Language.
      */
-    public String getScriptString() {
-        var scrFilePath = this.getSourceLoc();
-        String scriptStr = "";
-        if (scrFilePath.isEmpty()) {
-            //No source file, must be inline
-            for (int i = 0; i < this.getChildCount(); i++) {
-                var child = this.getChild(i);
-                if (child instanceof Text) {
-                    scriptStr = scriptStr.concat(child.getValue());
-                } else {
-                    //not text
-                }
-            }
-        } else {
-
-            try {
-                var reader = new BufferedReader(new FileReader(scrFilePath.get()));
-                var lines = reader.lines();
-                scriptStr = lines.collect(Collectors.joining("\n"));
-                reader.close();
-            } catch (IOException ex) {
-                Logger.getLogger(ScriptElement.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-        return scriptStr;
-    }
-
-    /**
-     * Set script String.
-     *
-     * @param script String representation of script.
-     * @throws ScriptException Failed eval.
-     */
-    public void setScriptString(final String script) throws ScriptException {
-        if (this.getSourceLoc().isEmpty()) {
-            this.removeChildren();
-            this.appendChild(script);
-        }
-        if (myScriptEngine != null) {
-            reloadScript();
-        }
-    }
-
-    /**
-     * Reload the element's script.
-     *
-     * @throws ScriptException Failed eval.
-     */
-    public void reloadScript() throws ScriptException {
-        myScriptEngine.getBindings(ScriptContext.ENGINE_SCOPE).clear();
-        myScriptEngine.eval(this.getScriptString());
+    public ScriptElement(final String name, final String uri, final String scriptPath, final String scriptLang) {
+        super(name, uri);
+        var sourceAttr = new Attribute(INCLUDE_ATTR, scriptPath);
+        this.addAttribute(sourceAttr);
+        this.setScriptLang(scriptLang);
+        this.inlineScript = false;
     }
 
     /**
@@ -150,44 +124,22 @@ public final class ScriptElement extends Element implements Invocable, Includabl
      * @return String of language name
      */
     public String getScriptLang() {
-        return myLang;
+        var lang = this.getAttribute(LANG_ATTR);
+        if (lang == null) {
+            setScriptLang(DEF_LANG);
+            return DEF_LANG;
+        }
+        return lang.getValue();
     }
 
     /**
      * Not currently supported.
      *
      * @param lang language name string
-     * @return set language name string
      */
-    public String setScriptLang(final String lang) {
-        return myLang;
-    }
-
-    /**
-     * Set the element's script engine.
-     *
-     * @param scriptEngineMan Global engine manager.
-     * @throws ScriptException Failed eval.
-     */
-    public void initScriptingEngine(final ScriptEngineManager scriptEngineMan) throws ScriptException {
-        var newScrEngine = scriptEngineMan.
-                getEngineByName(this.getScriptLang());
-
-        this.myScriptEngine = newScrEngine;
-        var parentEl = (Scriptable) this.getParent();
-        var bindings = parentEl.getScriptingBindings();
-        //Attach parent bindings
-        var obsbind = parentEl.getParentElementScriptingBindings();
-        parentEl.getParentElementScriptingBindings().ifPresent(b -> bindings.setParent(b));
-
-        // Attach the local bindings
-        newScrEngine.setBindings(bindings,
-                ScriptContext.ENGINE_SCOPE);
-
-        var scr = this.getScriptString();
-        myScriptEngine.eval(scr);
-        myScriptEngine.eval("print(\"hello\")");
-        invScriptEngine = (Invocable) myScriptEngine;
+    public void setScriptLang(final String lang) {
+        var langAttr = new Attribute(LANG_ATTR, lang);
+        this.addAttribute(langAttr);
     }
 
     /**
@@ -197,65 +149,8 @@ public final class ScriptElement extends Element implements Invocable, Includabl
      */
     @Override
     public Optional<String> getSourceLoc() {
-        /**
-         * @todo check this is correct for a variety of inputs.
-         */
-        return Optional.ofNullable(this.getAttribute("include_source")) //Get include_source attribute
-                .map(f -> f.getValue())
-                .map(f -> {
-                    var baseDoc = this.getDocument().getRootElement();
-                    String myDir = "";
-
-                    if (baseDoc instanceof DocElement) {
-                        if (((DocElement) baseDoc).getBaseDir().isPresent()) {
-                            myDir = ((DocElement) baseDoc).getBaseDir().get();
-                        }
-                    }
-                    String loc = null;
-
-                    if (f.contains(":/") || f.startsWith("/")) {
-                        //Must be an absolute Path
-                        loc = f;
-                    } else if (f.startsWith(".")) {
-                        //Must be a relative Path
-                        loc = myDir.concat(f);
-                    }
-                    if (!f.startsWith("http")) {
-                        //Not a URL? Must be a file
-                        loc = "file:".concat(loc);
-                    }
-                    return loc;
-                });
+        //Get include_source attribute
+        return Optional.ofNullable(this.getAttribute(INCLUDE_ATTR))
+                .map(f -> f.getValue());
     }
-
-    /**
-     * Invoke function in script.
-     *
-     * @param func Function name String.
-     * @param arg Argument to pass.
-     * @return Function Return value.
-     * @throws ScriptException Failed eval.
-     * @throws NoSuchMethodException Failed to find function.
-     */
-    @Override
-    public Object invokeFunction(final String func, final Object... arg) throws ScriptException, NoSuchMethodException {
-        return invScriptEngine.invokeFunction(func, arg);
-    }
-
-    //CHECKSTYLE:OFF
-    @Override
-    public Object invokeMethod(Object arg0, String arg1, Object... arg2) throws ScriptException, NoSuchMethodException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public <T> T getInterface(Class<T> arg0) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public <T> T getInterface(Object arg0, Class<T> arg1) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-    //CHECKSTYLE:ON
 }

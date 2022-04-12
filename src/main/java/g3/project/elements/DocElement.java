@@ -28,10 +28,12 @@
  */
 package g3.project.elements;
 
+import g3.project.core.Engine;
 import g3.project.core.RecursiveBindings;
 import java.util.Optional;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.function.Consumer;
 import nu.xom.*;
 
 /**
@@ -44,6 +46,17 @@ public final class DocElement extends Element implements Scriptable {
      * Directory containing this document (String).
      */
     private String containingDirStr = null;
+    
+    /**
+     * Doc validation errors.
+     */
+    private ArrayList<String> validationErrors = new ArrayList<>();
+    
+    /**
+     * Change callback.
+     */
+    private Consumer<VisualElement> updateCallback = (f) -> {
+    };
 
     /**
      * Script bindings for the element.
@@ -82,6 +95,24 @@ public final class DocElement extends Element implements Scriptable {
     }
 
     /**
+     * Set change callback.
+     *
+     * @param func Notifier Function.
+     */
+    public void setChangeCallback(final Consumer<VisualElement> func) {
+        updateCallback = func;
+    }
+
+    /**
+     * Get the change callback.
+     *
+     * @return change callback.
+     */
+    public Consumer<VisualElement> getChangeCallback() {
+        return updateCallback;
+    }
+
+    /**
      * Get document base directory.
      *
      * @return Directory string.
@@ -90,6 +121,18 @@ public final class DocElement extends Element implements Scriptable {
         return Optional.ofNullable(containingDirStr);
     }
 
+    /**
+     * Set doc validation errors.
+     * @param errors validation errors.
+     */
+    public void setValidationErrors(final ArrayList<String> errors){
+        validationErrors = errors;
+    }
+    
+    public ArrayList<String> getValidationErrors(){
+        return validationErrors;
+    }
+    
     /**
      *
      * @return ArrayList containing the Doc's pages
@@ -132,16 +175,14 @@ public final class DocElement extends Element implements Scriptable {
     }
 
     /**
-     * Validates if the given ID is unique or not.
+     * Validates if the given ID is unique or not. The element it will be
+     * attached to must NOT already be in the doc!
      *
      * @param id ID to validate.
      * @return Validity
      */
     public Boolean validateUniqueID(final String id) {
-        /*
-        @todo: Implement!
-         */
-        return true;
+        return getElementByID(id).isEmpty();
     }
 
     /**
@@ -150,7 +191,18 @@ public final class DocElement extends Element implements Scriptable {
      * @param id ID of element.
      * @return Optional of Element
      */
-    public Optional<Element> getElementByID(final String id) {
+    public Optional<VisualElement> getElementByID(final String id) {
+        /*
+        @todo: Make faster
+         */
+        for (var el : this.getChildElements()) {
+            if (el instanceof VisualElement) {
+                var elOp = ((VisualElement) el).getByID(id);
+                if (elOp.isPresent()) {
+                    return elOp; //Found it
+                }
+            }
+        }
         return Optional.empty();
     }
 
@@ -190,5 +242,10 @@ public final class DocElement extends Element implements Scriptable {
             }
         }
         return Optional.empty();
+    }
+
+    @Override
+    public final String getRealType() {
+        return this.getClass().getName();
     }
 }
