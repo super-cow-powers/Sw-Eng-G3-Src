@@ -59,22 +59,33 @@ public class ShapeElement extends VisualElement {
 
     public String getType() {
         var type = this.getAttribute("type");
-        return type != null? type.getValue(): "";
+        return type != null ? type.getValue() : "";
     }
-    
-    public String setType(String type){
+
+    public String setType(String type) {
         this.addAttribute(new Attribute("type", type));
         return this.getType();
     }
-    
-    public Optional<TextElement> getText(){
+
+    public Optional<TextElement> getText() {
         TextElement text = null;
-        for (var ch: this.getChildElements()){
-            if (ch instanceof TextElement){
-                text = (TextElement)ch;
+        for (var ch : this.getChildElements()) {
+            if (ch instanceof TextElement) {
+                text = (TextElement) ch;
             }
         }
         return Optional.ofNullable(text);
+    }
+
+    public final void setText(String textString) {
+        for (var ch : this.getChildElements()) {
+            if (ch instanceof TextElement) {
+                ch.detach();
+            }
+        }
+        var text = new TextElement("base:text", BASE_URI, textString);
+        this.appendChild(text);
+        hasUpdated();
     }
 
 }

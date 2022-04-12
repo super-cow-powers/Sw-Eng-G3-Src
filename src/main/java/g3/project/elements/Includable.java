@@ -35,11 +35,12 @@ import java.util.Optional;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public interface Includable {
-
+    static String INCLUDE_ATTR = "include_source";
     /**
      * Return the source path or URL.
      *
      * @return Location string.
      */
     Optional<String> getSourceLoc();
+
 }

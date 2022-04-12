@@ -28,6 +28,7 @@
  */
 package g3.project.elements;
 
+import g3.project.core.Engine;
 import g3.project.core.RecursiveBindings;
 import g3.project.ui.LocObj;
 import g3.project.ui.SizeObj;
@@ -41,12 +42,20 @@ import nu.xom.Element;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class VisualElement extends Element implements Scriptable{
-
+public class VisualElement extends Element implements Scriptable {
+    static public final String BASE_URI = "http://PWS_Base";
+    static public final String EXT_URI = "http://PWS_Exts"; 
+    
     /**
      * Script bindings for the element.
      */
     private RecursiveBindings elementScriptBindings = new RecursiveBindings();
+
+    /**
+     * Ref to the engine.
+     */
+    private Optional<Engine> engine = Optional.empty();
+
     /**
      * Clone of this object. Might not use it.
      */
@@ -117,6 +126,7 @@ public class VisualElement extends Element implements Scriptable{
             this.addAttribute(new Attribute("x_orig", Double.toString(s.getX())));
             this.addAttribute(new Attribute("y_orig", Double.toString(s.getY())));
         });
+        hasUpdated();
         return this.getLoc();
     }
 
@@ -142,6 +152,7 @@ public class VisualElement extends Element implements Scriptable{
      */
     public final String setID(final String id) {
         this.addAttribute(new Attribute("ID", id));
+        hasUpdated();
         return this.getID();
     }
 
@@ -163,6 +174,7 @@ public class VisualElement extends Element implements Scriptable{
      */
     public final Double setZInd(final Double z) {
         this.addAttribute(new Attribute("z_ind", Double.toString(z)));
+        hasUpdated();
         return this.getZInd();
     }
 
@@ -231,6 +243,43 @@ public class VisualElement extends Element implements Scriptable{
     }
 
     /**
+     * Set the fill colour.
+     *
+     * @param colourString RGB or RGBA string.
+     * @throws Exception Bad colour string.
+     */
+    public final void setFillColour(final String colourString) throws Exception {
+        if (!colourString.startsWith("#")) {
+            throw new Exception("Bad Colour String");
+        }
+        var colAttr = new Attribute("fill", colourString);
+        this.addAttribute(colAttr);
+        hasUpdated();
+    }
+
+    /**
+     * Returns the referred element, if this is it or it is a child of this.
+     *
+     * @param id Element to find.
+     * @return Optional referred element.
+     */
+    public final Optional<VisualElement> getByID(final String id) {
+        if (this.getID() == id) {
+            return Optional.of(this);
+        } else {
+            for (Element el : this.getChildElements()) {
+                if (el instanceof VisualElement) {
+                    var elOp = ((VisualElement) el).getByID(id);
+                    if (elOp.isPresent()) {
+                        return elOp; //Found it
+                    }
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
      * Get the local scope for this object.
      *
      * @return my Bindings.
@@ -271,6 +320,21 @@ public class VisualElement extends Element implements Scriptable{
             }
         }
         return Optional.empty();
+    }
+
+    @Override
+    public final String getRealType() {
+        return this.getClass().getName();
+    }
+
+    /**
+     * Element has changed/updated. Notify the engine.
+     */
+    protected final void hasUpdated() {
+        var root = this.getDocument().getRootElement();
+        if (root instanceof DocElement) {
+            ((DocElement) root).getChangeCallback().accept(this);
+        }
     }
 
 }

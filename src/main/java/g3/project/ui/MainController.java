@@ -38,6 +38,7 @@ import com.jthemedetecor.OsThemeDetector;
 import g3.project.core.Engine;
 import g3.project.graphics.ExtShape;
 import g3.project.graphics.FontProps;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,7 +48,10 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ListChangeListener.Change;
 import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -163,9 +167,13 @@ public final class MainController {
      */
     @FXML
     private void handleEvent(final InputEvent event) {
-        System.out.println("g3.project.ui.MainController.handleKeyInput()");
+        event.consume(); //Don't pass to elements below!
         engine.offerEvent(event);
     }
+    /**
+     * Event handler for input events.
+     */
+    private final EventHandler<InputEvent> handleInput = evt -> handleEvent(evt);
 
     /**
      * Handle scroll event on page.
@@ -213,6 +221,13 @@ public final class MainController {
      */
     @FXML
     private void handleOpenNewDoc(final ActionEvent event) {
+        showDocPicker();
+    }
+    
+    /**
+     * Shows a new-doc file picker, then loads selected doc.
+     */
+    public void showDocPicker(){
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open New Stack");
         fileChooser.setInitialDirectory(
@@ -280,6 +295,7 @@ public final class MainController {
      */
     public void updateShape(final String id, final SizeObj size, final LocObj loc, final String shapeType, final Color fillColour,
             final Color strokeColour, final Double strokeWidth, final String textString, final FontProps textProps) {
+
         ExtShape newShape = new ExtShape(shapeType, id, size.getX(), size.getY(), fillColour, strokeColour, strokeWidth, textString, textProps);
         newShape.setRotate(size.getRot());
         if (drawnElements.containsKey(id)) {
@@ -399,7 +415,13 @@ public final class MainController {
             updateImage(id, size, loc, loadingGif); //Show loading GIF
             //Runnable to load then show image
             Runnable imageLoaderRunnable = () -> {
-                var im = new Image(path);
+                Image im;
+                var resOpt = engine.getDocIO().getResource(path);
+                if (resOpt.isPresent()) {
+                    im = new Image(new ByteArrayInputStream(resOpt.get()));
+                } else {
+                    im = loadingGif;
+                }
                 loadedImages.put(path, im);
                 Platform.runLater(() -> {
                     /* Check if image should stll be visible */
@@ -444,6 +466,7 @@ public final class MainController {
             var start = loc.getStart().get();
             imv.relocate(start.getX(), start.getY());
         }
+        imv.setId(id);
         imv.setViewOrder(loc.getZ());
         imv.setRotate(size.getRot());
         imv.setPreserveRatio(true);
@@ -462,7 +485,7 @@ public final class MainController {
         messageLabel.setText(message);
         messageLabel.setOpacity(1d);
         nbMessageClearFuture = executorSvc.schedule(() -> {
-                Platform.runLater(() -> clearNBMessage(NBMESSAGE_FADE_MS));
+            Platform.runLater(() -> clearNBMessage(NBMESSAGE_FADE_MS));
         },
                 MESSAGE_DURATION,
                 TimeUnit.MILLISECONDS);
@@ -515,12 +538,31 @@ public final class MainController {
      */
     public void initialize() {
         //this.scene = contentPane.getScene();
-        File xmlFile = new File("exampledoc.xml");
-        var loadingGifPath = "file:".concat(MainController.class
-                .getResource("loading.gif").getPath());
-        loadingGif = new Image(loadingGifPath);
+
+        var loadingGifStr = MainController.class
+                .getResourceAsStream("loading.gif");
+        loadingGif = new Image(loadingGifStr);
 
         engine = new Engine(this);
+        pagePane.addEventHandler(MouseEvent.MOUSE_CLICKED, handleInput);
+        pagePane.setViewOrder(-1);
+        pagePane.getChildren()
+                .addListener((Change<? extends Node> c) -> {
+                    while (c.next()) {
+                        if (c.wasPermutated()) {
+                            for (int i = c.getFrom(); i < c.getTo(); ++i) {
+                                //permutate
+                            }
+                        } else if (c.wasUpdated()) {
+                            //update item
+                        } else {
+
+                            for (Node addedNode : c.getAddedSubList()) {
+                                addedNode.addEventHandler(MouseEvent.MOUSE_CLICKED, handleInput);
+                            }
+                        }
+                    }
+                });
 
         darkMode = detector.isDark();
         detector.registerListener(isDark -> {
@@ -539,7 +581,6 @@ public final class MainController {
                 });
         Platform.runLater(() -> { //Run when initialised
             engine.start();
-            engine.offerNewDoc(xmlFile);
         });
         pagePane.setOnScroll((e) -> pageScrollEventHandler(e)); //Scaling stuff
         pageScroll.setOnKeyReleased((e) -> engine.offerEvent(e)); //I'll get the engine to handle the keys

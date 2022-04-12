@@ -29,13 +29,14 @@
 package g3.project.elements;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import nu.xom.*;
 
 /**
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class TextElement extends Element {
+public class TextElement extends Element implements Includable {
 //CHECKSTYLE:OFF
     private static ThreadLocal builders = new ThreadLocal() {
 
@@ -56,6 +57,12 @@ public class TextElement extends Element {
     public TextElement(Element element) {
         super(element);
     }
+    
+    public TextElement(String name, String uri, String textString) {
+        super(name, uri);
+        var fontBlock = new FontElement("base:font", uri, textString);
+        this.appendChild(fontBlock);
+    }
 //CHECKSTYLE:ON
 
     /**
@@ -71,6 +78,11 @@ public class TextElement extends Element {
             }
         }
         return list;
+    }
+
+    @Override
+    public Optional<String> getSourceLoc() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }
