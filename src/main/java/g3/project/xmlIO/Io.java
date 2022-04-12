@@ -42,11 +42,16 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nu.xom.*;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXNotRecognizedException;
+import org.xml.sax.SAXNotSupportedException;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.XMLFilter;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
-
+import nu.xom.*;
 
 /**
  *
@@ -247,9 +252,12 @@ public final class Io {
      */
     private Optional<Document> parseDocXML(final InputStream xmlStream) {
         Builder parser;
-
-        parser = new Builder(getParser(true), true, new ElementFactory());
-
+        try {
+            parser = new Builder((XMLReader) getParser(true), true, new ElementFactory());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Optional.empty();
+        }
         Document doc = null;
         try {
             doc = parser.build(xmlStream);
