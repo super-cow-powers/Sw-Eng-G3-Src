@@ -97,11 +97,7 @@ public final class Scripting {
             //Setup bindings
             var bindings = element.getScriptingBindings();
             bindings.put("this", element);
-
             element.getParentElementScriptingBindings().ifPresent(p -> bindings.setParent(p));
-
-            var scrEngine = getScriptEngine(scrEl.getScriptLang());
-            scrEngine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
 
             var locOpt = scrEl.getSourceLoc();
             if (locOpt.isEmpty()) {
@@ -111,11 +107,24 @@ public final class Scripting {
             var bytesOpt = docIo.getResource(loc);
             if (bytesOpt.isPresent()) {
                 var b = bytesOpt.get();
-                scrEngine.eval(new String(b, StandardCharsets.UTF_8));
+                var str = new String(b, StandardCharsets.UTF_8);
+                this.evalString(str, scrEl.getScriptLang(), bindings);
             } else {
                 throw new IOException("Couldn't open script file");
             }
         }
+    }
+    /**
+     * Evaluate a string of code. Provided for testing.
+     * @param code Code to eval.
+     * @param lang Language.
+     * @param bindings Bindings to use.
+     * @throws ScriptException Bad script.
+     */
+    protected void evalString(final String code, final String lang, final RecursiveBindings bindings) throws ScriptException {
+        var scrEngine = getScriptEngine(lang);
+        scrEngine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+        scrEngine.eval(code);
     }
 
     /**

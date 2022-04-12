@@ -153,6 +153,15 @@ public final class Engine extends Threaded {
     }
 
     /**
+     * Is the engine allowed to draw to the UI?
+     *
+     * @return state.
+     */
+    public Boolean drawingAllowed() {
+        return uiAvailable.get();
+    }
+
+    /**
      * Send an event to the engine.
      *
      * @param event Event to send.

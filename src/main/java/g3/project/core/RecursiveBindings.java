@@ -57,7 +57,15 @@ public final class RecursiveBindings extends SimpleBindings {
      * @param p Parent bindings.
      */
     public void setParent(final RecursiveBindings p) {
-        this.parentBindings = Optional.of(p);
+        this.parentBindings = Optional.ofNullable(p);
+    }
+    
+    /**
+     * Get the optional parent bindings.
+     * @return Optional parent.
+     */
+    public Optional<RecursiveBindings> getParent(){
+        return this.parentBindings;
     }
 
     /**
