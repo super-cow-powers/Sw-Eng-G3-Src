@@ -135,7 +135,7 @@ public final class Scripting {
      * @param x_loc x location.
      * @param y_loc y location.
      */
-    public void execElementClick(final Scriptable element, final String button_name, final Double x_loc, final Double y_loc) {
+    public void execElementClick(final Scriptable element, final String button_name, final Double x_loc, final Double y_loc, final Boolean down) {
         var scrElOpt = element.getScriptEl();
         if (scrElOpt.isPresent()) {
             var scrEl = scrElOpt.get();
@@ -143,7 +143,7 @@ public final class Scripting {
             var engine = getScriptEngine(lang);
             engine.setBindings(element.getScriptingBindings(), ScriptContext.ENGINE_SCOPE);
             try {
-                ((Invocable) engine).invokeFunction(CLICK_FN, button_name, x_loc, y_loc);
+                ((Invocable) engine).invokeFunction(CLICK_FN, button_name, x_loc, y_loc, down);
             } catch (ScriptException | NoSuchMethodException ex) {
                 Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
             }

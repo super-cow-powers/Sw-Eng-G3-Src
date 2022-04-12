@@ -272,10 +272,11 @@ public final class Engine extends Threaded {
         var evSrc = (javafx.scene.Node) ev.getSource();
         var elOpt = currentDoc.getElementByID(evSrc.getId());
 
-        if (evType == MouseEvent.MOUSE_CLICKED) {
+        if (evType == MouseEvent.MOUSE_PRESSED || evType == MouseEvent.MOUSE_RELEASED) {
+            System.out.println(evType);
             var mev = (MouseEvent) ev;
-
-            elOpt.ifPresent(el -> elementClicked(el, mev.getButton(), mev.getX(), mev.getY()));
+            var down = ev.getEventType() == MouseEvent.MOUSE_PRESSED; //Is the mouse pressed right now?
+            elOpt.ifPresent(el -> elementClicked(el, mev.getButton(), mev.getX(), mev.getY(), down));
         } else {
             System.out.println("Unsupported Element Event: " + ev);
         }
@@ -289,8 +290,8 @@ public final class Engine extends Threaded {
      * @param xLoc X Location.
      * @param yLoc Y Location.
      */
-    private void elementClicked(final VisualElement el, final MouseButton button, final Double xLoc, final Double yLoc) {
-        scriptingEngine.execElementClick(el, button.name(), xLoc, yLoc);
+    private void elementClicked(final VisualElement el, final MouseButton button, final Double xLoc, final Double yLoc, final Boolean mouseDown) {
+        scriptingEngine.execElementClick(el, button.name(), xLoc, yLoc, mouseDown);
     }
 
     /**
@@ -473,11 +474,15 @@ public final class Engine extends Threaded {
         ArrayList<FontElement> fontBlocks = new ArrayList<>();
         FontProps fontProps;
         String textString;
+        Color fill;
+        Color strokeCol;
+        Double strokeWidth;
         var size = shape.getSize();
         var loc = shape.getLoc();
         var shapeType = shape.getType();
         var fillOpt = shape.getFillColour();
-        Color fill;
+        var strokeOpt = shape.getStroke();
+
         if (fillOpt.isPresent()) {
             fill = fillOpt.get();
         } else {
@@ -495,6 +500,26 @@ public final class Engine extends Threaded {
             fontProps = null;
             textString = "";
         }
+        if (strokeOpt.isPresent()) {
+            var stroke = strokeOpt.get();
+            var strokeColOpt = stroke.getColour();
+            var strokeStyleOpt = stroke.getStyle();
+            var strokeWidthOpt = stroke.getWidth();
+            if (strokeColOpt.isPresent()) {
+                strokeCol = strokeColOpt.get();
+            } else {
+                strokeCol = Color.BLACK;
+            }
+            if (strokeWidthOpt.isPresent()) {
+                strokeWidth = strokeWidthOpt.get();
+            } else {
+                strokeWidth = 0d;
+            }
+        } else {
+            strokeCol = Color.BLACK;
+            strokeWidth = 0d;
+        }
+
         if (size.isPresent() && loc.isPresent()) {
             Platform.runLater(
                     () -> {
@@ -505,8 +530,8 @@ public final class Engine extends Threaded {
                                     loc.get(),
                                     shapeType,
                                     fill,
-                                    null,
-                                    null,
+                                    strokeCol,
+                                    strokeWidth,
                                     textString,
                                     fontProps);
                         }

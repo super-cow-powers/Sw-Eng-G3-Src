@@ -140,10 +140,10 @@ public final class MainController {
 
     @FXML
     private VBox pageVBox;
-    
+
     @FXML
     private MenuItem saveMenuItem;
-    
+
     @FXML
     private MenuItem saveAsMenuItem;
 //CHECKSTYLE:ON
@@ -219,7 +219,7 @@ public final class MainController {
     private void handleCloseAction(final ActionEvent event) {
         engine.showStartScreen();
     }
-    
+
     /**
      * Handle click on save menu item.
      *
@@ -228,7 +228,7 @@ public final class MainController {
     @FXML
     private void handleSaveAction(final ActionEvent event) {
     }
-    
+
     /**
      * Handle click on save as menu item.
      *
@@ -247,11 +247,11 @@ public final class MainController {
     private void handleOpenNewDoc(final ActionEvent event) {
         showDocPicker();
     }
-    
+
     /**
      * Shows a new-doc file picker, then loads selected doc.
      */
-    public void showDocPicker(){
+    public void showDocPicker() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open New Stack");
         fileChooser.setInitialDirectory(
@@ -261,6 +261,7 @@ public final class MainController {
                 new FileChooser.ExtensionFilter("XML", "*.xml"),
                 new FileChooser.ExtensionFilter("SPRES", "*.spres")
         );
+        
         var newFile = fileChooser.showOpenDialog(pagePane.getScene().getWindow());
         if (newFile != null) {
             engine.offerNewDoc(newFile);
@@ -319,17 +320,23 @@ public final class MainController {
      */
     public void updateShape(final String id, final SizeObj size, final LocObj loc, final String shapeType, final Color fillColour,
             final Color strokeColour, final Double strokeWidth, final String textString, final FontProps textProps) {
-
-        ExtShape newShape = new ExtShape(shapeType, id, size.getX(), size.getY(), fillColour, strokeColour, strokeWidth, textString, textProps);
-        newShape.setRotate(size.getRot());
+        ExtShape newShape;
         if (drawnElements.containsKey(id)) {
-            pagePane.getChildren().remove(drawnElements.get(id));
+            newShape = (ExtShape) drawnElements.get(id);
+            newShape.setSize(size.getX(), size.getY());
+            newShape.setFill(fillColour);
+            newShape.setStroke(strokeColour, strokeWidth);
+            newShape.setText(textString);
+            newShape.setFont(textProps);
+        } else {
+            newShape = new ExtShape(shapeType, id, size.getX(), size.getY(), fillColour, strokeColour, strokeWidth, textString, textProps);
+            newShape.setRotate(size.getRot());
+            drawnElements.put(id, newShape);
+            pagePane.getChildren().add(newShape);
         }
-        drawnElements.put(id, newShape);
         var start = loc.getStart().get();
         newShape.relocate(start.getX(), start.getY());
         newShape.setViewOrder(loc.getZ());
-        pagePane.getChildren().add(newShape);
     }
 
     /**
@@ -580,9 +587,8 @@ public final class MainController {
                         } else if (c.wasUpdated()) {
                             //update item
                         } else {
-
                             for (Node addedNode : c.getAddedSubList()) {
-                                addedNode.addEventHandler(MouseEvent.MOUSE_CLICKED, handleInput);
+                                addedNode.addEventHandler(MouseEvent.ANY, handleInput);
                             }
                         }
                     }

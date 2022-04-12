@@ -1,4 +1,8 @@
-def onClick(button, x, y):
+def onClick(button, x, y, mouseDown):
     print("Hello from " + this.getID())
-    this.setText("Scripting")
-    this.setFillColour("#123456ff")
+    if mouseDown == True:
+        this.setFillColour("#123456ff")
+        print("Mouse is down")
+    else:
+        this.setFillColour("#A2A2A2FF")
+        print("Mouse is up")

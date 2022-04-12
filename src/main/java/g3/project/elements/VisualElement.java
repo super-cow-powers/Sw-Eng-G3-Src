@@ -43,9 +43,10 @@ import nu.xom.Element;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public class VisualElement extends Element implements Scriptable {
+
     static public final String BASE_URI = "http://PWS_Base";
-    static public final String EXT_URI = "http://PWS_Exts"; 
-    
+    static public final String EXT_URI = "http://PWS_Exts";
+
     /**
      * Script bindings for the element.
      */
@@ -274,6 +275,20 @@ public class VisualElement extends Element implements Scriptable {
                         return elOp; //Found it
                     }
                 }
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Get the stroke element for this element.
+     *
+     * @return Optional Stroke Element.
+     */
+    public final Optional<StrokeElement> getStroke() {
+        for (Element el : this.getChildElements()) {
+            if (el instanceof StrokeElement) {
+                return Optional.of((StrokeElement) el);
             }
         }
         return Optional.empty();
