@@ -106,20 +106,6 @@ public class RSA {
     }
 
     /**
-     * Encrypts an object using the private key.
-     * 
-     * @param objectToEncrypt
-     * @param selfPrivateKey
-     * @return encryptedObject
-     * @throws Exception
-     */
-    public SealedObject encryptPrivate(Serializable objectToEncrypt) throws Exception {
-        Cipher cipher = Cipher.getInstance(transformation);
-        cipher.init(Cipher.ENCRYPT_MODE, privateKey);
-        return new SealedObject(objectToEncrypt, cipher);
-    }
-
-    /**
      * Decrypts an object using the private key.
      * 
      * @param encryptedObject
@@ -129,19 +115,6 @@ public class RSA {
     public Serializable decryptPrivate(SealedObject encryptedObject) throws Exception {
         Cipher cipher = Cipher.getInstance(transformation);
         cipher.init(Cipher.DECRYPT_MODE, privateKey);
-        return (Serializable) encryptedObject.getObject(cipher);
-    }
-
-    /**
-     * Decrypts an object using the public key.
-     * 
-     * @param encryptedObject
-     * @return decryptedObject
-     * @throws Exception
-     */
-    public Serializable decryptPublic(SealedObject encryptedObject, PublicKey senderPublicKey) throws Exception {
-        Cipher cipher = Cipher.getInstance(transformation);
-        cipher.init(Cipher.DECRYPT_MODE, senderPublicKey);
         return (Serializable) encryptedObject.getObject(cipher);
     }
 }

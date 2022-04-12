@@ -69,7 +69,7 @@ public final class Engine extends Threaded {
     /**
      * Network Comms.
      */
-    private final NetThing netComms = new NetThing();
+    private final NetThing netComms = new NetThing(this);
 
     /**
      * List of tools.

@@ -28,6 +28,7 @@
  */
 package g3.project.network;
 
+import g3.project.core.Engine;
 import g3.project.core.Threaded;
 
 import java.io.IOException;
@@ -35,8 +36,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.crypto.SealedObject;
-
+import javafx.application.Platform;
 import javafx.event.Event;
 
 /**
@@ -44,40 +44,66 @@ import javafx.event.Event;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public final class NetThing extends Threaded {
-
-    /**
-     * Constructor.
-     */
-    public NetThing() {
-        super();
-    }
-
     /**
      * Client Session
      */
-    private Client client;
+    private final Client client = new Client();
 
     /**
      * Server Session
      */
-    private Server server;
+    private final Server server = new Server(this);
 
     /**
-     * Am I the Host?
+     * Am I hosting?
      */
-    private AtomicBoolean isHost;
+    private final AtomicBoolean isHosting = new AtomicBoolean(false);
 
     /**
-     * Event queue from input sources.
+     * Am I connected to a session?
+     */
+    private final AtomicBoolean isConnected = new AtomicBoolean(false);
+
+    /**
+     * Connect to Server request queue.
+     */
+    private final BlockingQueue<Event> connectToServerRequestQueue 
+    = new LinkedBlockingQueue<>();
+
+    /**
+     * Client to Server transfer queue.
      */
     private final BlockingQueue<Event> txEventQueue
             = new LinkedBlockingQueue<Event>();
 
     /**
-     * Event queue from input sources.
+     * Server to Client transfer queue.
      */
     private final BlockingQueue<Event> rxEventQueue
             = new LinkedBlockingQueue<Event>();
+
+    /**
+     * Ref to the Engine
+     */
+    private final Engine engine;
+
+    /**
+     * Constructor.
+     */
+    public NetThing(final Engine engine) {
+        super();
+        this.engine = engine;
+    }
+
+    /**
+     * Request to connect to Server.
+     * 
+     * @param event Event to connect to server
+     */
+    public void connectToServer(final Event event) {
+        connectToServerRequestQueue.offer(event);
+        unsuspend();
+    }
 
     /**
      * Send an event to the net.
@@ -99,38 +125,31 @@ public final class NetThing extends Threaded {
     }
 
     @Override
+    @SuppressWarnings("empty-statement")
     public void run() {
         //Wait till running properly
         while (!(running.get())) {
         }
         //Post-construction Setup goes here
-        client = new Client();
-        if (isHost.get()) {
-            server = new Server();
-            try {
-                server.acceptConnection();
-                client.connectToServer();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        } else {
-            try {
-                server.acceptConnection();
-                client.connectToServer();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
+        initNetThing();
 
         //...
         while (running.get()) {
             //Main thread dispatch loop
             try {
-                if (!txEventQueue.isEmpty()) { // New event to send
-
-                } else {
+                if (!connectToServerRequestQueue.isEmpty()) {
+                    if(!isConnected.get()) {
+                        //Connect to Server
+                    }
+                } else if (!txEventQueue.isEmpty()) {
+                    if(isHosting.get()) {
+                        //send to server
+                    }
+                } else if (!rxEventQueue.isEmpty()) {
+                    if(isConnected.get()) {
+                        //receive from server
+                    }
+                } else { 
                     suspended.set(true);
                 }
 
@@ -154,30 +173,67 @@ public final class NetThing extends Threaded {
         return;
     }
 
-    private void txEvent() throws IOException {
+    private void initNetThing() {
+        // Initialise the Client
+        // TODO Load from file?
         try {
-            // encrypt event
-            var updateTx = client.encryption(txEventQueue.take());
-            // send event
-            client.sendObjectToServer(updateTx);
-        } catch (Exception e) {
+            client.initClient();
+        } catch (IOException initCE) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            initCE.printStackTrace();
+            Platform.runLater(() -> engine.
+            putMessage("Failed to initialise client", false));
+        }
+        // Initialise the Server
+        // TODO Load from file?
+        try {
+            server.initServer();
+            server.checkInHost(client);
+        } catch (IOException initSE) {
+            // TODO Auto-generated catch block
+            initSE.printStackTrace();
+            Platform.runLater(() -> engine.
+            putMessage("Failed to initialise server", false));
         }
     }
 
-    private Event rxEvent() throws IOException {
+    /**
+     * Encrypt and send an event to the server.
+     * 
+     * @throws IOException
+     */
+    private void txEvent(final Event event) throws IOException {
+        try {
+            // offer the event to the server to be sent
+            server.offerTxEvent(event);
+        } catch (Exception txE) {
+            // TODO Auto-generated catch block
+            txE.printStackTrace();
+            Platform.runLater(() -> engine.
+            putMessage("Failed to transfer event to server - see stack trace", false));
+        }
+    }
+
+    /**
+     * Recieve an encrypted event from the server and decrypt it.
+     * 
+     * @throws IOException
+     */
+    private void rxEvent() throws IOException {
         try {
             // receive event
             var eventLine = client.readObjectFromServer();
             // decrypt event
             var updateRx = client.decryption(eventLine);
-            return (Event)updateRx;
-        } catch (Exception e) {
+            // send event to engine for processing
+            // return to engine threadngine.
+            engine.offerEvent((Event) updateRx);
+        } catch (Exception rxE) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            rxE.printStackTrace();
+            Platform.runLater(() -> engine.
+            putMessage("Failed to recieve event from server - see stack trace", false));
         }
-        return null;
     }
 
 }

@@ -31,73 +31,51 @@ package g3.project.network;
 import java.net.*;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import g3.project.core.Threaded;
+
 import java.io.*;
-import java.lang.reflect.Array;
 
 /**
  *
  * @author Boris Choi<kyc526@york.ac.uk>
  */
-public class Server {
-    private static final int PORT = 8080;
+public class Server extends Threaded {
+    private static final int SERVER_TIMEOUT = 10000;
 
     private ServerSocket serverSocket;
+    private int hostID = 0;
     private int clientCnt = 0;
     private int clientCntMax = 10;
 
-    private ArrayList<Socket> clientSockets = new ArrayList<>();
-    private ArrayList<PublicKey> clientPublicKeys = new ArrayList<>();
+    private Client host;
+    private ArrayList<Client> clients = new ArrayList<Client>();
 
     /**
-     * Constructor - define max client count
-     * 
-     * @param clientCntMax
+     * Server object queue
      */
-    public Server(int clientCntMax) {
-        this.clientCntMax = clientCntMax;
-    }
+    private BlockingQueue<Object> serverQueue
+            = new LinkedBlockingQueue<Object>();
+
+    private final NetThing netComm;
 
     /**
      * Constructor - use default max client count
      */
-    public Server() {
+    public Server(final NetThing netComm) {
+        super();
+        this.netComm = netComm;
     }
 
     /**
-     * Start the server
-     * 
-     * @throws IOException
+     * Offer an event to the server queue
      */
-    public void initServer() throws IOException {
-        serverSocket = new ServerSocket(PORT);
-    }
-
-    /**
-     * Accept client connection
-     * 
-     * @throws IOException
-     */
-    public void acceptConnection() throws IOException {
-        if (clientCnt < clientCntMax) {
-            Socket socket = serverSocket.accept();
-            ObjectInputStream eventIn = new ObjectInputStream(socket.getInputStream());
-            ObjectOutputStream eventOut = new ObjectOutputStream(socket.getOutputStream());
-
-            int clientID = clientCnt++;
-            eventOut.writeInt(clientID);
-
-            clientSockets.add(socket);
-
-        } else {
-            System.out.println("Server is full");
-        }
-    }
-
-    /**
-     * Close the server
-     */
-    public void closeConnection() throws IOException {
-        serverSocket.close();
+    public void offerTxEvent(Object event) {
+        serverQueue.offer(event);
+        unsuspend();
     }
 
     /**
@@ -107,5 +85,107 @@ public class Server {
      */
     public int getPort() {
         return serverSocket.getLocalPort();
+    }
+
+    /**
+     * Getter for server remote socket address
+     * 
+     * @return server socket address
+     */
+    public InetAddress getAddress() {
+        return serverSocket.getInetAddress();
+    }
+
+    @Override
+    public void run() {
+        while (!(running.get())){
+        }
+        //Post-construction Setup goes here
+
+        //...
+        while (running.get()) {
+            try {
+                if (!serverQueue.isEmpty()) {// New event into server?
+                    //encrypt and send to all clients
+                }
+
+                while (suspended.get()) {
+                    synchronized (this) {
+                        wait();
+                    }
+                }
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }        
+
+    /**
+     * Start the server
+     * 
+     * @throws IOException
+     */
+    public void initServer() throws IOException {
+        try {
+            serverSocket = new ServerSocket(0);
+            serverSocket.setSoTimeout(SERVER_TIMEOUT);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Chech-in host
+     */
+    public void checkInHost(Client host){
+        this.host = host;
+    }
+
+
+    /**
+     * Accept client connection
+     * 
+     * @throws IOException
+     */
+    public void acceptConnection() throws Exception {
+        if (clientCnt < clientCntMax) {
+            //Accept client connection
+            Socket newClientSocket = serverSocket.accept();
+
+            //Clone client socket and IO streams
+            Client newClient = new Client();
+            newClient.setSocket(newClientSocket);
+
+            //Get client public key
+            PublicKey clientPublicKey = (PublicKey) newClient.getRxStream().readObject();
+            newClient.setPublicKeyHolder(clientPublicKey);
+            
+            //Add clone to client list
+            clients.add(newClient);
+        } else {
+            System.out.println("Server is full");
+        }
+    }
+
+    /**
+     * Host encrypt an event and distribute to all clients
+     * @throws IOException
+     */
+    public void hostEncryptAndSend(Object event) throws IOException {
+        for (Client client : clients) {
+            // encrypt event
+            var updateTx = host.encryption((Serializable)event, client);
+            // send event
+            client.getTxStream().writeObject(updateTx);
+            client.getTxStream().flush();
+        }
+    }
+
+    /**
+     * Close the server
+     */
+    public void closeConnection() throws IOException {
+        serverSocket.close();
     }
 }
