@@ -42,7 +42,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.BlockingQueue;
@@ -55,13 +54,10 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import nu.xom.Document;
 import nu.xom.Element;
@@ -127,6 +123,13 @@ public final class Engine extends Threaded {
      */
     private final BlockingQueue<File> docQueue
             = new LinkedBlockingQueue<File>();
+
+    /**
+     * Out of thread call queue.
+     */
+    private final BlockingQueue<Runnable> callQueue
+            = new LinkedBlockingQueue<>();
+
     /**
      * Ref to the UI controller.
      */
@@ -184,39 +187,48 @@ public final class Engine extends Threaded {
 
         while (!(running.get())) {
         }
-        //Start network thing
-        netComms.start();
-        scriptingEngine = new Scripting("python", this);
-        //Load the start screen
-        var startXmlStream = MainController.class
-                .getResourceAsStream("start_screen.xml");
-        parseNewDoc(startXmlStream);
-        
-        // Load in the tools
-        loadTools()
-                .ifPresentOrElse(
-                        t -> myTools = t.getTools(),
-                        () -> {
-                            myTools = new ArrayList<Tool>();
-                            Platform.runLater(() -> controller.
-                            showNonBlockingMessage("Failed Loading"
-                                    + " Tools!"));
-                        });
-        // Add tool buttons
-        var iterTool = myTools.iterator();
-        while (iterTool.hasNext()) {
-            var currentTool = iterTool.next();
-            Platform.runLater(() -> controller.
-                    addTool(currentTool.getName(), currentTool.getID()));
+        try {
+            //Start network thing
+            netComms.start();
+            scriptingEngine = new Scripting("python", this);
+            //Load the start screen
+            var startXmlStream = MainController.class
+                    .getResourceAsStream("start_screen.xml");
+            parseNewDoc(startXmlStream);
+
+            // Load in the tools
+            loadTools()
+                    .ifPresentOrElse(
+                            t -> myTools = t.getTools(),
+                            () -> {
+                                myTools = new ArrayList<Tool>();
+                                Platform.runLater(() -> controller.
+                                showNonBlockingMessage("Failed Loading"
+                                        + " Tools!"));
+                            });
+            // Add tool buttons
+            var iterTool = myTools.iterator();
+            while (iterTool.hasNext()) {
+                var currentTool = iterTool.next();
+                Platform.runLater(() -> controller.
+                        addTool(currentTool.getName(), currentTool.getID()));
+            }
+        } catch (Exception ex) {
+            //Something went wrong. Couldn't start.
+            ex.printStackTrace();
+            netComms.stop();
+            return;
         }
         // Quit if running flag set to false
         while (running.get()) {
             try {
-                if (!docQueue.isEmpty()) { // New doc request?
+                if (!docQueue.isEmpty()) { //New doc request?
                     parseNewDoc(docQueue.take());
-                } else if (!eventQueue.isEmpty()) { // New event?
+                } else if (!eventQueue.isEmpty()) { //New event?
                     handleEvent(eventQueue.take());
-                } else {
+                } else if (!callQueue.isEmpty()) { //Out-of-thread call request
+                    callQueue.take().run();
+                } else { //Nothing to do. Suspend
                     suspended.set(true);
                 }
 
@@ -225,7 +237,8 @@ public final class Engine extends Threaded {
                         wait();
                     }
                 }
-            } catch (InterruptedException ex) {
+            } catch (Exception ex) {
+                //Something went wrong.
                 ex.printStackTrace();
             }
         }
@@ -343,6 +356,7 @@ public final class Engine extends Threaded {
             // Oops, couldn't parse initial doc.
         }
     }
+
     /**
      * Parse an (currently internal) XML document from stream.
      *
@@ -361,6 +375,7 @@ public final class Engine extends Threaded {
 
     /**
      * Initialise/load doc.
+     *
      * @param doc doc to init.
      */
     private void initDoc(final Document doc) {
@@ -374,7 +389,7 @@ public final class Engine extends Threaded {
         if (child instanceof DocElement) {
             currentDoc = (DocElement) child;
             var valErrs = currentDoc.getValidationErrors();
-            for (var err : valErrs){
+            for (var err : valErrs) {
                 System.out.println(err);
             }
             currentDoc.setChangeCallback(
@@ -424,6 +439,13 @@ public final class Engine extends Threaded {
      * @param img Image to draw.
      */
     public void drawImage(final ImageElement img) {
+        /*
+        Enforce thread boundary!
+         */
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> drawImage(img));
+            return;
+        }
         final double defImgXY = 20d;
         var sourceOpt = img.getSourceLoc();
         var locOpt = img.getLoc();
@@ -447,7 +469,10 @@ public final class Engine extends Threaded {
      * @param shape Shape to draw.
      */
     public void drawShape(final ShapeElement shape) {
-
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> drawShape(shape));
+            return;
+        }
         ArrayList<FontElement> fontBlocks = new ArrayList<>();
         FontProps fontProps;
         String textString;
@@ -496,6 +521,10 @@ public final class Engine extends Threaded {
      * Go to next sequential page.
      */
     public void gotoNextPage() {
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> gotoNextPage());
+            return;
+        }
         var currentCard = getPageIndex(currentPageID);
         if (currentCard < currentPages.size() - 1) {
             currentCard++;
@@ -507,6 +536,10 @@ public final class Engine extends Threaded {
      * Go to last visited page.
      */
     public void gotoPrevPage() {
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> gotoPrevPage());
+            return;
+        }
         this.gotoPage(navHistory.pop(), false);
     }
 
@@ -517,6 +550,10 @@ public final class Engine extends Threaded {
      * @param storeHistory Should I record it in history?
      */
     public void gotoPage(final Integer pageNum, final Boolean storeHistory) {
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> gotoPage(pageNum, storeHistory));
+            return;
+        }
         var pages = currentDoc.getPages();
         pages.ifPresent(f -> gotoPage(f.get(pageNum), storeHistory));
     }
@@ -528,6 +565,10 @@ public final class Engine extends Threaded {
      * @param storeHistory Should I record it in history?
      */
     public void gotoPage(final String pageID, final Boolean storeHistory) {
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> gotoPage(pageID, storeHistory));
+            return;
+        }
         var it = currentPages.iterator();
         while (it.hasNext()) {
             var page = it.next();
@@ -545,6 +586,10 @@ public final class Engine extends Threaded {
      * @param storeHistory Should I record it in history?
      */
     public void gotoPage(final PageElement page, final Boolean storeHistory) {
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> gotoPage(page, storeHistory));
+            return;
+        }
         if (storeHistory) {
             navHistory.push(currentPageID); // Push previous to stack
         }
@@ -585,6 +630,10 @@ public final class Engine extends Threaded {
      * @param el Element
      */
     public void processEls(final VisualElement el) {
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> processEls(el));
+            return;
+        }
         // Do whatever you're going to do with this node…
         redrawEl(el);
         //If element is scriptable, evaluate it.
@@ -604,7 +653,16 @@ public final class Engine extends Threaded {
         }
     }
 
+    /**
+     * Re/draws a Visual element.
+     *
+     * @param el Visual Element.
+     */
     public void redrawEl(final VisualElement el) {
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> redrawEl(el));
+            return;
+        }
         if (el instanceof ImageElement) {
             this.drawImage((ImageElement) el);
         } else if (el instanceof ShapeElement) {
@@ -636,6 +694,10 @@ public final class Engine extends Threaded {
      * @param blocking Should I block the User?
      */
     public void putMessage(final String message, final Boolean blocking) {
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> putMessage(message, blocking));
+            return;
+        }
         System.out.println("Message: " + message);
         if (blocking) {
             Platform.runLater(() -> controller.showBlockingMessage(message));
@@ -643,11 +705,15 @@ public final class Engine extends Threaded {
             Platform.runLater(() -> controller.showNonBlockingMessage(message));
         }
     }
-    
+
     /**
      * Request the UI to show a doc chooser.
      */
-    public void showDocChooser(){
+    public void showDocChooser() {
+        if (Thread.currentThread() != myThread) {
+            callQueue.add(() -> showDocChooser());
+            return;
+        }
         Platform.runLater(() -> controller.showDocPicker());
     }
 }
