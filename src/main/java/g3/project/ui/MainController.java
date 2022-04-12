@@ -140,6 +140,12 @@ public final class MainController {
 
     @FXML
     private VBox pageVBox;
+    
+    @FXML
+    private MenuItem saveMenuItem;
+    
+    @FXML
+    private MenuItem saveAsMenuItem;
 //CHECKSTYLE:ON
     /**
      * Duration for to show a non-blocking message.
@@ -205,13 +211,31 @@ public final class MainController {
     }
 
     /**
-     * Handle click on exit menu item.
+     * Handle click on close menu item.
      *
      * @param event exit-click event.
      */
     @FXML
-    private void handleExitAction(final ActionEvent event) {
-        System.out.print("Quitting\n");
+    private void handleCloseAction(final ActionEvent event) {
+        engine.showStartScreen();
+    }
+    
+    /**
+     * Handle click on save menu item.
+     *
+     * @param event exit-click event.
+     */
+    @FXML
+    private void handleSaveAction(final ActionEvent event) {
+    }
+    
+    /**
+     * Handle click on save as menu item.
+     *
+     * @param event exit-click event.
+     */
+    @FXML
+    private void handleSaveAsAction(final ActionEvent event) {
     }
 
     /**

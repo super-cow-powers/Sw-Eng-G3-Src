@@ -109,11 +109,6 @@ public final class Engine extends Threaded {
     private final Stack<String> navHistory = new Stack<>();
 
     /**
-     * Is the UI available?
-     */
-    private final AtomicBoolean uiAvailable = new AtomicBoolean(false);
-
-    /**
      * Event queue from input sources.
      */
     private final BlockingQueue<Event> eventQueue
@@ -146,22 +141,6 @@ public final class Engine extends Threaded {
     }
 
     /**
-     * Tell the engine that the UI is now active.
-     */
-    public void allowDraw() {
-        uiAvailable.set(true);
-    }
-
-    /**
-     * Is the engine allowed to draw to the UI?
-     *
-     * @return state.
-     */
-    public Boolean drawingAllowed() {
-        return uiAvailable.get();
-    }
-
-    /**
      * Send an event to the engine.
      *
      * @param event Event to send.
@@ -178,6 +157,16 @@ public final class Engine extends Threaded {
      */
     public void offerNewDoc(final File xmlFile) {
         docQueue.offer(xmlFile);
+        unsuspend();
+    }
+
+    /**
+     * Run a function on the engine thread.
+     *
+     * @param r Runnable function.
+     */
+    public void runFunction(final Runnable r) {
+        callQueue.offer(r);
         unsuspend();
     }
 
@@ -199,12 +188,10 @@ public final class Engine extends Threaded {
         try {
             //Start network thing
             netComms.start();
+            //Init Scripting Engine
             scriptingEngine = new Scripting("python", this);
-            //Load the start screen
-            var startXmlStream = MainController.class
-                    .getResourceAsStream("start_screen.xml");
-            parseNewDoc(startXmlStream);
-
+            //Show Start Screen
+            showStartScreen();
             // Load in the tools
             loadTools()
                     .ifPresentOrElse(
@@ -453,7 +440,7 @@ public final class Engine extends Threaded {
         Enforce thread boundary!
          */
         if (Thread.currentThread() != myThread) {
-            callQueue.add(() -> drawImage(img));
+            runFunction(() -> drawImage(img));
             return;
         }
         final double defImgXY = 20d;
@@ -480,7 +467,7 @@ public final class Engine extends Threaded {
      */
     public void drawShape(final ShapeElement shape) {
         if (Thread.currentThread() != myThread) {
-            callQueue.add(() -> drawShape(shape));
+            runFunction(() -> drawShape(shape));
             return;
         }
         ArrayList<FontElement> fontBlocks = new ArrayList<>();
@@ -532,7 +519,7 @@ public final class Engine extends Threaded {
      */
     public void gotoNextPage() {
         if (Thread.currentThread() != myThread) {
-            callQueue.add(() -> gotoNextPage());
+            runFunction(() -> gotoNextPage());
             return;
         }
         var currentCard = getPageIndex(currentPageID);
@@ -547,7 +534,7 @@ public final class Engine extends Threaded {
      */
     public void gotoPrevPage() {
         if (Thread.currentThread() != myThread) {
-            callQueue.add(() -> gotoPrevPage());
+            runFunction(() -> gotoPrevPage());
             return;
         }
         this.gotoPage(navHistory.pop(), false);
@@ -561,7 +548,7 @@ public final class Engine extends Threaded {
      */
     public void gotoPage(final Integer pageNum, final Boolean storeHistory) {
         if (Thread.currentThread() != myThread) {
-            callQueue.add(() -> gotoPage(pageNum, storeHistory));
+            runFunction(() -> gotoPage(pageNum, storeHistory));
             return;
         }
         var pages = currentDoc.getPages();
@@ -576,7 +563,7 @@ public final class Engine extends Threaded {
      */
     public void gotoPage(final String pageID, final Boolean storeHistory) {
         if (Thread.currentThread() != myThread) {
-            callQueue.add(() -> gotoPage(pageID, storeHistory));
+            runFunction(() -> gotoPage(pageID, storeHistory));
             return;
         }
         var it = currentPages.iterator();
@@ -597,7 +584,7 @@ public final class Engine extends Threaded {
      */
     public void gotoPage(final PageElement page, final Boolean storeHistory) {
         if (Thread.currentThread() != myThread) {
-            callQueue.add(() -> gotoPage(page, storeHistory));
+            runFunction(() -> gotoPage(page, storeHistory));
             return;
         }
         if (storeHistory) {
@@ -641,7 +628,7 @@ public final class Engine extends Threaded {
      */
     public void processEls(final VisualElement el) {
         if (Thread.currentThread() != myThread) {
-            callQueue.add(() -> processEls(el));
+            runFunction(() -> processEls(el));
             return;
         }
         // Do whatever you're going to do with this node…
@@ -670,7 +657,7 @@ public final class Engine extends Threaded {
      */
     public void redrawEl(final VisualElement el) {
         if (Thread.currentThread() != myThread) {
-            callQueue.add(() -> redrawEl(el));
+            runFunction(() -> redrawEl(el));
             return;
         }
         if (el instanceof ImageElement) {
@@ -705,7 +692,7 @@ public final class Engine extends Threaded {
      */
     public void putMessage(final String message, final Boolean blocking) {
         if (Thread.currentThread() != myThread) {
-            callQueue.add(() -> putMessage(message, blocking));
+            runFunction(() -> putMessage(message, blocking));
             return;
         }
         System.out.println("Message: " + message);
@@ -721,9 +708,26 @@ public final class Engine extends Threaded {
      */
     public void showDocChooser() {
         if (Thread.currentThread() != myThread) {
-            callQueue.add(() -> showDocChooser());
+            runFunction(() -> showDocChooser());
             return;
         }
         Platform.runLater(() -> controller.showDocPicker());
+    }
+
+    /**
+     * Loads the start screen.
+     */
+    public void showStartScreen() {
+        if (Thread.currentThread() != myThread) {
+            runFunction(() -> showStartScreen());
+            return;
+        }
+        eventQueue.clear();
+        callQueue.clear();
+        docQueue.clear();
+        //Load the start screen
+        var startXmlStream = MainController.class
+                .getResourceAsStream("start_screen.xml");
+        parseNewDoc(startXmlStream);
     }
 }

@@ -240,35 +240,6 @@ public final class Io {
      * @return Optional doc.
      */
     private Optional<Document> parseDocXML(final File xmlFile) {
-
-        /*
-            SAXParser p;
-            Builder parser;
-            try {
-            p = getParser(true);
-            parser = new Builder(p.getXMLReader(), true, new ElementFactory());
-            } catch (ParserConfigurationException | SAXException ex) {
-            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
-            return Optional.empty();
-            }
-            
-            
-            Document doc = null;
-            try {
-            doc = parser.build(xmlFile);
-            if (doc != null) {
-            var root = doc.getRootElement();
-            if (root instanceof DocElement) {
-            ((DocElement) doc.getRootElement()).setBaseDir(dirPathString);
-            }
-            }
-            } catch (ValidityException vex){
-            doc = vex.getDocument();
-            } catch (ParsingException | IOException ex) { //We're returning an optional
-            ex.printStackTrace();   //So I'm not throwing this out of the method
-            }
-            return Optional.ofNullable(doc);
-         */
         try {
             var doc = parseDocXML(new FileInputStream(xmlFile));
             return doc;
