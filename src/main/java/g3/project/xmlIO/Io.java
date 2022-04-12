@@ -35,6 +35,7 @@ import java.util.Optional;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -65,14 +66,16 @@ public final class Io {
     private final Optional<Document> myDoc;
 
     /**
-     * Document File.
+     * Document Name.
      */
-    private final File myFile;
+    private final String docFileName;
 
     /**
      * Containing dir.
      */
     private final String dirPathString;
+
+    private Boolean allowSave = true;
 
     /**
      * Create new IO and parse the project doc.
@@ -82,7 +85,7 @@ public final class Io {
     public Io(final File xmlFile) {
         dirPathString = xmlFile.getAbsoluteFile().getParent() + "/";
         myDoc = parseDocXML(xmlFile);
-        myFile = xmlFile;
+        docFileName = xmlFile.getName();
     }
 
     /**
@@ -93,8 +96,9 @@ public final class Io {
      */
     public Io(final InputStream docIs, final String dir) {
         dirPathString = dir;
-        myFile = null;
         myDoc = parseDocXML(docIs);
+        docFileName = "Stream";
+        allowSave = false;
     }
 
     /**
@@ -106,7 +110,7 @@ public final class Io {
     public Io(final File xmlFile, final NodeFactory customFactory) {
         dirPathString = xmlFile.getAbsoluteFile().getParent() + "/";
         myDoc = parseGenericXML(xmlFile, customFactory);
-        myFile = xmlFile;
+        docFileName = xmlFile.getName();
     }
 
     /**
@@ -116,6 +120,37 @@ public final class Io {
      */
     public Optional<Document> getDoc() {
         return myDoc;
+    }
+
+    /**
+     * Save document to current location.
+     *
+     * @param doc document to save.
+     * @throws IOException bad file.
+     */
+    public void saveDoc(final Document doc) throws IOException {
+        saveDocAs(doc, dirPathString + docFileName);
+    }
+
+    /**
+     * Save document to new location.
+     *
+     * @param doc document to save.
+     * @param newPath Path to save to.
+     * @throws IOException bad file.
+     */
+    public void saveDocAs(final Document doc, final String newPath) throws IOException {
+        if (!allowSave) {
+            throw new IOException("Saving Not Permitted.");
+        }
+        String path;
+        try {
+            path = new URI(pathToURI(newPath)).getPath();
+        } catch (URISyntaxException ex) {
+            throw new IOException("Invalid File Path.");
+        }
+        Serializer serializer = new Serializer(new FileOutputStream(path), "ISO-8859-1");
+        serializer.write(doc);
     }
 
     /**

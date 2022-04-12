@@ -394,6 +394,7 @@ public final class Engine extends Threaded {
                     controller.clearCard("");
                     controller.setViewScale(1d);
                 });
+
         var child = doc.getRootElement();
         if (child instanceof DocElement) {
             currentDoc = (DocElement) child;
