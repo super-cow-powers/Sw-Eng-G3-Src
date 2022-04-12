@@ -105,12 +105,9 @@
             </dependencies>
         </profile>
         <profile>
-            <id>amd64-system-jfx</id>
+            <id>arch-system-jfx</id>
             <activation>
-                <os>
-                    <name>linux</name>
-                    <arch>amd64</arch>
-                </os>
+                <activeByDefault>false</activeByDefault>
             </activation>
             <dependencies>
                 <dependency>
