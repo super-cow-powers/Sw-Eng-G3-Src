@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, David Miall<dm1306@york.ac.uk>
+ * Copyright (c) 2022, Boris Choi
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@ import javafx.event.Event;
 
 /**
  *
- * @author David Miall<dm1306@york.ac.uk>
+ * @author Boris Choi
  */
 public final class CommSys extends Threaded {
     /**
