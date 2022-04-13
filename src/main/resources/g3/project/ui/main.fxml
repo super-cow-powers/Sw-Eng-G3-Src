@@ -32,6 +32,24 @@
                         <MenuItem mnemonicParsing="false" text="Delete" />
                     </items>
                 </Menu>
+                <Menu mnemonicParsing="false" text="Remote">
+                    <items>
+                        <Menu mnemonicParsing="false" text="View">
+                            <items>
+                                <MenuItem mnemonicParsing="false" text="Connect" />
+                                <MenuItem mnemonicParsing="false" text="Pause/Resume" />
+                                <MenuItem mnemonicParsing="false" text="Disconnect" />
+                            </items>
+                        </Menu>
+                        <Menu mnemonicParsing="false" text="Present">
+                            <items>
+                                <MenuItem mnemonicParsing="false" text="Start" />
+                                <MenuItem mnemonicParsing="false" text="Pause/Resume" />
+                                <MenuItem mnemonicParsing="false" text="End" />
+                            </items>
+                        </Menu>
+                    </items>
+                </Menu>
                 <Menu mnemonicParsing="false" text="Help">
                     <items>
                         <MenuItem mnemonicParsing="false" onAction="#handleAboutAction" text="About" />
