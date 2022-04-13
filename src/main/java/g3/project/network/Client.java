@@ -36,67 +36,68 @@ import java.io.*;
  *
  * @author Boris Choi<kyc526@york.ac.uk>
  */
-public class Client {
+public final class Client {
+
+    /**
+     * Connection timeout in Seconds.
+     */
     private static final int CLIENT_TIMEOUT = 10000;
+    /**
+     * My connection.
+     */
     private Socket socket;
-
+    /**
+     * Client Received-data stream.
+     */
     private ObjectInputStream rxStream;
-    private ObjectOutputStream txStream;
+//Clients don's transmit objects!
+//At most, they need to send auth details.
+//private ObjectOutputStream txStream;
 
     /**
-     * Constructor - creates a new client object
+     * Constructor - Initialise the client object.
+     *
+     * @param server Details of server to connect to.
      * @throws IOException
      */
-    public Client() {
-    }
-
-    /**
-     * Initialise the client object
-     * 
-     * @throws IOException
-     */
-    public void initClient() throws IOException{
-        setSocket(new Socket());
-    }
-
-    /**
-     * Set socket and IO streams
-     * 
-     * @param socket
-     * @throws IOException
-     */
-    public void setSocket(Socket socket) throws IOException {
-        this.socket = socket;
+    public Client(String server) throws IOException {
+        this.socket = new Socket();
         rxStream = new ObjectInputStream(socket.getInputStream());
-        txStream = new ObjectOutputStream(socket.getOutputStream());
     }
 
-    public ObjectInputStream getRxStream(){
+    /**
+     * Get the stream of received data.
+     *
+     * @return ObjectInputStream.
+     */
+    public ObjectInputStream getRxStream() {
         return rxStream;
     }
 
-    public ObjectOutputStream getTxStream(){
+    /*public ObjectOutputStream getTxStream(){
         return txStream;
+    }*/
+    /**
+     * Disconnect from server.
+     *
+     * @throws IOException IO Error.
+     */
+    public void disconnectFromServer() throws IOException {
+        //socket.close();
     }
 
-    // Connect client to server
-    public void connectToServer(Server server) throws IOException{
-        socket.connect(new InetSocketAddress(server.getAddress(), server.getPort()), CLIENT_TIMEOUT);
-    }
-
-    //disconnect client from server
-    public void disconnectFromServer() throws IOException{
-        socket.close();
-    }
-
-    // Send object to server
-    public void sendObjectToServer(Object object) throws IOException {
+    /**
+     * Send object to server
+     */
+    /*public void sendObjectToServer(Object object) throws IOException {
         txStream.writeObject(object);
         txStream.flush();
-    }
-
-    // Read object from server
-    public Object readObjectFromServer() throws IOException, ClassNotFoundException {
+    }*/
+    //I suggest this be re-worked to use callbacks or observables instead of polling.
+    /**
+     * Read object from server.
+     */
+    /*public Object readObjectFromServer() throws IOException, ClassNotFoundException {
         return rxStream.readObject();
-    }
+    }*/
 }

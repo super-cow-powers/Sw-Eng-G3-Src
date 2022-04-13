@@ -46,61 +46,69 @@ import javafx.event.Event;
 public final class CommSys extends Threaded {
 
     /**
-     * Client Session
+     * Client.
      */
-    private final Client client = new Client();
+    private Client client;
 
     /**
-     * Server Session
+     * Server.
      *
      * @param commSys
      */
-    private final Server server = new Server(this);
+    private Server server;
 
     /**
-     * Server connection action queue.
+     * Server connection queue.
+     *
+     * @todo Replace String placeholder.
      */
-    private final BlockingQueue<Server> serverConnectionQueue
+    private final BlockingQueue<String> serverConnectionQueue
             = new LinkedBlockingQueue<>();
 
     /**
      * Host session request queue.
+     *
+     * @todo Replace String placeholder.
      */
-    private final BlockingQueue<Event> hostSessionRequestQueue
+    private final BlockingQueue<String> startServerRequestQueue
             = new LinkedBlockingQueue<>();
 
     /**
-     * Client to Server transfer queue.
+     * Transmit queue. From Engine.
      */
     private final BlockingQueue<Event> txEventQueue
             = new LinkedBlockingQueue<Event>();
 
     /**
-     * Server to Client transfer queue.
+     * Received data queue. To Engine.
      */
     private final BlockingQueue<Event> rxEventQueue
             = new LinkedBlockingQueue<Event>();
 
     /**
-     * Ref to the Engine
+     * Ref to the Engine.
      */
     private final Engine engine;
 
     /**
      * Constructor.
+     *
+     * @param globalEngine Application engine.
      */
-    public CommSys(final Engine engine) {
+    public CommSys(final Engine globalEngine) {
         super();
-        this.engine = engine;
+        this.engine = globalEngine;
     }
 
     /**
-     * Send a connection event to the communication system.
+     * Request to connect to a server.
      *
-     * @param server Server to connect to.
+     * @todo Replace String placeholder.
+     *
+     * @param serverDetails Server to connect to.
      */
-    public void offerFonnectionEvent(final Server server) {
-        serverConnectionQueue.offer(server);
+    public void requestConnection(final String serverDetails) {
+        serverConnectionQueue.offer(serverDetails);
         unsuspend();
     }
 
@@ -131,13 +139,13 @@ public final class CommSys extends Threaded {
         }
         //Post-construction Setup goes here
         try {
+            //DO NOT START CLIENTS/SERVERS BEFORE THEY ARE REQUIRED!
             //Init the client session
-            client.initClient();
+            //client.initClient();
             //Start the server session
-            server.start();
+            //server.start();
         } catch (Exception ex) {
             ex.printStackTrace();
-            server.stop();
             return;
         }
 
@@ -146,11 +154,9 @@ public final class CommSys extends Threaded {
             //Main thread dispatch loop
             try {
                 if (!serverConnectionQueue.isEmpty()) { //New connection request?
-                    connectionUpdate(serverConnectionQueue.take());
+                    connectToRemote(serverConnectionQueue.take());
                 } else if (!txEventQueue.isEmpty()) { //Event to send?
-                    uploadToServer(txEventQueue.take());
-                } else if (!rxEventQueue.isEmpty()) { //Event recieved?
-                    loadUpdateToEngine(rxEventQueue.take());
+                    transmitEvent(txEventQueue.take());
                 } else {
                     suspended.set(true);
                 }
@@ -172,26 +178,30 @@ public final class CommSys extends Threaded {
     /**
      * Connect to the server.
      *
-     * @param event
+     * @todo Replace String placeholder.
+     * @param serverDetails Remote server details.
      */
-    private void connectionUpdate(Server server) {
+    private void connectToRemote(final String serverDetails) {
         // Try connect to the server
+        /*
         try {
             client.connectToServer(server);
         } catch (IOException ex) {
             ex.printStackTrace();
             Platform.runLater(() -> engine.
                     putMessage("Fail to connect to server - see stack trace", true));
-        }
+        }*/
     }
 
     /**
      * Upload an event to the server.
      *
-     * @param event
+     * @param event Event to send.
      */
-    private void uploadToServer(Event event) {
+    private void transmitEvent(final Event event) {
+        //TRANSMITTED (Server) EVENTS SHOULD NOT GO THROUGH A CLIENT!!!
         // Try to upload the event to the server
+        /*
         try {
             client.sendObjectToServer(event);
         } catch (IOException ex) {
@@ -199,13 +209,21 @@ public final class CommSys extends Threaded {
             Platform.runLater(() -> engine.
                     putMessage("Fail to upload event to server - see stack trace", true));
         }
+        */
     }
 
+    /*THE ENGINE WILL HANDLE EVENTS DIRECTLY FROM THE RX_QUEUE
+    PLEASE DO NOT FEED THEM IN IN THIS WAY.
+    I'm purposefully using a blocking queue, as they're thread safe.
+    Of course, if you really wanted, the constructor could take the engine's event queue as a param -
+    but that'd not be so good. I want to be able to distinguish between local and remote events.
+    */
     /**
      * Load an event to the engine from the server.
      *
      * @param event
      */
+    /*
     private void loadUpdateToEngine(Event event) {
         // Try to load the event to the engine
         try {
@@ -216,5 +234,5 @@ public final class CommSys extends Threaded {
             Platform.runLater(() -> engine.
                     putMessage("Fail to load event to engine - see stack trace", true));
         }
-    }
+    }*/
 }

@@ -37,6 +37,7 @@ import javax.crypto.SealedObject;
  *
  * @author Boris Choi<
  */ 
+/*
 public class RSA {
     private String algorithm = "RSA";
     private String transformation = "RSA/ECB/PKCS1Padding";
@@ -118,3 +119,4 @@ public class RSA {
         return (Serializable) encryptedObject.getObject(cipher);
     }
 }
+*/
