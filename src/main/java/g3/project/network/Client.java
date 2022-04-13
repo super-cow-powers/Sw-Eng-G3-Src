@@ -28,14 +28,7 @@
  */
 package g3.project.network;
 
-import javafx.application.Application;
 import java.net.*;
-import java.security.PublicKey;
-import java.util.Optional;
-
-import javax.crypto.SealedObject;
-
-import javafx.event.Event;
 
 import java.io.*;
 
@@ -49,9 +42,6 @@ public class Client {
 
     private ObjectInputStream rxStream;
     private ObjectOutputStream txStream;
-
-    private RSA rsa;
-    private PublicKey publicKeyHolder;
 
     /**
      * Constructor - creates a new client object
@@ -67,8 +57,6 @@ public class Client {
      */
     public void initClient() throws IOException{
         setSocket(new Socket());
-        rsa = new RSA();
-        rsa.createKeyPair();
     }
 
     /**
@@ -92,74 +80,23 @@ public class Client {
     }
 
     // Connect client to server
-    public void connectToServer(Server server){
-        try{
-            socket.connect(new InetSocketAddress(server.getAddress(), server.getPort()), CLIENT_TIMEOUT);
-
-            // Send public key to server
-            txStream.writeObject(rsa.getPublicKey());
-            txStream.flush();
-
-            // Save host public key
-            PublicKey hostPublicKey= (PublicKey) rxStream.readObject();
-            setPublicKeyHolder(publicKeyHolder);
-
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+    public void connectToServer(Server server) throws IOException{
+        socket.connect(new InetSocketAddress(server.getAddress(), server.getPort()), CLIENT_TIMEOUT);
     }
 
     //disconnect client from server
-    public void disconnectFromServer(){
-        try {
-            socket.close();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-
-    // save a public key to the holder
-    public void setPublicKeyHolder(PublicKey publicKeyHolder) {
-        this.publicKeyHolder = publicKeyHolder;
-    }
-
-    private PublicKey getPublicKeyHolder() {
-        return publicKeyHolder;
+    public void disconnectFromServer() throws IOException{
+        socket.close();
     }
 
     // Send object to server
-    public void sendObjectToServer(SealedObject object) throws IOException {
+    public void sendObjectToServer(Object object) throws IOException {
         txStream.writeObject(object);
         txStream.flush();
     }
 
     // Read object from server
-    public SealedObject readObjectFromServer() throws IOException, ClassNotFoundException {
-        return (SealedObject) rxStream.readObject();
-    }
-
-    public SealedObject encryption(Serializable objectToEncrypt, Client reciever) throws IOException {
-        try {
-            //encrypt object with reciever public key
-            return rsa.encryptPublic(objectToEncrypt, reciever.getPublicKeyHolder());
-        }   catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public Serializable decryption(SealedObject objectToDecrypt) throws IOException {
-        try {
-            //decrypt object with self private key
-            return rsa.decryptPrivate(objectToDecrypt);
-        }   catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
+    public Object readObjectFromServer() throws IOException, ClassNotFoundException {
+        return rxStream.readObject();
     }
 }

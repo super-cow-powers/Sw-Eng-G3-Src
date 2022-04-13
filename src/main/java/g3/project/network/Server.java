@@ -29,13 +29,13 @@
 package g3.project.network;
 
 import java.net.*;
-import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import g3.project.core.Threaded;
+import javafx.event.Event;
 
 import java.io.*;
 
@@ -51,30 +51,35 @@ public class Server extends Threaded {
     private int clientCnt = 0;
     private int clientCntMax = 10;
 
-    private Client host;
     private ArrayList<Client> clients = new ArrayList<Client>();
 
     /**
-     * Server object queue
+     * Host upload queue.
      */
-    private BlockingQueue<Object> serverQueue
+    private BlockingQueue<Object> uploadQueue
             = new LinkedBlockingQueue<Object>();
 
-    private final NetThing netComm;
+    /**
+     * Client connection request queue.
+     */
+    private BlockingQueue<Event> connectToServerRequestQueue
+            = new LinkedBlockingQueue<Event>();
+
+    private final CommSys commSys;
 
     /**
      * Constructor - use default max client count
      */
-    public Server(final NetThing netComm) {
+    public Server(final CommSys commSys) {
         super();
-        this.netComm = netComm;
+        this.commSys = commSys;
     }
 
     /**
-     * Offer an event to the server queue
+     * Host offer an object to the server queue
      */
-    public void offerTxEvent(Object event) {
-        serverQueue.offer(event);
+    public void offerEventToUpload(Object event) {
+        uploadQueue.offer(event);
         unsuspend();
     }
 
@@ -105,8 +110,12 @@ public class Server extends Threaded {
         //...
         while (running.get()) {
             try {
-                if (!serverQueue.isEmpty()) {// New event into server?
-                    //encrypt and send to all clients
+                if (!connectToServerRequestQueue.isEmpty()) {//New connection request?
+
+                } else if (!uploadQueue.isEmpty()) {//New object being uploaded?
+
+                } else { // No new event. Suspend.
+                    suspended.set(true);
                 }
 
                 while (suspended.get()) {
@@ -126,22 +135,9 @@ public class Server extends Threaded {
      * @throws IOException
      */
     public void initServer() throws IOException {
-        try {
-            serverSocket = new ServerSocket(0);
-            serverSocket.setSoTimeout(SERVER_TIMEOUT);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        serverSocket = new ServerSocket(0);
+        serverSocket.setSoTimeout(SERVER_TIMEOUT);
     }
-
-    /**
-     * Chech-in host
-     */
-    public void checkInHost(Client host){
-        this.host = host;
-    }
-
 
     /**
      * Accept client connection
@@ -156,29 +152,11 @@ public class Server extends Threaded {
             //Clone client socket and IO streams
             Client newClient = new Client();
             newClient.setSocket(newClientSocket);
-
-            //Get client public key
-            PublicKey clientPublicKey = (PublicKey) newClient.getRxStream().readObject();
-            newClient.setPublicKeyHolder(clientPublicKey);
             
             //Add clone to client list
             clients.add(newClient);
         } else {
             System.out.println("Server is full");
-        }
-    }
-
-    /**
-     * Host encrypt an event and distribute to all clients
-     * @throws IOException
-     */
-    public void hostEncryptAndSend(Object event) throws IOException {
-        for (Client client : clients) {
-            // encrypt event
-            var updateTx = host.encryption((Serializable)event, client);
-            // send event
-            client.getTxStream().writeObject(updateTx);
-            client.getTxStream().flush();
         }
     }
 

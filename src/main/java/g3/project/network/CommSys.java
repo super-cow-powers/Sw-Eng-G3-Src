@@ -43,7 +43,7 @@ import javafx.event.Event;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public final class NetThing extends Threaded {
+public final class CommSys extends Threaded {
     /**
      * Client Session
      */
@@ -51,24 +51,21 @@ public final class NetThing extends Threaded {
 
     /**
      * Server Session
+     * @param commSys
      */
     private final Server server = new Server(this);
 
     /**
-     * Am I hosting?
+     * Server connection action queue.
      */
-    private final AtomicBoolean isHosting = new AtomicBoolean(false);
+    private final BlockingQueue<Event> serverConnectionQueue 
+            = new LinkedBlockingQueue<>();
 
     /**
-     * Am I connected to a session?
+     * Host session request queue.
      */
-    private final AtomicBoolean isConnected = new AtomicBoolean(false);
-
-    /**
-     * Connect to Server request queue.
-     */
-    private final BlockingQueue<Event> connectToServerRequestQueue 
-    = new LinkedBlockingQueue<>();
+    private final BlockingQueue<Event> hostSessionRequestQueue
+            = new LinkedBlockingQueue<>();
 
     /**
      * Client to Server transfer queue.
@@ -90,18 +87,18 @@ public final class NetThing extends Threaded {
     /**
      * Constructor.
      */
-    public NetThing(final Engine engine) {
+    public CommSys(final Engine engine) {
         super();
         this.engine = engine;
     }
 
     /**
-     * Request to connect to Server.
+     * Send a connection event to the communication system.
      * 
-     * @param event Event to connect to server
+     * @param event
      */
-    public void connectToServer(final Event event) {
-        connectToServerRequestQueue.offer(event);
+    public void offerFonnectionEvent(final Event event) {
+        serverConnectionQueue.offer(event);
         unsuspend();
     }
 
@@ -131,24 +128,27 @@ public final class NetThing extends Threaded {
         while (!(running.get())) {
         }
         //Post-construction Setup goes here
-        initNetThing();
+        try {
+            //Init the client session
+            client.initClient();
+            //Start the server session
+            server.start();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            server.stop();
+            return;
+        }
 
         //...
         while (running.get()) {
             //Main thread dispatch loop
             try {
-                if (!connectToServerRequestQueue.isEmpty()) {
-                    if(!isConnected.get()) {
-                        //Connect to Server
-                    }
-                } else if (!txEventQueue.isEmpty()) {
-                    if(isHosting.get()) {
-                        //send to server
-                    }
-                } else if (!rxEventQueue.isEmpty()) {
-                    if(isConnected.get()) {
-                        //receive from server
-                    }
+                if (!serverConnectionQueue.isEmpty()) { //New connection request?
+                    connectionUpdate(serverConnectionQueue.take());
+                } else if (!txEventQueue.isEmpty()) { //Event to send?
+                    uploadToServer(txEventQueue.take());
+                } else if (!rxEventQueue.isEmpty()) { //Event recieved?
+                    loadUpdateToEngine(rxEventQueue.take());
                 } else { 
                     suspended.set(true);
                 }
@@ -163,77 +163,56 @@ public final class NetThing extends Threaded {
             }
         }
 
-        try {
-            server.closeConnection();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        System.out.println("Net-thing is going down NOW.");
+        System.out.println("Comm-System is going down NOW.");
         return;
     }
 
-    private void initNetThing() {
-        // Initialise the Client
-        // TODO Load from file?
+    /**
+     * Connect to the server.
+     * 
+     * @param event
+     */
+    private void connectionUpdate(Server server) {
+        // Try connect to the server
         try {
-            client.initClient();
-        } catch (IOException initCE) {
-            // TODO Auto-generated catch block
-            initCE.printStackTrace();
+            client.connectToServer(server);
+        } catch (IOException ex) {
+            ex.printStackTrace();
             Platform.runLater(() -> engine.
-            putMessage("Failed to initialise client", false));
-        }
-        // Initialise the Server
-        // TODO Load from file?
-        try {
-            server.initServer();
-            server.checkInHost(client);
-        } catch (IOException initSE) {
-            // TODO Auto-generated catch block
-            initSE.printStackTrace();
-            Platform.runLater(() -> engine.
-            putMessage("Failed to initialise server", false));
+            putMessage("Fail to connect to server - see stack trace", true));
         }
     }
 
     /**
-     * Encrypt and send an event to the server.
+     * Upload an event to the server.
      * 
-     * @throws IOException
+     * @param event
      */
-    private void txEvent(final Event event) throws IOException {
+    private void uploadToServer(Event event) {
+        // Try to upload the event to the server
         try {
-            // offer the event to the server to be sent
-            server.offerTxEvent(event);
-        } catch (Exception txE) {
-            // TODO Auto-generated catch block
-            txE.printStackTrace();
+            client.sendObjectToServer(event);
+        } catch (IOException ex) {
+            ex.printStackTrace();
             Platform.runLater(() -> engine.
-            putMessage("Failed to transfer event to server - see stack trace", false));
+            putMessage("Fail to upload event to server - see stack trace", true));
         }
     }
 
     /**
-     * Recieve an encrypted event from the server and decrypt it.
+     * Load an event to the engine from the server.
      * 
-     * @throws IOException
+     * @param event
      */
-    private void rxEvent() throws IOException {
+    private void loadUpdateToEngine(Event event) {
+        // Try to load the event to the engine
         try {
-            // receive event
-            var eventLine = client.readObjectFromServer();
-            // decrypt event
-            var updateRx = client.decryption(eventLine);
-            // send event to engine for processing
-            // return to engine threadngine.
-            engine.offerEvent((Event) updateRx);
-        } catch (Exception rxE) {
-            // TODO Auto-generated catch block
-            rxE.printStackTrace();
+            Event update = (Event) client.readObjectFromServer();
+            engine.offerEvent(update);
+        } catch (IOException | ClassNotFoundException ex) {
+            ex.printStackTrace();
             Platform.runLater(() -> engine.
-            putMessage("Failed to recieve event from server - see stack trace", false));
+            putMessage("Fail to load event to engine - see stack trace", true));
         }
     }
-
 }

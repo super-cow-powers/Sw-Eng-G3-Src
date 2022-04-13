@@ -33,7 +33,7 @@ import g3.project.elements.DocElement;
 import g3.project.elements.PageElement;
 import g3.project.elements.VisualElement;
 import g3.project.graphics.FontProps;
-import g3.project.network.NetThing;
+import g3.project.network.CommSys;
 import g3.project.ui.LocObj;
 import g3.project.ui.MainController;
 import g3.project.ui.SizeObj;
@@ -80,7 +80,7 @@ public final class Engine extends Threaded {
     /**
      * Network Communications module.
      */
-    private final NetThing netComms = new NetThing(this);
+    private final CommSys netComms = new CommSys(this);
 
     /**
      * Scripting Engine Controller.
@@ -197,7 +197,7 @@ public final class Engine extends Threaded {
         while (!(running.get())) {
         }
         try {
-            //Start network thing
+            //Start communication system.
             netComms.start();
             scriptingEngine = new Scripting("python", this);
             //Load the start screen
