@@ -63,7 +63,7 @@ public class App extends Application {
  * @throws IOException Couldn't load document.
  */
     private static Parent loadFXML(final String fxml) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(MainController.class.getResource(fxml + ".fxml"));
         Parent fxld = fxmlLoader.load();
         mainUIController = (MainController) fxmlLoader.getController();
         return fxld;

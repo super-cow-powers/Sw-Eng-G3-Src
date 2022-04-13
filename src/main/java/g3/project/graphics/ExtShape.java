@@ -45,20 +45,19 @@ import javafx.scene.text.Text;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public class ExtShape extends Group {
+
     private StackPane stack = new StackPane();
     private Shape shape;
-    private Label text;
-    
-    public ExtShape(String shapeType, String ID, Double width, Double height, Color fill, Color strokeColour, Double strokeSize, String textCont, FontProps textProps){
-        switch(shapeType){
+    private Label textLabel;
+    private Boolean amTextbox = false;
+
+    public ExtShape(String shapeType, String ID, Double width, Double height, Color fill, Color strokeColour, Double strokeSize, String textCont, FontProps textProps) {
+        switch (shapeType) {
             case "circle":
-                shape = new Ellipse(width/2, height/2);
+                shape = new Ellipse(width / 2, height / 2);
                 break;
             case "textbox":
                 shape = new Rectangle(width, height);
-                shape.setStroke(Color.BLACK);
-                shape.setStrokeWidth(3d);
-                shape.setFill(Color.WHITE);
                 break;
             case "rectangle":
                 shape = new Rectangle(width, height);
@@ -66,21 +65,84 @@ public class ExtShape extends Group {
             default:
                 shape = new Rectangle(width, height);
                 break;
-                    
+
         }
-        if (shape == null){
-            return ;
+        if (shape == null) {
+            return;
         }
         this.setId(ID);
-        if (strokeColour!=null){shape.setStroke(strokeColour);}
-        if (strokeSize!=null){shape.setStrokeWidth(strokeSize);}
-        if (fill != null){shape.setFill(fill);}
-        text = new Label(textCont);
-        text.setFont(new Font(textProps.getSize()));
-        text.setTextFill(textProps.getColour());
-        text.setUnderline(textProps.getUnderscore());
-        
-        stack.getChildren().addAll(shape, text);
+        if (strokeColour != null) {
+            shape.setStroke(strokeColour);
+        }
+        if (strokeSize != null) {
+            shape.setStrokeWidth(strokeSize);
+        }
+        if (fill != null) {
+            shape.setFill(fill);
+        }
+        textLabel = new Label(textCont);
+        textLabel.setFont(new Font(textProps.getSize()));
+        textLabel.setTextFill(textProps.getColour());
+        textLabel.setUnderline(textProps.getUnderscore());
+
+        stack.getChildren().addAll(shape, textLabel);
         this.getChildren().add(stack);
+    }
+
+    /**
+     * Set the shape size.
+     *
+     * @param width Width.
+     * @param height Height.
+     */
+    public void setSize(final Double width, final Double height) {
+        if (shape instanceof Rectangle) {
+            ((Rectangle) shape).setWidth(width);
+            ((Rectangle) shape).setHeight(height);
+        } else if (shape instanceof Ellipse) {
+            ((Ellipse) shape).setRadiusX(width);
+            ((Ellipse) shape).setRadiusY(height);
+        }
+    }
+
+    /**
+     * Set the shape fill colour.
+     *
+     * @param fill Fill colour.
+     */
+    public void setFill(final Color fill) {
+        shape.setFill(fill);
+    }
+
+    /**
+     * Configure shape stroke.
+     *
+     * @param strokeColor Colour of stroke.
+     * @param strokeWidth Width of stroke.
+     */
+    public void setStroke(final Color strokeColor, final Double strokeWidth) {
+        shape.setStroke(strokeColor);
+        shape.setStrokeWidth(strokeWidth);
+    }
+
+    /**
+     * Set text in element.
+     *
+     * @todo Make work for arbitrary Rich Text.
+     * @param text Text to set.
+     */
+    public void setText(final String text) {
+        textLabel.setText(text);
+    }
+
+    /**
+     * Set font properties.
+     *
+     * @param font Font props.
+     */
+    public void setFont(final FontProps font) {
+        textLabel.setFont(new Font(font.getSize()));
+        textLabel.setTextFill(font.getColour());
+        textLabel.setUnderline(font.getUnderscore());
     }
 }

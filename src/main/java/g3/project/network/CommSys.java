@@ -44,6 +44,7 @@ import javafx.event.Event;
  * @author Boris Choi
  */
 public final class CommSys extends Threaded {
+
     /**
      * Client Session
      */
@@ -51,6 +52,7 @@ public final class CommSys extends Threaded {
 
     /**
      * Server Session
+     *
      * @param commSys
      */
     private final Server server = new Server(this);
@@ -58,7 +60,7 @@ public final class CommSys extends Threaded {
     /**
      * Server connection action queue.
      */
-    private final BlockingQueue<Event> serverConnectionQueue 
+    private final BlockingQueue<Server> serverConnectionQueue
             = new LinkedBlockingQueue<>();
 
     /**
@@ -94,11 +96,11 @@ public final class CommSys extends Threaded {
 
     /**
      * Send a connection event to the communication system.
-     * 
-     * @param event
+     *
+     * @param server Server to connect to.
      */
-    public void offerFonnectionEvent(final Event event) {
-        serverConnectionQueue.offer(event);
+    public void offerFonnectionEvent(final Server server) {
+        serverConnectionQueue.offer(server);
         unsuspend();
     }
 
@@ -149,7 +151,7 @@ public final class CommSys extends Threaded {
                     uploadToServer(txEventQueue.take());
                 } else if (!rxEventQueue.isEmpty()) { //Event recieved?
                     loadUpdateToEngine(rxEventQueue.take());
-                } else { 
+                } else {
                     suspended.set(true);
                 }
 
@@ -169,7 +171,7 @@ public final class CommSys extends Threaded {
 
     /**
      * Connect to the server.
-     * 
+     *
      * @param event
      */
     private void connectionUpdate(Server server) {
@@ -179,13 +181,13 @@ public final class CommSys extends Threaded {
         } catch (IOException ex) {
             ex.printStackTrace();
             Platform.runLater(() -> engine.
-            putMessage("Fail to connect to server - see stack trace", true));
+                    putMessage("Fail to connect to server - see stack trace", true));
         }
     }
 
     /**
      * Upload an event to the server.
-     * 
+     *
      * @param event
      */
     private void uploadToServer(Event event) {
@@ -195,13 +197,13 @@ public final class CommSys extends Threaded {
         } catch (IOException ex) {
             ex.printStackTrace();
             Platform.runLater(() -> engine.
-            putMessage("Fail to upload event to server - see stack trace", true));
+                    putMessage("Fail to upload event to server - see stack trace", true));
         }
     }
 
     /**
      * Load an event to the engine from the server.
-     * 
+     *
      * @param event
      */
     private void loadUpdateToEngine(Event event) {
@@ -212,7 +214,7 @@ public final class CommSys extends Threaded {
         } catch (IOException | ClassNotFoundException ex) {
             ex.printStackTrace();
             Platform.runLater(() -> engine.
-            putMessage("Fail to load event to engine - see stack trace", true));
+                    putMessage("Fail to load event to engine - see stack trace", true));
         }
     }
 }
