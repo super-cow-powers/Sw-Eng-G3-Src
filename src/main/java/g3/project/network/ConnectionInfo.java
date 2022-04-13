@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software
+ *   be used to endorse or promote products derived from this software 
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -26,86 +26,65 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package g3.project.core;
-
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+package g3.project.network;
 
 /**
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public abstract class Threaded implements Runnable {
+public final class ConnectionInfo {
 
     /**
-     * Thread I'm to run on.
+     * Host Location.
      */
-    protected Thread myThread;
-
+    private final String hostLoc;
     /**
-     * Am I running?
+     * Host ID.
      */
-    protected final AtomicBoolean running = new AtomicBoolean(false);
-
+    private final String hostId;
     /**
-     * Am I suspended?
+     * Host Port.
      */
-    protected final AtomicBoolean suspended = new AtomicBoolean(false);
+    private final Integer port;
 
     /**
-     * Out of thread call queue.
-     */
-    protected final BlockingQueue<Runnable> callQueue
-            = new LinkedBlockingQueue<>();
-
-    /**
-     * Request start thread activity.
-     */
-    public final void start() {
-        myThread = new Thread(this);
-        myThread.start();
-        running.set(true);
-    }
-
-    /**
-     * Request stop thread activity.
-     */
-    public final void stop() {
-        running.set(false);
-        unsuspend();
-    }
-
-    /**
-     * Unsuspend thread.
-     */
-    protected final synchronized void unsuspend() {
-        // Trigger notify if suspended
-        if (suspended.get()) {
-            suspended.set(false);
-            notify();
-        }
-    }
-
-    /**
-     * Run a function on the engine thread.
+     * Constructor.
      *
-     * @param r Runnable function.
+     * @param hostLocString Host location/address.
+     * @param hostIdString Host ID.
+     * @param hostPort Port to connect to.
      */
-    public void runFunction(final Runnable r) {
-        callQueue.offer(r);
-        unsuspend();
+    public ConnectionInfo(final String hostLocString, final String hostIdString, final Integer hostPort) {
+        this.hostLoc = hostLocString;
+        this.hostId = hostIdString;
+        this.port = hostPort;
     }
 
     /**
-     * Run stuff.
+     * Get host location.
+     *
+     * @return Host Location.
      */
-    @Override
-    public abstract void run();
+    public String getHostLoc() {
+        return hostLoc;
+    }
+
+    /**
+     * Get host ID.
+     *
+     * @return Host ID.
+     */
+    public String getHostId() {
+        return hostId;
+    }
+
+    /**
+     * Get host Port.
+     *
+     * @return Host Port.
+     */
+    public Integer getPort() {
+        return port;
+    }
 
 }

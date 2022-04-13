@@ -60,7 +60,7 @@ public final class Client {
      * @param server Details of server to connect to.
      * @throws IOException
      */
-    public Client(String server) throws IOException {
+    public Client(ConnectException server) throws IOException {
         this.socket = new Socket();
         rxStream = new ObjectInputStream(socket.getInputStream());
     }

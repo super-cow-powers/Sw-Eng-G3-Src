@@ -62,15 +62,7 @@ public final class CommSys extends Threaded {
      *
      * @todo Replace String placeholder.
      */
-    private final BlockingQueue<String> serverConnectionQueue
-            = new LinkedBlockingQueue<>();
-
-    /**
-     * Host session request queue.
-     *
-     * @todo Replace String placeholder.
-     */
-    private final BlockingQueue<String> startServerRequestQueue
+    private final BlockingQueue<ConnectionInfo> serverConnectionQueue
             = new LinkedBlockingQueue<>();
 
     /**
@@ -107,9 +99,23 @@ public final class CommSys extends Threaded {
      *
      * @param serverDetails Server to connect to.
      */
-    public void requestConnection(final String serverDetails) {
+    public void requestConnection(final ConnectionInfo serverDetails) {
         serverConnectionQueue.offer(serverDetails);
         unsuspend();
+    }
+
+    /**
+     * Start the server with the specified configuration.
+     *
+     * @param serverConfig server configuration.
+     */
+    public void startServer(final String serverConfig) {
+        if (Thread.currentThread() != myThread) {
+            //This enforces the thread boundary.
+            runFunction(() -> startServer(serverConfig));
+            return;
+        }
+        //Start server an' that.
     }
 
     /**
@@ -157,6 +163,8 @@ public final class CommSys extends Threaded {
                     connectToRemote(serverConnectionQueue.take());
                 } else if (!txEventQueue.isEmpty()) { //Event to send?
                     transmitEvent(txEventQueue.take());
+                } else if (!callQueue.isEmpty()) { //Something needs running.
+                    callQueue.take().run();
                 } else {
                     suspended.set(true);
                 }
@@ -181,7 +189,7 @@ public final class CommSys extends Threaded {
      * @todo Replace String placeholder.
      * @param serverDetails Remote server details.
      */
-    private void connectToRemote(final String serverDetails) {
+    private void connectToRemote(final ConnectionInfo serverDetails) {
         // Try connect to the server
         /*
         try {
@@ -209,7 +217,7 @@ public final class CommSys extends Threaded {
             Platform.runLater(() -> engine.
                     putMessage("Fail to upload event to server - see stack trace", true));
         }
-        */
+         */
     }
 
     /*THE ENGINE WILL HANDLE EVENTS DIRECTLY FROM THE RX_QUEUE
@@ -217,7 +225,7 @@ public final class CommSys extends Threaded {
     I'm purposefully using a blocking queue, as they're thread safe.
     Of course, if you really wanted, the constructor could take the engine's event queue as a param -
     but that'd not be so good. I want to be able to distinguish between local and remote events.
-    */
+     */
     /**
      * Load an event to the engine from the server.
      *
