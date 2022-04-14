@@ -32,6 +32,7 @@ import g3.project.core.Engine;
 import g3.project.core.Threaded;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -60,13 +61,13 @@ public final class CommSys extends Threaded {
     /**
      * Server connection action queue.
      */
-    private final BlockingQueue<Server> serverConnectionQueue
-            = new LinkedBlockingQueue<>();
+    private final BlockingQueue<InetSocketAddress> viewConnectionQueue
+            = new LinkedBlockingQueue<InetSocketAddress>();
 
     /**
      * Host session request queue.
      */
-    private final BlockingQueue<Event> hostSessionRequestQueue
+    private final BlockingQueue<Event> hostSessionQueue
             = new LinkedBlockingQueue<>();
 
     /**
@@ -99,8 +100,8 @@ public final class CommSys extends Threaded {
      *
      * @param server Server to connect to.
      */
-    public void offerFonnectionEvent(final Server server) {
-        serverConnectionQueue.offer(server);
+    public void offerConnectionEvent(final InetSocketAddress connectionRef) {
+        viewConnectionQueue.offer(connectionRef);
         unsuspend();
     }
 
@@ -145,8 +146,8 @@ public final class CommSys extends Threaded {
         while (running.get()) {
             //Main thread dispatch loop
             try {
-                if (!serverConnectionQueue.isEmpty()) { //New connection request?
-                    connectionUpdate(serverConnectionQueue.take());
+                if (!viewConnectionQueue.isEmpty()) { //New connection request?
+                    connectionUpdate(viewConnectionQueue.take());
                 } else if (!txEventQueue.isEmpty()) { //Event to send?
                     uploadToServer(txEventQueue.take());
                 } else if (!rxEventQueue.isEmpty()) { //Event recieved?
@@ -169,20 +170,16 @@ public final class CommSys extends Threaded {
         return;
     }
 
+
+    
     /**
-     * Connect to the server.
-     *
+     * Alter the connection status of the server.
+     * 
      * @param event
      */
-    private void connectionUpdate(Server server) {
-        // Try connect to the server
-        try {
-            client.connectToServer(server);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            Platform.runLater(() -> engine.
-                    putMessage("Fail to connect to server - see stack trace", true));
-        }
+    private void connectionUpdate(final InetSocketAddress connectionRef) {
+        // Route Event
+
     }
 
     /**

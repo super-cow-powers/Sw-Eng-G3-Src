@@ -80,8 +80,8 @@ public class Client {
     }
 
     // Connect client to server
-    public void connectToServer(Server server) throws IOException{
-        socket.connect(new InetSocketAddress(server.getAddress(), server.getPort()), CLIENT_TIMEOUT);
+    public void connectToServer(InetSocketAddress connectionRef) throws IOException{
+        socket.connect(connectionRef, CLIENT_TIMEOUT);
     }
 
     //disconnect client from server

@@ -269,6 +269,20 @@ public final class MainController {
     }
 
     /**
+     * Handle user request to connect to a session
+     * 
+     * @param event user-event
+     */
+    @FXML
+    private void handleStartView(final ActionEvent event){
+
+    }
+
+    /**
+     * Handle 
+     */
+
+    /**
      * Handle all the exit stuff.
      */
     public void gracefulExit() {

@@ -5,6 +5,7 @@
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.FlowPane?>
@@ -12,7 +13,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="g3.project.ui.MainController">
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="g3.project.ui.MainController">
     <children>
         <MenuBar>
             <menus>
@@ -36,16 +37,18 @@
                     <items>
                         <Menu mnemonicParsing="false" text="View">
                             <items>
-                                <MenuItem mnemonicParsing="false" text="Connect" />
-                                <MenuItem mnemonicParsing="false" text="Pause/Resume" />
-                                <MenuItem mnemonicParsing="false" text="Disconnect" />
+                                <MenuItem fx:id="connectMenuItem" mnemonicParsing="false" onAction="#handleStartView" text="Connect" />
+                                <MenuItem fx:id="toggleViewMenuItem" mnemonicParsing="false" onAction="#handlePauseResumeView" text="Pause/Resume" />
+                                <MenuItem fx:id="disconnectMenuItem" mnemonicParsing="false" onAction="#handleEndView" text="Disconnect" />
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Present">
                             <items>
-                                <MenuItem mnemonicParsing="false" text="Start" />
-                                <MenuItem mnemonicParsing="false" text="Pause/Resume" />
-                                <MenuItem mnemonicParsing="false" text="End" />
+                                <MenuItem fx:id="startPresentMenuItem" mnemonicParsing="false" onAction="#handleStartPresent" text="Start" />
+                                <MenuItem fx:id="togglePresentMenuItem" mnemonicParsing="false" onAction="#handlePauseResumePresent" text="Pause/Resume" />
+                                <MenuItem fx:id="endPresentMenuItem" mnemonicParsing="false" onAction="#handleEndPresent" text="End" />
+                        <SeparatorMenuItem mnemonicParsing="false" />
+                                <MenuItem fx:id="getLinkMenuItem" mnemonicParsing="false" onAction="#handleGetShareLink" text="Get Share Link" />
                             </items>
                         </Menu>
                     </items>
