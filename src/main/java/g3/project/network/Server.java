@@ -43,96 +43,72 @@ import java.io.*;
  *
  * @author Boris Choi<kyc526@york.ac.uk>
  */
-public class Server extends Threaded {
+public final class Server {
+
     private static final int SERVER_TIMEOUT = 10000;
 
     private ServerSocket serverSocket;
-    private int hostID = 0;
-    private int clientCnt = 0;
-    private int clientCntMax = 10;
 
-    private ArrayList<Client> clients = new ArrayList<Client>();
+    private String hostID = "";
+
+    private static final int MAX_CLIENTS = 10;
+
+    //private ArrayList<Client> clients = new ArrayList<>();
+    /**
+     * List containing connected clients. STRING IS A PLACEHOLDER!
+     */
+    private ArrayList<Socket> connectionsList = new ArrayList<>();
 
     /**
-     * Host upload queue.
+     * Event transmit queue.
      */
-    private BlockingQueue<Object> uploadQueue
-            = new LinkedBlockingQueue<Object>();
+    private BlockingQueue<Event> transmitQueue
+            = new LinkedBlockingQueue<>();
 
     /**
      * Client connection request queue.
+     *
      */
-    private BlockingQueue<Event> connectToServerRequestQueue
-            = new LinkedBlockingQueue<Event>();
-
-    private final CommSys commSys;
+    private BlockingQueue<String> connectionRequestQueue
+            = new LinkedBlockingQueue<>();
 
     /**
-     * Constructor - use default max client count
+     * Constructor.
      */
-    public Server(final CommSys commSys) {
-        super();
-        this.commSys = commSys;
+    public Server() {
     }
 
     /**
-     * Host offer an object to the server queue
+     * Host offer an object to the server queue.
+     *
+     * @param event Event to send.
      */
-    public void offerEventToUpload(Object event) {
-        uploadQueue.offer(event);
-        unsuspend();
+    public void sendEvent(final Event event) {
+        transmitQueue.offer(event);
     }
 
     /**
-     * Getter for port number
-     * 
-     * @return port number
+     * Getter for port number.
+     *
+     * @return port number.
      */
     public int getPort() {
         return serverSocket.getLocalPort();
     }
 
     /**
-     * Getter for server remote socket address
-     * 
-     * @return server socket address
+     * Getter for server remote socket address.
+     *
+     * @return server socket address.
      */
     public InetAddress getAddress() {
         return serverSocket.getInetAddress();
     }
 
-    @Override
-    public void run() {
-        while (!(running.get())){
-        }
-        //Post-construction Setup goes here
-
-        //...
-        while (running.get()) {
-            try {
-                if (!connectToServerRequestQueue.isEmpty()) {//New connection request?
-
-                } else if (!uploadQueue.isEmpty()) {//New object being uploaded?
-
-                } else { // No new event. Suspend.
-                    suspended.set(true);
-                }
-
-                while (suspended.get()) {
-                    synchronized (this) {
-                        wait();
-                    }
-                }
-            } catch (InterruptedException ex) {
-                ex.printStackTrace();
-            }
-        }
-    }        
-
     /**
-     * Start the server
-     * 
-     * @throws IOException
+     * Start the server.
+     *
+     * @throws IOException IO Error.
      */
     public void initServer() throws IOException {
         serverSocket = new ServerSocket(0);
@@ -140,28 +116,29 @@ public class Server extends Threaded {
     }
 
     /**
-     * Accept client connection
+     * Accept client connection.
+     *
+     * @todo I'm not sure if this is the correct way to handle multiple
+     * connections to a simple socket-based server. Needs looking-up.
      * 
-     * @throws IOException
+     * @throws Exception Exception.
      */
     public void acceptConnection() throws Exception {
-        if (clientCnt < clientCntMax) {
+        if (connectionsList.size() < MAX_CLIENTS) {
             //Accept client connection
             Socket newClientSocket = serverSocket.accept();
 
-            //Clone client socket and IO streams
-            Client newClient = new Client();
-            newClient.setSocket(newClientSocket);
-            
-            //Add clone to client list
-            clients.add(newClient);
+            //Add socket to connections
+            connectionsList.add(newClientSocket);
         } else {
             System.out.println("Server is full");
         }
     }
 
     /**
-     * Close the server
+     * Close the server.
+     *
+     * @throws IOException IO Error.
      */
     public void closeConnection() throws IOException {
         serverSocket.close();

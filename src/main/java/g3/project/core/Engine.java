@@ -120,12 +120,6 @@ public final class Engine extends Threaded {
             = new LinkedBlockingQueue<File>();
 
     /**
-     * Out of thread call queue.
-     */
-    private final BlockingQueue<Runnable> callQueue
-            = new LinkedBlockingQueue<>();
-
-    /**
      * Ref to the UI controller.
      */
     private final MainController controller;
@@ -157,16 +151,6 @@ public final class Engine extends Threaded {
      */
     public void offerNewDoc(final File xmlFile) {
         docQueue.offer(xmlFile);
-        unsuspend();
-    }
-
-    /**
-     * Run a function on the engine thread.
-     *
-     * @param r Runnable function.
-     */
-    public void runFunction(final Runnable r) {
-        callQueue.offer(r);
         unsuspend();
     }
 
