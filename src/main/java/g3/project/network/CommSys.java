@@ -33,6 +33,7 @@ import g3.project.core.Threaded;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketTimeoutException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -45,41 +46,44 @@ import javafx.event.Event;
  * @author Boris Choi
  */
 public final class CommSys extends Threaded {
+    private static final int CS_TIMEOUT = 50;
 
     /**
      * Client Session
      */
-    private final Client client = new Client();
-
+    private Client client;
     /**
      * Server Session
      *
      * @param commSys
      */
-    private final Server server = new Server(this);
+    private Server server;
+
+    /**
+     * Is Connected?
+     */
+    private AtomicBoolean isConnected = new AtomicBoolean(false);
+
+    /**
+     * Is Presenting?
+     */
+    private AtomicBoolean isPresenting = new AtomicBoolean(false);
+
+    /**
+     * Is Paused?
+     */
+    private AtomicBoolean isPaused = new AtomicBoolean(true);
 
     /**
      * Server connection action queue.
      */
-    private final BlockingQueue<InetSocketAddress> viewConnectionQueue
-            = new LinkedBlockingQueue<InetSocketAddress>();
-
-    /**
-     * Host session request queue.
-     */
-    private final BlockingQueue<Event> hostSessionQueue
-            = new LinkedBlockingQueue<>();
+    private final BlockingQueue<ConnectionInfo> connectionQueue
+    = new LinkedBlockingQueue<>();
 
     /**
      * Client to Server transfer queue.
      */
     private final BlockingQueue<Event> txEventQueue
-            = new LinkedBlockingQueue<Event>();
-
-    /**
-     * Server to Client transfer queue.
-     */
-    private final BlockingQueue<Event> rxEventQueue
             = new LinkedBlockingQueue<Event>();
 
     /**
@@ -89,19 +93,21 @@ public final class CommSys extends Threaded {
 
     /**
      * Constructor.
+     * 
+     * @param globalEngine Application engine.
      */
-    public CommSys(final Engine engine) {
+    public CommSys(final Engine globalEngine) {
         super();
-        this.engine = engine;
+        this.engine = globalEngine;
     }
 
     /**
      * Send a connection event to the communication system.
      *
-     * @param server Server to connect to.
+     * @param serverDetails Detail of server to connect to.
      */
-    public void offerConnectionEvent(final InetSocketAddress connectionRef) {
-        viewConnectionQueue.offer(connectionRef);
+    public void offerConnectionEvent(final ConnectionInfo connectionRef) {
+        connectionQueue.offer(connectionRef);
         unsuspend();
     }
 
@@ -115,50 +121,34 @@ public final class CommSys extends Threaded {
         unsuspend();
     }
 
-    /**
-     * Get the RX queue.
-     *
-     * @return blocking queue for events.
-     */
-    public BlockingQueue<Event> getRxQueue() {
-        return rxEventQueue;
-    }
-
     @Override
     @SuppressWarnings("empty-statement")
     public void run() {
         //Wait till running properly
         while (!(running.get())) {
         }
-        //Post-construction Setup goes here
-        try {
-            //Init the client session
-            client.initClient();
-            //Start the server session
-            server.start();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            server.stop();
-            return;
-        }
 
         //...
         while (running.get()) {
             //Main thread dispatch loop
             try {
-                if (!viewConnectionQueue.isEmpty()) { //New connection request?
-                    connectionUpdate(viewConnectionQueue.take());
+                if (!connectionQueue.isEmpty()) { //New connection request?
+                    connectToRemote(connectionQueue.take());
                 } else if (!txEventQueue.isEmpty()) { //Event to send?
-                    uploadToServer(txEventQueue.take());
-                } else if (!rxEventQueue.isEmpty()) { //Event recieved?
-                    loadUpdateToEngine(rxEventQueue.take());
+                    transmitEvent(txEventQueue.take());
                 } else {
-                    suspended.set(true);
+                    suspended.set(true); // Nothing from enngine
                 }
 
+                //@todo Implement checking loop properly
                 while (suspended.get()) { // Suspend
-                    synchronized (this) {
-                        wait();
+                    if (!isPaused.get()) { // if session is not paused
+                        serverLoop(); // Server loop
+                        clientLoop(); // Client loop
+                    } else{
+                        synchronized (this) {
+                            wait();
+                        }
                     }
                 }
             } catch (InterruptedException ex) {
@@ -170,48 +160,114 @@ public final class CommSys extends Threaded {
         return;
     }
 
-
+    /**
+     * Connect to the server.
+     *
+     * @param serverDetails Remote server details.
+     */
+    private void connectToRemote(final ConnectionInfo serverDetails) {
+        // Try connect to the server
+        try {
+            client.connectToServer(serverDetails);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            Platform.runLater(() -> engine.
+                    putMessage("Fail to connect to server - see stack trace", true));
+        }
+    }
     
     /**
      * Alter the connection status of the server.
-     * 
-     * @param event
      */
-    private void connectionUpdate(final InetSocketAddress connectionRef) {
-        // Route Event
-
+    private void sessionUpdate() {
+        // Toggle the connection status
+        isPaused.set(!isPaused.get());
     }
 
     /**
      * Upload an event to the server.
      *
-     * @param event
+     * @param event Event to send.
      */
-    private void uploadToServer(Event event) {
+    private void transmitEvent(final Event event) {
         // Try to upload the event to the server
         try {
-            client.sendObjectToServer(event);
+            server.sendEvent(event);
         } catch (IOException ex) {
             ex.printStackTrace();
             Platform.runLater(() -> engine.
                     putMessage("Fail to upload event to server - see stack trace", true));
         }
+        
+    }
+
+    /*
+     @todo - implement the following loops
+     make both server and client threaded?
+    */
+
+    /**
+     * Server loop
+     * @throws InterruptedException
+     */
+    private void serverLoop() throws InterruptedException{
+        while(isPresenting.get()){
+            try {
+                // Accept the connection
+                server.acceptConnection();
+            } catch (SocketTimeoutException ex) {
+                // Suspend for a while
+                synchronized (this) {
+                    wait(CS_TIMEOUT);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Platform.runLater(() -> engine.
+                        putMessage("Fail to accept connection - see stack trace", true));
+            }
+        }
+
+        // Close the server
+        try {
+            server.closeServer();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            Platform.runLater(() -> engine.
+                    putMessage("Fail to close server - see stack trace", true));
+        }
     }
 
     /**
-     * Load an event to the engine from the server.
-     *
-     * @param event
+     * Client loop
+     * @throws InterruptedException
      */
-    private void loadUpdateToEngine(Event event) {
-        // Try to load the event to the engine
+    private void clientLoop() throws InterruptedException{
+        while(isConnected.get()){
+            try {
+                // Receive the event
+                if(client.rxAvailable()){
+                    Event event = (Event) client.readObject();
+                    engine.offerEvent(event);
+                }
+            } catch (SocketTimeoutException ex) {
+                // Suspend for a while
+                synchronized (this) {
+                    wait(CS_TIMEOUT);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Platform.runLater(() -> engine.
+                        putMessage("Fail to receive event - see stack trace", true));
+            }
+        }
+
+        // Close the client
         try {
-            Event update = (Event) client.readObjectFromServer();
-            engine.offerEvent(update);
-        } catch (IOException | ClassNotFoundException ex) {
+            client.disconnectFromServer();
+        } catch (IOException ex) {
             ex.printStackTrace();
             Platform.runLater(() -> engine.
-                    putMessage("Fail to load event to engine - see stack trace", true));
+                    putMessage("Fail to close client - see stack trace", true));
         }
     }
 }

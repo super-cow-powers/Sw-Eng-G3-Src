@@ -29,59 +29,55 @@
 package g3.project.network;
 
 import java.net.*;
-
 import java.io.*;
+
+import org.apache.commons.io.input.ObservableInputStream;
 
 /**
  *
  * @author Boris Choi<kyc526@york.ac.uk>
  */
-public class Client {
+public final class Client{
+
+    /**
+     * Connection timeout in Seconds.
+     */
     private static final int CLIENT_TIMEOUT = 10000;
+    /**
+     * My connection.
+     */
     private Socket socket;
 
+    /**
+     * Client Received-data stream.
+     */
     private ObjectInputStream rxStream;
-    private ObjectOutputStream txStream;
+
+
+    //private ObservableInputStream ois;
 
     /**
-     * Constructor - creates a new client object
+     * Constructor - Initialise the client object.
+     *
+     * @param server Details of server to connect to.
      * @throws IOException
      */
-    public Client() {
-    }
-
-    /**
-     * Initialise the client object
-     * 
-     * @throws IOException
-     */
-    public void initClient() throws IOException{
-        setSocket(new Socket());
-    }
-
-    /**
-     * Set socket and IO streams
-     * 
-     * @param socket
-     * @throws IOException
-     */
-    public void setSocket(Socket socket) throws IOException {
-        this.socket = socket;
+    public Client(org.apache.commons.io.input.ObservableInputStream.Observer observer) throws IOException {
+        this.socket = new Socket();
+        socket.setSoTimeout(CLIENT_TIMEOUT);
+        
         rxStream = new ObjectInputStream(socket.getInputStream());
-        txStream = new ObjectOutputStream(socket.getOutputStream());
-    }
-
-    public ObjectInputStream getRxStream(){
-        return rxStream;
-    }
-
-    public ObjectOutputStream getTxStream(){
-        return txStream;
+        /* 
+        //Observable Input Stream - need to compare for preformance
+        ois = new ObservableInputStream(socket.getInputStream());
+        xStream = new ObjectInputStream(ois);
+        ois.add(observer);
+         */
     }
 
     // Connect client to server
-    public void connectToServer(InetSocketAddress connectionRef) throws IOException{
-        socket.connect(connectionRef, CLIENT_TIMEOUT);
+    public void connectToServer(final ConnectionInfo serverDetails) throws IOException{
+        socket.connect(new InetSocketAddress(serverDetails.getHostLoc(), serverDetails.getPort()), CLIENT_TIMEOUT);
     }
 
     //disconnect client from server
@@ -89,14 +85,17 @@ public class Client {
         socket.close();
     }
 
-    // Send object to server
-    public void sendObjectToServer(Object object) throws IOException {
-        txStream.writeObject(object);
-        txStream.flush();
+    /**
+     * See if object is available to read from the input stream.
+     */
+    public boolean rxAvailable() throws IOException {
+        return rxStream.available() > 0;
     }
 
-    // Read object from server
-    public Object readObjectFromServer() throws IOException, ClassNotFoundException {
+    /**
+     * Read object from the input stream.
+     */
+    public Object readObject() throws IOException, ClassNotFoundException {
         return rxStream.readObject();
     }
 }

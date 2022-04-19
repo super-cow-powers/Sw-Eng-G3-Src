@@ -30,11 +30,6 @@ package g3.project.network;
 
 import java.net.*;
 import java.util.ArrayList;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import g3.project.core.Threaded;
 import javafx.event.Event;
 
 import java.io.*;
@@ -45,7 +40,7 @@ import java.io.*;
  */
 public final class Server {
 
-    private static final int SERVER_TIMEOUT = 10000;
+    private static final int SERVER_TIMEOUT = 50;
 
     private ServerSocket serverSocket;
 
@@ -53,38 +48,18 @@ public final class Server {
 
     private static final int MAX_CLIENTS = 10;
 
-    //private ArrayList<Client> clients = new ArrayList<>();
     /**
-     * List containing connected clients. STRING IS A PLACEHOLDER!
+     * List containing connected clients.
      */
     private ArrayList<Socket> connectionsList = new ArrayList<>();
 
     /**
-     * Event transmit queue.
-     */
-    private BlockingQueue<Event> transmitQueue
-            = new LinkedBlockingQueue<>();
-
-    /**
-     * Client connection request queue.
-     *
-     */
-    private BlockingQueue<String> connectionRequestQueue
-            = new LinkedBlockingQueue<>();
-
-    /**
      * Constructor.
+     * @throws IOException
      */
-    public Server() {
-    }
-
-    /**
-     * Host offer an object to the server queue.
-     *
-     * @param event Event to send.
-     */
-    public void sendEvent(final Event event) {
-        transmitQueue.offer(event);
+    public Server() throws IOException {
+        serverSocket = new ServerSocket(0);
+        serverSocket.setSoTimeout(SERVER_TIMEOUT);
     }
 
     /**
@@ -106,16 +81,6 @@ public final class Server {
     }
 
     /**
-     * Start the server.
-     *
-     * @throws IOException IO Error.
-     */
-    public void initServer() throws IOException {
-        serverSocket = new ServerSocket(0);
-        serverSocket.setSoTimeout(SERVER_TIMEOUT);
-    }
-
-    /**
      * Accept client connection.
      *
      * @todo I'm not sure if this is the correct way to handle multiple
@@ -127,7 +92,6 @@ public final class Server {
         if (connectionsList.size() < MAX_CLIENTS) {
             //Accept client connection
             Socket newClientSocket = serverSocket.accept();
-
             //Add socket to connections
             connectionsList.add(newClientSocket);
         } else {
@@ -140,7 +104,21 @@ public final class Server {
      *
      * @throws IOException IO Error.
      */
-    public void closeConnection() throws IOException {
+    public void closeServer() throws IOException {
         serverSocket.close();
+    }
+
+    /**
+     * Send an event to all connected clients.
+     * 
+     * @param event Event to send.
+     * @throws IOException IO Error.
+     */
+    public void sendEvent(Event event) throws IOException {
+        for (Socket client : connectionsList) {
+            ObjectOutputStream txStream = (ObjectOutputStream) client.getOutputStream();
+            txStream.writeObject(event);
+            txStream.flush();            
+        }
     }
 }

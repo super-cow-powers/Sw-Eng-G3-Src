@@ -268,6 +268,8 @@ public final class MainController {
         }
     }
 
+    // @todo edit method for menu items
+
     /**
      * Handle user request to connect to a session
      * 
@@ -279,8 +281,52 @@ public final class MainController {
     }
 
     /**
-     * Handle 
+     * Handle user request to pause or resume viewing
      */
+    @FXML
+    private void handlePauseResumeView(final ActionEvent event){
+
+    }
+
+    /**
+     * Handle user request to disconnect from a session
+     */
+    @FXML
+    private void handleEndView(final ActionEvent event){
+
+    }
+
+    /**
+     * Handle user request to start a new session
+     */
+    @FXML
+    private void handleStartPresent(final ActionEvent event){
+
+    }
+
+    /**
+     * Handle user request to pause or resume presenting
+     */
+    @FXML
+    private void handlePauseResumePresent(final ActionEvent event){
+
+    }
+
+    /**
+     * Handle user request to end a session
+     */
+    @FXML
+    private void handleEndPresent(final ActionEvent event){
+
+    }
+
+    /**
+     * Handle user request to get a sharable link to connect to a session
+     */
+    @FXML
+    private void handleGetShareLink(final ActionEvent event){
+
+    }
 
     /**
      * Handle all the exit stuff.
