@@ -590,4 +590,12 @@ public final class MainController {
 
         toggleDarkMode();
     }
+
+    /**
+     * Return the Pane pagePane
+     * For testing
+     */
+    public Pane getPagePane() {
+        return pagePane;
+    }
 }
