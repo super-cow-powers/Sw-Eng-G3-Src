@@ -35,6 +35,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.apache.tools.ant.taskdefs.MacroInstance.Element;
 import org.mozilla.javascript.engine.RhinoScriptEngine;
 
 /**
@@ -88,6 +90,12 @@ public class ScriptingTest {
         assertEquals(pyBindings.get("va"), 5);
         assertEquals(rhinoBindings.get("va"), 5);
         //CHECKSTYLE:ON
+    }
+
+    @Test
+    public void testEvalElement() throws Exception {
+        System.out.println(RhinoScriptEngine.ENGINE_VERSION);
+        System.out.println("evalElement");
     }
     
 }
