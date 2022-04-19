@@ -87,6 +87,18 @@ public final class CommSys extends Threaded {
             = new LinkedBlockingQueue<Event>();
 
     /**
+     * Client to Server buffer queue.
+     */
+    private final BlockingQueue<Event> txBufferQueue
+            = new LinkedBlockingQueue<Event>();
+
+    /**
+     * Server to Client buffer queue.
+     */
+    private final BlockingQueue<Event> rxBufferQueue
+            = new LinkedBlockingQueue<Event>(); 
+
+    /**
      * Ref to the Engine
      */
     private final Engine engine;
@@ -142,9 +154,10 @@ public final class CommSys extends Threaded {
 
                 //@todo Implement checking loop properly
                 while (suspended.get()) { // Suspend
-                    if (!isPaused.get()) { // if session is not paused
-                        serverLoop(); // Server loop
+                    if (isConnected.get()) { // if connected
                         clientLoop(); // Client loop
+                    } else if (isPresenting.get()) { // if presenting
+                        serverLoop(); // Server loop
                     } else{
                         synchronized (this) {
                             wait();
@@ -188,11 +201,17 @@ public final class CommSys extends Threaded {
      * Upload an event to the server.
      *
      * @param event Event to send.
+     * @throws InterruptedException
      */
-    private void transmitEvent(final Event event) {
+    private void transmitEvent(final Event event) throws InterruptedException {
         // Try to upload the event to the server
         try {
-            server.sendEvent(event);
+            txBufferQueue.offer(event);
+            if (!isPaused.get()) {
+                while(!txBufferQueue.isEmpty()) {
+                    server.sendEvent(txBufferQueue.take());
+                }
+            }
         } catch (IOException ex) {
             ex.printStackTrace();
             Platform.runLater(() -> engine.
@@ -247,7 +266,13 @@ public final class CommSys extends Threaded {
                 // Receive the event
                 if(client.rxAvailable()){
                     Event event = (Event) client.readObject();
-                    engine.offerEvent(event);
+                    rxBufferQueue.offer(event);
+                }
+                if(!isPaused.get()){
+                    while(!rxBufferQueue.isEmpty()){
+                        Event event = rxBufferQueue.take();
+                        engine.offerEvent(event);
+                    }
                 }
             } catch (SocketTimeoutException ex) {
                 // Suspend for a while
