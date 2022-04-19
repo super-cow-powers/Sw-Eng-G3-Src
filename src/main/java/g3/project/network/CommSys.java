@@ -155,9 +155,23 @@ public final class CommSys extends Threaded {
                 //@todo Implement checking loop properly
                 while (suspended.get()) { // Suspend
                     if (isConnected.get()) { // if connected
-                        clientLoop(); // Client loop
+                        try{
+                            clientCheck(); // Client check for 50ms
+                        } catch (SocketTimeoutException e) {
+                            // pause for 50ms
+                            synchronized (this) {
+                                wait(CS_TIMEOUT);
+                            }
+                        }
                     } else if (isPresenting.get()) { // if presenting
-                        serverLoop(); // Server loop
+                        try{
+                            serverCheck(); // Server check for 50ms
+                        } catch (SocketTimeoutException e) {
+                            // pause for 50ms
+                            synchronized (this) {
+                                wait(CS_TIMEOUT);
+                            }
+                        }
                     } else{
                         synchronized (this) {
                             wait();
@@ -169,6 +183,8 @@ public final class CommSys extends Threaded {
             }
         }
 
+        //close server
+        //close client
         System.out.println("Comm-System is going down NOW.");
         return;
     }
@@ -226,42 +242,30 @@ public final class CommSys extends Threaded {
     */
 
     /**
-     * Server loop
+     * Server check
      * @throws InterruptedException
+     * @throws SocketTimeoutException
      */
-    private void serverLoop() throws InterruptedException{
-        while(isPresenting.get()){
+    private void serverCheck() throws InterruptedException, SocketTimeoutException {
+        if(isPresenting.get()){
             try {
                 // Accept the connection
                 server.acceptConnection();
-            } catch (SocketTimeoutException ex) {
-                // Suspend for a while
-                synchronized (this) {
-                    wait(CS_TIMEOUT);
-                }
             } catch (Exception ex) {
                 ex.printStackTrace();
                 Platform.runLater(() -> engine.
                         putMessage("Fail to accept connection - see stack trace", true));
             }
         }
-
-        // Close the server
-        try {
-            server.closeServer();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            Platform.runLater(() -> engine.
-                    putMessage("Fail to close server - see stack trace", true));
-        }
     }
 
     /**
-     * Client loop
+     * Client check
      * @throws InterruptedException
+     * @throws SocketTimeoutException
      */
-    private void clientLoop() throws InterruptedException{
-        while(isConnected.get()){
+    private void clientCheck() throws InterruptedException, SocketTimeoutException {
+        if(isConnected.get()){
             try {
                 // Receive the event
                 if(client.rxAvailable()){
@@ -269,30 +273,19 @@ public final class CommSys extends Threaded {
                     rxBufferQueue.offer(event);
                 }
                 if(!isPaused.get()){
+                    // @todo set local session to origin
+
+                    // Update local session
                     while(!rxBufferQueue.isEmpty()){
                         Event event = rxBufferQueue.take();
                         engine.offerEvent(event);
                     }
-                }
-            } catch (SocketTimeoutException ex) {
-                // Suspend for a while
-                synchronized (this) {
-                    wait(CS_TIMEOUT);
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
                 Platform.runLater(() -> engine.
                         putMessage("Fail to receive event - see stack trace", true));
             }
-        }
-
-        // Close the client
-        try {
-            client.disconnectFromServer();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            Platform.runLater(() -> engine.
-                    putMessage("Fail to close client - see stack trace", true));
         }
     }
 }
