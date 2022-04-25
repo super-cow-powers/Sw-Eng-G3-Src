@@ -490,7 +490,7 @@ public final class Engine extends Threaded {
         }
         var textOpt = shape.getText();
         if (textOpt.isPresent()) {
-            fontBlocks = textOpt.get().getFontBlocks();
+            fontBlocks = textOpt.get().getText();
         }
 
         if (fontBlocks.size() > 0) {

@@ -26,69 +26,50 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package g3.project.elements;
-
-import g3.project.graphics.StyledTextSeg;
-import java.util.ArrayList;
-import java.util.Optional;
-import nu.xom.*;
+package g3.project.graphics;
 
 /**
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class ShapeElement extends VisualElement {
+public class StyledTextSeg {
 
-    private static ThreadLocal builders = new ThreadLocal() {
+    /**
+     * Style.
+     */
+    private final FontProps style;
+    /**
+     * Text.
+     */
+    private final String text;
 
-        protected synchronized Object initialValue() {
-            return new Builder(new ElementFactory());
-        }
-
-    };
-
-    public ShapeElement(String name) {
-        super(name);
+    /**
+     * Constructor. Create styled segment of text.
+     *
+     * @param myStyle Text Style.
+     * @param myWord Text to style.
+     */
+    public StyledTextSeg(final FontProps myStyle, final String myWord) {
+        style = myStyle;
+        text = myWord;
     }
 
-    public ShapeElement(String name, String uri) {
-        super(name, uri);
+    /**
+     * Get the style.
+     *
+     * @return FontProps.
+     */
+    public final FontProps getStyle() {
+        return style;
     }
 
-    public ShapeElement(Element element) {
-        super(element);
-    }
-
-    public String getType() {
-        var type = this.getAttribute("type");
-        return type != null ? type.getValue() : "";
-    }
-
-    public String setType(String type) {
-        this.addAttribute(new Attribute("type", type));
-        return this.getType();
-    }
-
-    public Optional<ArrayList<StyledTextSeg>> getText() {
-        ArrayList<StyledTextSeg> text = null;
-        for (var ch : this.getChildElements()) {
-            if (ch instanceof TextElement) {
-                text = ((TextElement) ch).getText();
-            }
-        }
-        return Optional.ofNullable(text);
-    }
-
-    public final void setText(ArrayList<StyledTextSeg> text) {
-        for (var ch : this.getChildElements()) {
-            if (ch instanceof TextElement) {
-                this.removeChild(ch);
-                ch.detach();
-            }
-        }
-        var textEl = new TextElement("base:text", BASE_URI, text);
-        this.appendChild(textEl);
-        hasUpdated();
+    /**
+     * Get the text segment.
+     *
+     * @return String.
+     */
+    public final String getText() {
+        return text;
     }
 
 }

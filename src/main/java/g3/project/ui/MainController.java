@@ -38,6 +38,7 @@ import com.jthemedetecor.OsThemeDetector;
 import g3.project.core.Engine;
 import g3.project.graphics.ExtShape;
 import g3.project.graphics.FontProps;
+import g3.project.graphics.StyledTextSeg;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.Optional;
@@ -315,11 +316,10 @@ public final class MainController {
      * @param fillColour Shape Fill Colour
      * @param strokeColour Shape Stroke Colour
      * @param strokeWidth Shape Stroke Width
-     * @param textString Shape Text String
-     * @param textProps Shape Text Properties
+     * @param text Shape Text and Properties
      */
     public void updateShape(final String id, final SizeObj size, final LocObj loc, final String shapeType, final Color fillColour,
-            final Color strokeColour, final Double strokeWidth, final String textString, final FontProps textProps) {
+            final Color strokeColour, final Double strokeWidth, final ArrayList<StyledTextSeg> text) {
         ExtShape newShape;
         if (drawnElements.containsKey(id)) {
             newShape = (ExtShape) drawnElements.get(id);

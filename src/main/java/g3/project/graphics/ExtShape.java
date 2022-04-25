@@ -28,6 +28,7 @@
  */
 package g3.project.graphics;
 
+import java.util.ArrayList;
 import java.util.Optional;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
@@ -39,6 +40,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import org.fxmisc.richtext.InlineCssTextArea;
 
 /**
  *
@@ -48,10 +50,10 @@ public class ExtShape extends Group {
 
     private StackPane stack = new StackPane();
     private Shape shape;
-    private Label textLabel;
+    private InlineCssTextArea textArea = new InlineCssTextArea();
     private Boolean amTextbox = false;
 
-    public ExtShape(String shapeType, String ID, Double width, Double height, Color fill, Color strokeColour, Double strokeSize, String textCont, FontProps textProps) {
+    public ExtShape(String shapeType, String ID, Double width, Double height, Color fill, Color strokeColour, Double strokeSize, ArrayList<StyledTextSeg> text) {
         switch (shapeType) {
             case "circle":
                 shape = new Ellipse(width / 2, height / 2);
@@ -80,12 +82,8 @@ public class ExtShape extends Group {
         if (fill != null) {
             shape.setFill(fill);
         }
-        textLabel = new Label(textCont);
-        textLabel.setFont(new Font(textProps.getSize()));
-        textLabel.setTextFill(textProps.getColour());
-        textLabel.setUnderline(textProps.getUnderscore());
-
-        stack.getChildren().addAll(shape, textLabel);
+        textArea.insert(0, text.get(0).getText(), text.get(0).getStyle().toCSS());
+        stack.getChildren().addAll(shape, textArea);
         this.getChildren().add(stack);
     }
 
@@ -126,23 +124,13 @@ public class ExtShape extends Group {
     }
 
     /**
-     * Set text in element.
+     * Set text and style in element.
      *
      * @todo Make work for arbitrary Rich Text.
      * @param text Text to set.
      */
-    public void setText(final String text) {
-        textLabel.setText(text);
-    }
-
-    /**
-     * Set font properties.
-     *
-     * @param font Font props.
-     */
-    public void setFont(final FontProps font) {
-        textLabel.setFont(new Font(font.getSize()));
-        textLabel.setTextFill(font.getColour());
-        textLabel.setUnderline(font.getUnderscore());
+    public void setText(final ArrayList<StyledTextSeg> text) {
+        textArea.clear();
+        textArea.insert(0, text.get(0).getText(), text.get(0).getStyle().toCSS());
     }
 }
