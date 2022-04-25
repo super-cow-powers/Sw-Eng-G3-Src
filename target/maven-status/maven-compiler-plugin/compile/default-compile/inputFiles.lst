@@ -9,8 +9,10 @@
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/core/Tool.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/graphics/ExtShape.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/core/App.java
+/home/david/NetBeansProjects/project-core/src/main/java/g3/project/graphics/StyledTextSeg.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/VisualElement.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/StrokeElement.java
+/home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/RefElement.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/PlayableElement.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/core/Engine.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/core/Tools.java

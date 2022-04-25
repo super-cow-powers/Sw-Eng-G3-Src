@@ -41,6 +41,7 @@ import g3.project.graphics.FontProps;
 import g3.project.graphics.StyledTextSeg;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -262,7 +263,7 @@ public final class MainController {
                 new FileChooser.ExtensionFilter("XML", "*.xml"),
                 new FileChooser.ExtensionFilter("SPRES", "*.spres")
         );
-        
+
         var newFile = fileChooser.showOpenDialog(pagePane.getScene().getWindow());
         if (newFile != null) {
             engine.offerNewDoc(newFile);
@@ -326,14 +327,16 @@ public final class MainController {
             newShape.setSize(size.getX(), size.getY());
             newShape.setFill(fillColour);
             newShape.setStroke(strokeColour, strokeWidth);
-            newShape.setText(textString);
-            newShape.setFont(textProps);
+            newShape.setText(text);
         } else {
-            newShape = new ExtShape(shapeType, id, size.getX(), size.getY(), fillColour, strokeColour, strokeWidth, textString, textProps);
+            newShape = new ExtShape(shapeType, id, size.getX(), size.getY(), fillColour, strokeColour, strokeWidth, text);
             newShape.setRotate(size.getRot());
             drawnElements.put(id, newShape);
             pagePane.getChildren().add(newShape);
         }
+        newShape.setHrefHandler((l, t) -> {
+            System.out.println("Href " + l + " clicked");
+        });
         var start = loc.getStart().get();
         newShape.relocate(start.getX(), start.getY());
         newShape.setViewOrder(loc.getZ());

@@ -77,8 +77,8 @@ public class FontProps extends HashMap<String, Object> {
     /**
      * Contains CSS strings for known props.
      */
-    private static final Map<String, String> CSS = Map.ofEntries(entry(US, "-fx-underline: \'%s\';"), entry(IT, "-fx-font-style: \'%s\';"), entry(BOLD, "-fx-font-weight: \'%s\';"),
-            entry(SIZE, "-fx-font-size: %s;"), entry(FONT, "-fx-font-family: \'%s\'"), entry(COLOUR, "-fx-fill: \'%s\'"));
+    private static final Map<String, String> CSS = Map.ofEntries(entry(US, "-fx-underline: \'%s\';"), entry(IT, "-fx-font-style: %s;"), entry(BOLD, "-fx-font-weight: %s;"),
+            entry(SIZE, "-fx-font-size: %s;"), entry(FONT, "-fx-font-family: \'%s\';"), entry(COLOUR, "-fx-fill: \'%s\';"));
 
     /**
      * Constructor. Takes map of properties.
@@ -95,11 +95,11 @@ public class FontProps extends HashMap<String, Object> {
             });
         }
     }
-    
+
     /**
      * Empty constructor.
      */
-    public FontProps(){
+    public FontProps() {
         super();
     }
 
@@ -117,21 +117,26 @@ public class FontProps extends HashMap<String, Object> {
         //Might be null if invalid. Return optional to limit damage
         return Optional.ofNullable(val);
     }
+
     /**
      * Get the JFX CSS for these properties.
+     *
      * @return CSS String.
      */
     public String toCSS() {
         var propsStream = PROPS_MAP.keySet().stream();
         return propsStream.map(p -> {
             var cssFmt = CSS.get(p);
-            Object val = getProp(p).get();
+            Object val = this.getProp(p).get();
             switch (p) { //These aren't the same types in JFX css as in our files.
                 case IT:
                     val = (Boolean) val == false ? "normal" : "italic";
+                    break;
                 case BOLD:
                     val = (Boolean) val == false ? "normal" : "bold";
+                    break;
                 default:
+                    break;
             }
             return String.format(cssFmt, val.toString());
         }).collect(Collectors.joining(" "));

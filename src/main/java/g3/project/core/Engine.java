@@ -33,6 +33,7 @@ import g3.project.elements.DocElement;
 import g3.project.elements.PageElement;
 import g3.project.elements.VisualElement;
 import g3.project.graphics.FontProps;
+import g3.project.graphics.StyledTextSeg;
 import g3.project.network.NetThing;
 import g3.project.ui.LocObj;
 import g3.project.ui.MainController;
@@ -471,9 +472,7 @@ public final class Engine extends Threaded {
             runFunction(() -> drawShape(shape));
             return;
         }
-        ArrayList<FontElement> fontBlocks = new ArrayList<>();
-        FontProps fontProps;
-        String textString;
+        ArrayList<StyledTextSeg> textSegs;
         Color fill;
         Color strokeCol;
         Double strokeWidth;
@@ -490,16 +489,11 @@ public final class Engine extends Threaded {
         }
         var textOpt = shape.getText();
         if (textOpt.isPresent()) {
-            fontBlocks = textOpt.get().getText();
+            textSegs = textOpt.get();
+        } else {
+            textSegs = new ArrayList<>();
         }
 
-        if (fontBlocks.size() > 0) {
-            textString = fontBlocks.get(0).getValue();
-            fontProps = fontBlocks.get(0).getProperties();
-        } else {
-            fontProps = null;
-            textString = "";
-        }
         if (strokeOpt.isPresent()) {
             var stroke = strokeOpt.get();
             var strokeColOpt = stroke.getColour();
@@ -523,18 +517,15 @@ public final class Engine extends Threaded {
         if (size.isPresent() && loc.isPresent()) {
             Platform.runLater(
                     () -> {
-                        if (fontProps != null) {
-                            controller.updateShape(
-                                    shape.getID(),
-                                    size.get(),
-                                    loc.get(),
-                                    shapeType,
-                                    fill,
-                                    strokeCol,
-                                    strokeWidth,
-                                    textString,
-                                    fontProps);
-                        }
+                        controller.updateShape(
+                                shape.getID(),
+                                size.get(),
+                                loc.get(),
+                                shapeType,
+                                fill,
+                                strokeCol,
+                                strokeWidth,
+                                textSegs);
                     });
         }
     }

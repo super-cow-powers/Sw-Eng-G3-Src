@@ -28,19 +28,19 @@
  */
 package g3.project.graphics;
 
+import g3.project.graphics.StyledTextSeg.REF_TYPE;
 import java.util.ArrayList;
-import java.util.Optional;
+import java.util.function.BiConsumer;
 import javafx.scene.Group;
-import javafx.scene.control.Label;
+import javafx.scene.Node;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Ellipse;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
-import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import org.fxmisc.richtext.InlineCssTextArea;
+import javafx.scene.text.TextFlow;
 
 /**
  *
@@ -50,8 +50,19 @@ public class ExtShape extends Group {
 
     private StackPane stack = new StackPane();
     private Shape shape;
-    private InlineCssTextArea textArea = new InlineCssTextArea();
+    private TextFlow textFlow = null;
     private Boolean amTextbox = false;
+
+    private Double width;
+    private Double height;
+
+    /**
+     * General href handler. String is location.
+     */
+    @SuppressWarnings("empty-statement")
+    private BiConsumer<String, REF_TYPE> hrefHandlerBiConsumer = (loc, type) -> {
+        ;
+    };
 
     public ExtShape(String shapeType, String ID, Double width, Double height, Color fill, Color strokeColour, Double strokeSize, ArrayList<StyledTextSeg> text) {
         switch (shapeType) {
@@ -69,6 +80,8 @@ public class ExtShape extends Group {
                 break;
 
         }
+        this.width = width;
+        this.height = height;
         if (shape == null) {
             return;
         }
@@ -82,9 +95,21 @@ public class ExtShape extends Group {
         if (fill != null) {
             shape.setFill(fill);
         }
-        textArea.insert(0, text.get(0).getText(), text.get(0).getStyle().toCSS());
-        stack.getChildren().addAll(shape, textArea);
+        stack.getChildren().add(shape);
+        if (text.size() > 0) {
+            setText(text);
+        }
+
         this.getChildren().add(stack);
+    }
+
+    /**
+     * Set the href handler.
+     *
+     * @param handler Handler to set.
+     */
+    public void setHrefHandler(BiConsumer<String, REF_TYPE> handler) {
+        this.hrefHandlerBiConsumer = handler;
     }
 
     /**
@@ -94,12 +119,17 @@ public class ExtShape extends Group {
      * @param height Height.
      */
     public void setSize(final Double width, final Double height) {
+        this.width = width;
+        this.height = height;
+        if (textFlow != null) {
+            textFlow.setPrefWidth(width);
+        }
         if (shape instanceof Rectangle) {
             ((Rectangle) shape).setWidth(width);
             ((Rectangle) shape).setHeight(height);
         } else if (shape instanceof Ellipse) {
-            ((Ellipse) shape).setRadiusX(width);
-            ((Ellipse) shape).setRadiusY(height);
+            ((Ellipse) shape).setRadiusX(width / 2);
+            ((Ellipse) shape).setRadiusY(height / 2);
         }
     }
 
@@ -108,7 +138,7 @@ public class ExtShape extends Group {
      *
      * @param fill Fill colour.
      */
-    public void setFill(final Color fill) {
+    public final void setFill(final Color fill) {
         shape.setFill(fill);
     }
 
@@ -118,7 +148,7 @@ public class ExtShape extends Group {
      * @param strokeColor Colour of stroke.
      * @param strokeWidth Width of stroke.
      */
-    public void setStroke(final Color strokeColor, final Double strokeWidth) {
+    public final void setStroke(final Color strokeColor, final Double strokeWidth) {
         shape.setStroke(strokeColor);
         shape.setStrokeWidth(strokeWidth);
     }
@@ -129,8 +159,28 @@ public class ExtShape extends Group {
      * @todo Make work for arbitrary Rich Text.
      * @param text Text to set.
      */
-    public void setText(final ArrayList<StyledTextSeg> text) {
-        textArea.clear();
-        textArea.insert(0, text.get(0).getText(), text.get(0).getStyle().toCSS());
+    public final void setText(final ArrayList<StyledTextSeg> text) {
+        if (textFlow == null) {
+            textFlow = new TextFlow();
+            stack.getChildren().add(textFlow);
+        }
+        textFlow.setPrefWidth(this.width);
+        textFlow.getChildren().clear();
+        textFlow.setStyle("-fx-background-color:transparent;");
+        //Iterate through all segments
+        for (StyledTextSeg seg : text) {
+            Node textEl;
+            if (seg.isHref()) {
+                textEl = new Hyperlink(seg.getString());
+                var refType = seg.getRefType();
+                final String refTgt = seg.getRefTarget();
+                ((Hyperlink) textEl).setOnAction(e -> hrefHandlerBiConsumer.accept(refTgt, refType));
+            } else {
+                textEl = new Text(seg.getString());
+            }
+            textEl.setStyle(seg.getStyle().toCSS());
+            textFlow.getChildren().add(textEl);
+        }
+
     }
 }

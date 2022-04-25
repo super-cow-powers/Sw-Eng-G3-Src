@@ -42,6 +42,16 @@ public class StyledTextSeg {
      * Text.
      */
     private final String text;
+    /**
+     * href properties, if I am an href.
+     */
+    private RefProps myRef = null;
+    /**
+     * Function to run on click of link.
+     */
+    private Runnable refAction = () -> {
+        System.err.println(this.getRefTarget());
+    };
 
     /**
      * Constructor. Create styled segment of text.
@@ -52,6 +62,45 @@ public class StyledTextSeg {
     public StyledTextSeg(final FontProps myStyle, final String myWord) {
         style = myStyle;
         text = myWord;
+    }
+
+    /**
+     * Set an href on this segment.
+     *
+     * @param target href target.
+     * @param type href target type.
+     */
+    public final void SetHRef(final String target, final REF_TYPE type) {
+        myRef = new RefProps(type, target);
+    }
+
+    /**
+     * Is this an href?
+     *
+     * @return Boolean.
+     */
+    public final Boolean isHref() {
+        return myRef == null ? false : true;
+    }
+
+    /**
+     * Get ref target, if it exists. THIS CAN RETURN NULL! ALWAYS CHECK REF
+     * STATE FIRST.
+     *
+     * @return ref target. Will be null if not a ref.
+     */
+    public final String getRefTarget() {
+        return myRef == null ? null : myRef.refTarget;
+    }
+
+    /**
+     * Get ref type, if it exists. THIS CAN RETURN NULL! ALWAYS CHECK REF STATE
+     * FIRST.
+     *
+     * @return ref type - internal or external. Will be null if not a ref.
+     */
+    public final REF_TYPE getRefType() {
+        return myRef == null ? null : myRef.refType;
     }
 
     /**
@@ -68,8 +117,41 @@ public class StyledTextSeg {
      *
      * @return String.
      */
-    public final String getText() {
+    public final String getString() {
         return text;
     }
 
+    //CHECKSTYLE:OFF
+    /**
+     * Enumerator for use with refs. Is the ref to an internal or external
+     * location?
+     */
+    public static enum REF_TYPE {
+        INTERNAL,
+        EXTERNAL,
+    }
+
+    /**
+     * Properties for any ref.
+     */
+    private class RefProps {
+
+        private final REF_TYPE refType;
+        private final String refTarget;
+
+        public RefProps(REF_TYPE type, String target) {
+            refTarget = target;
+            refType = type;
+        }
+
+        public String getTarget() {
+            return refTarget;
+        }
+
+        public REF_TYPE getType() {
+            return refType;
+        }
+
+    }
+    //CHECKSTYLE:ON
 }

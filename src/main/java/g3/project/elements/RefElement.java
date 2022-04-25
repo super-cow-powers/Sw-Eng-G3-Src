@@ -29,6 +29,7 @@
 package g3.project.elements;
 
 import g3.project.graphics.StyledTextSeg;
+import g3.project.graphics.StyledTextSeg.REF_TYPE;
 import java.util.ArrayList;
 import java.util.Optional;
 import nu.xom.*;
@@ -37,7 +38,7 @@ import nu.xom.*;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class TextElement extends Element implements Includable {
+public class RefElement extends Element {
 //CHECKSTYLE:OFF
 
     private static ThreadLocal builders = new ThreadLocal() {
@@ -48,58 +49,77 @@ public class TextElement extends Element implements Includable {
 
     };
 
-    public TextElement(String name) {
+    public RefElement(String name) {
         super(name);
     }
 
-    public TextElement(String name, String uri) {
+    public RefElement(String name, String uri) {
         super(name, uri);
     }
 
-    public TextElement(Element element) {
+    public RefElement(Element element) {
         super(element);
     }
 
-    public TextElement(String name, String uri, ArrayList<StyledTextSeg> textSegs) {
+    public RefElement(String name, String uri, String target, REF_TYPE refType) {
         super(name, uri);
-        for (StyledTextSeg seg : textSegs) {
-            var fontBlock = new FontElement("base:font", uri, seg);
-            this.appendChild(fontBlock);
-        }
+        var refTypeName = refType == REF_TYPE.INTERNAL ? "internal" : "external";
+        var typeAttr = new Attribute("type", refTypeName);
+        this.addAttribute(typeAttr); //Add ref type
+        var tgtAttr = new Attribute("target", target);
+        this.addAttribute(tgtAttr); //Add ref target
     }
+
 //CHECKSTYLE:ON
+    /**
+     * Get link text.
+     *
+     * @return String.
+     */
+    public final String getText() {
+        return this.getValue();
+    }
 
     /**
-     * Get all font blocks in this text section.
+     * Get the ref's type. Will guess if not specified.
      *
-     * @return ArrayList of styled text segments.
+     * @return ref type. Internal or External.
      */
-    public final ArrayList<StyledTextSeg> getText() {
-        var list = new ArrayList<StyledTextSeg>();
-        for (var ch : this.getChildElements()) {
-            if (ch instanceof FontElement) {
-                FontElement chf = (FontElement) ch;
-                var props = chf.getProperties();
-                //Go through the children to find any links
-                for (int i = 0; i < chf.getChildCount(); i++) {
-                    var textOrRef = chf.getChild(i);
-                    if (textOrRef instanceof nu.xom.Text) {
-                        var seg = new StyledTextSeg(props, textOrRef.getValue());
-                        list.add(seg);
-                    } else if (textOrRef instanceof RefElement) {
-                        var seg = new StyledTextSeg(props, textOrRef.getValue());
-                        seg.SetHRef(((RefElement) textOrRef).getTarget(), ((RefElement) textOrRef).getType());
-                        list.add(seg);
-                    }
+    public final REF_TYPE getType() {
+        var typeAttr = this.getAttribute("type");
+        if (typeAttr != null) {
+            var type = typeAttr.getValue();
+            if (type == "external") {
+                return REF_TYPE.EXTERNAL;
+            } else {
+                return REF_TYPE.INTERNAL;
+            }
+        } else { //Try to guess.
+            System.err.println("No ref type specified. I will have to guess!");
+            var tgt = this.getTarget();
+            if (tgt != null) {
+                //Just assume an ID wouldn't have ':/' in it.
+                if (tgt.contains(":/")) {
+                    return REF_TYPE.EXTERNAL;
+                } else {
+                    return REF_TYPE.INTERNAL;
                 }
+            } else {
+                //We're really screwed now. There's no target.
+                //Just point it at something internal and have done.
+                return REF_TYPE.INTERNAL;
             }
         }
-        return list;
     }
 
-    @Override
-    public Optional<String> getSourceLoc() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    /**
+     * Get ref target. RETURNS NULL IF NO TARGET GIVEN! Should never return null
+     * in practice.
+     *
+     * @return Ref Target.
+     */
+    public final String getTarget() {
+        var tgtAttr = this.getAttribute("target");
+        return tgtAttr == null ? null : tgtAttr.getValue();
     }
-
 }

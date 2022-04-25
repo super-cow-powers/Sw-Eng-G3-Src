@@ -63,7 +63,7 @@ public final class FontElement extends Element {
 
     public FontElement(final String name, String uri, StyledTextSeg textSeg) {
         super(name, uri);
-        this.insertChild(textSeg.getText(), 0); //Add text
+        this.insertChild(textSeg.getString(), 0); //Add text
         this.setProperties(textSeg.getStyle()); //Set the style props.
 
     }
