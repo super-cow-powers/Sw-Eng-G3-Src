@@ -31,9 +31,12 @@ package g3.project.graphics;
 import g3.project.graphics.StyledTextSeg.REF_TYPE;
 import java.util.ArrayList;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import javafx.event.ActionEvent;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Hyperlink;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Ellipse;
@@ -57,10 +60,26 @@ public class ExtShape extends Group {
     private Double height;
 
     /**
-     * General href handler. String is location.
+     * href click handler.
      */
     @SuppressWarnings("empty-statement")
-    private BiConsumer<String, REF_TYPE> hrefHandlerBiConsumer = (loc, type) -> {
+    private Consumer<MouseEvent> hrefClickHandlerConsumer = (evt) -> {
+        ;
+    };
+
+    /**
+     * href mouse roll-over (hover) enter handler.
+     */
+    @SuppressWarnings("empty-statement")
+    private Consumer<MouseEvent> hrefHovEntHandlerConsumer = (evt) -> {
+        ;
+    };
+
+    /**
+     * href mouse roll-over (hover) exit handler.
+     */
+    @SuppressWarnings("empty-statement")
+    private Consumer<MouseEvent> hrefHovExHandlerConsumer = (evt) -> {
         ;
     };
 
@@ -104,12 +123,30 @@ public class ExtShape extends Group {
     }
 
     /**
-     * Set the href handler.
+     * Set the href click handler.
      *
      * @param handler Handler to set.
      */
-    public void setHrefHandler(BiConsumer<String, REF_TYPE> handler) {
-        this.hrefHandlerBiConsumer = handler;
+    public final void setHrefClickHandler(final Consumer<MouseEvent> handler) {
+        this.hrefClickHandlerConsumer = handler;
+    }
+
+    /**
+     * Set the href hover entry handler.
+     *
+     * @param handler Handler to set.
+     */
+    public final void setHrefHoverEnterHandler(final Consumer<MouseEvent> handler) {
+        this.hrefHovEntHandlerConsumer = handler;
+    }
+
+    /**
+     * Set the href hover exit handler.
+     *
+     * @param handler Handler to set.
+     */
+    public final void setHrefHoverExitHandler(final Consumer<MouseEvent> handler) {
+        this.hrefHovExHandlerConsumer = handler;
     }
 
     /**
@@ -118,7 +155,7 @@ public class ExtShape extends Group {
      * @param width Width.
      * @param height Height.
      */
-    public void setSize(final Double width, final Double height) {
+    public final void setSize(final Double width, final Double height) {
         this.width = width;
         this.height = height;
         if (textFlow != null) {
@@ -168,13 +205,13 @@ public class ExtShape extends Group {
         textFlow.getChildren().clear();
         textFlow.setStyle("-fx-background-color:transparent;");
         //Iterate through all segments
-        for (StyledTextSeg seg : text) {
+        for (final StyledTextSeg seg : text) {
             Node textEl;
             if (seg.isHref()) {
                 textEl = new Hyperlink(seg.getString());
-                var refType = seg.getRefType();
-                final String refTgt = seg.getRefTarget();
-                ((Hyperlink) textEl).setOnAction(e -> hrefHandlerBiConsumer.accept(refTgt, refType));
+                ((Hyperlink) textEl).setOnMouseClicked(e -> hrefClickHandlerConsumer.accept(e));
+                ((Hyperlink) textEl).setOnMouseEntered(e -> hrefHovEntHandlerConsumer.accept(e));
+                ((Hyperlink) textEl).setOnMouseExited(e -> hrefHovExHandlerConsumer.accept(e));
             } else {
                 textEl = new Text(seg.getString());
             }

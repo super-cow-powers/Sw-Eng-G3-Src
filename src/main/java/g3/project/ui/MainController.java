@@ -333,10 +333,17 @@ public final class MainController {
             newShape.setRotate(size.getRot());
             drawnElements.put(id, newShape);
             pagePane.getChildren().add(newShape);
+            //Set Hyperlink handlers
+            newShape.setHrefClickHandler((ev) -> {
+                handleEvent(ev);
+            });
+            newShape.setHrefHoverEnterHandler((ev) -> {
+                handleEvent(ev);
+            });
+            newShape.setHrefHoverExitHandler((ev) -> {
+                handleEvent(ev);
+            });
         }
-        newShape.setHrefHandler((l, t) -> {
-            System.out.println("Href " + l + " clicked");
-        });
         var start = loc.getStart().get();
         newShape.relocate(start.getX(), start.getY());
         newShape.setViewOrder(loc.getZ());

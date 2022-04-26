@@ -55,6 +55,7 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -250,8 +251,6 @@ public final class Engine extends Threaded {
      * @param event Event to handle.
      */
     private void handleEvent(final Event event) {
-        System.out.println("g3.project.core.Engine.handleEvent()");
-        System.out.println(event);
         var evSrc = event.getSource();
         if (evSrc instanceof Button) {
             handleButtonEvent(event);
@@ -269,18 +268,62 @@ public final class Engine extends Threaded {
      * @param ev event.
      */
     private void routeElementEvent(final Event ev) {
-        var evType = ev.getEventType();
-        var evSrc = (javafx.scene.Node) ev.getSource();
-        var elOpt = currentDoc.getElementByID(evSrc.getId());
 
-        if (evType == MouseEvent.MOUSE_PRESSED || evType == MouseEvent.MOUSE_RELEASED) {
-            System.out.println(evType);
-            var mev = (MouseEvent) ev;
-            var down = ev.getEventType() == MouseEvent.MOUSE_PRESSED; //Is the mouse pressed right now?
-            elOpt.ifPresent(el -> elementClicked(el, mev.getButton(), mev.getX(), mev.getY(), down));
-        } else {
-            System.out.println("Unsupported Element Event: " + ev);
+        final var evType = ev.getEventType();
+        final var evSrc = (javafx.scene.Node) ev.getSource();
+        var elID = evSrc.getId();
+
+        if (elID != null) { //Element has an ID
+            var elOpt = currentDoc.getElementByID(elID);
+            if (evType == MouseEvent.MOUSE_PRESSED || evType == MouseEvent.MOUSE_RELEASED || evType == MouseEvent.MOUSE_CLICKED) {
+                System.out.println(evType);
+                var mev = (MouseEvent) ev;
+                var down = (ev.getEventType() == MouseEvent.MOUSE_PRESSED); //Is the mouse pressed right now?
+                elOpt.ifPresent(el -> elementClicked(el, mev.getButton(), mev.getX(), mev.getY(), down));
+            } else {
+                System.out.println("Unsupported Element Event: " + ev);
+            }
+        } else { //No ID - find it's container
+            if (evSrc instanceof Hyperlink) {
+                routeHrefEvt(ev);
+            }
         }
+    }
+
+    /**
+     * Route an event for an hyperlink.
+     *
+     * @param ev
+     */
+    private void routeHrefEvt(MouseEvent ev) {
+        var evSrc = (javafx.scene.Node) ev.getSource();
+        var parEl = evSrc.getParent();
+        var parID = parEl.getId();
+        while ((parID == null) && (parEl != null)) {
+            parEl = parEl.getParent();
+            parID = parEl.getId();
+        }
+        if (parEl == null) { //Failed to find a valid parent
+            putMessage("Warning: Couldn't route href evt: " + ev, false);
+            return;
+        }
+        var elOpt = currentDoc.getElementByID(parID); //Get the parent element
+        elOpt.ifPresent(el -> {
+            if (el instanceof ShapeElement) {
+                var segs = ((ShapeElement) el).getText();
+                for (StyledTextSeg seg : segs.get()) {
+                    if (seg.isHref()) {
+                        var segStr = seg.getString();
+                        var hlStr = ((Hyperlink) evSrc).getText();
+                        if (segStr.equals(hlStr)) {
+                            System.out.println("We got it: " + seg);
+                        }
+                    }
+                }
+            } else {
+                putMessage("Warning: Bad href parent type" + el.getRealType(), false);
+            }
+        });
     }
 
     /**
