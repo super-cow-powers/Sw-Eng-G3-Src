@@ -30,8 +30,9 @@ package g3.project.elements;
 
 import g3.project.core.Engine;
 import g3.project.core.RecursiveBindings;
-import g3.project.ui.LocObj;
-import g3.project.ui.SizeObj;
+import g3.project.graphics.LocObj;
+import g3.project.graphics.SizeObj;
+import g3.project.graphics.StrokeProps;
 import java.util.Optional;
 import javafx.geometry.Point2D;
 import javafx.scene.paint.Color;
@@ -97,7 +98,7 @@ public class VisualElement extends Element implements Scriptable {
      *
      * @return Optional Location
      */
-    public final Optional<LocObj> getLoc() {
+    public final Optional<LocObj> getOrigin() {
         var x = Optional.ofNullable(this.getAttribute("x_orig"))
                 .map(f -> f.getValue())
                 .map(f -> Double.valueOf(f));
@@ -106,29 +107,20 @@ public class VisualElement extends Element implements Scriptable {
                 .map(f -> Double.valueOf(f));
 
         return (x.isPresent() && y.isPresent())
-                ? Optional.of(new LocObj(new Point2D(x.get(), y.get()), null, null, getZInd())) : Optional.empty();
+                ? Optional.of(new LocObj(new Point2D(x.get(), y.get()), getZInd())) : Optional.empty();
     }
 
     /**
-     * Set the object's X/Y location. Returns the new location.
+     * Set the object's X/Y location.
      *
      * @param loc Location to set
-     * @return Optional Set Location
      */
-    public final Optional<LocObj> setLoc(final LocObj loc) {
-        var start = loc.getStart();
-        var centre = loc.getCentre();
-        var end = loc.getEnd();
+    public final void setOrigin(final LocObj loc) {
+        var point = loc.getLoc();
 
-        /**
-         * @todo Assign centre and end.
-         */
-        start.ifPresent(s -> {
-            this.addAttribute(new Attribute("x_orig", Double.toString(s.getX())));
-            this.addAttribute(new Attribute("y_orig", Double.toString(s.getY())));
-        });
+        this.addAttribute(new Attribute("x_orig", Double.toString(point.getX())));
+        this.addAttribute(new Attribute("y_orig", Double.toString(point.getY())));
         hasUpdated();
-        return this.getLoc();
     }
 
     /**
@@ -211,14 +203,23 @@ public class VisualElement extends Element implements Scriptable {
     public final Optional<Color> getFillColour() {
         final int lenRGB = 6;
         final int lenRGBA = 8;
-        var col = Optional.ofNullable(this.getAttribute("fill"));
+        var colAttr = Optional.ofNullable(this.getAttribute("fill"));
         /**
          * @todo: Find a nicer looking way of making this work Probably
          * containing more streams.
          */
-        if (col.isPresent()) {
-            var colStr = col.get().getValue().replace("#", "");
+        if (colAttr.isPresent()) {
 
+            //var colStr = colAttr.get().getValue().replace("#", "");
+            var colStr = colAttr.get().getValue();
+            Color col = null;
+            try {
+                col = Color.web(colStr);
+            } catch (IllegalArgumentException ex) {
+                System.err.println("Bad Colour: " + ex);
+            }
+            return Optional.ofNullable(col);
+            /*
             switch (colStr.length()) {
                 case lenRGB:
                     //CHECKSTYLE:OFF
@@ -237,9 +238,8 @@ public class VisualElement extends Element implements Scriptable {
                             (double) Integer.valueOf(colStr.substring(6, 8), 16) / 255));
                 //CHECKSTYLE:ON
                 default:
-            }
+            }*/
         }
-
         return Optional.empty();
     }
 
@@ -285,10 +285,10 @@ public class VisualElement extends Element implements Scriptable {
      *
      * @return Optional Stroke Element.
      */
-    public final Optional<StrokeElement> getStroke() {
+    public final Optional<StrokeProps> getStroke() {
         for (Element el : this.getChildElements()) {
             if (el instanceof StrokeElement) {
-                return Optional.of((StrokeElement) el);
+                return Optional.of(((StrokeElement) el).getProps());
             }
         }
         return Optional.empty();
@@ -301,6 +301,8 @@ public class VisualElement extends Element implements Scriptable {
      */
     @Override
     public final RecursiveBindings getScriptingBindings() {
+        var parBinOpt = this.getParentElementScriptingBindings();
+        parBinOpt.ifPresent(b->elementScriptBindings.setParent(b)); //Always set parent bindings
         return elementScriptBindings;
     }
 

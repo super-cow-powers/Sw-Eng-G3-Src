@@ -182,7 +182,7 @@ public final class Io {
      * @param resourceClass Class it is in.
      * @return
      */
-    private Optional<byte[]> getInternalResource(final String path, final Class resourceClass) {
+    public static Optional<byte[]> getInternalResource(final String path, final Class resourceClass) {
         byte[] bytes = null;
         try {
             bytes = resourceClass.getResourceAsStream(path)

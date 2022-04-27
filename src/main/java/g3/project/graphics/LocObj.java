@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -26,48 +26,46 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package g3.project.ui;
+package g3.project.graphics;
 
-import java.util.Optional;
 import javafx.geometry.Point2D;
 
 /**
  *
  * @author david
  */
-public class LocObj {
+public final class LocObj {
+//CHECKSTYLE:OFF
 
-    private final Point2D start;
-    private final Point2D centre;
-    private final Point2D end;
+    private final Point2D locXY;
     private final Double zIndex;
+//CHECKSTYLE:ON
 
     /**
      * Create location container. Any argument may be null
      *
-     * @param startPoint
-     * @param centrePoint
-     * @param endPoint
+     * @param loc X/Y Location.
+     * @param z Z-Index.
      */
-    public LocObj(Point2D startPoint, Point2D centrePoint, Point2D endPoint, Double z) {
-        start = startPoint;
-        centre = centrePoint;
-        end = endPoint;
+    public LocObj(final Point2D loc, final Double z) {
+        locXY = loc;
         zIndex = z != null ? z : 0;
     }
 
-    public Optional<Point2D> getStart() {
-        return Optional.ofNullable(start);
+    /**
+     * Get X/Y Coordinates.
+     *
+     * @return Location.
+     */
+    public Point2D getLoc() {
+        return locXY;
     }
 
-    public Optional<Point2D> getCentre() {
-        return Optional.ofNullable(centre);
-    }
-
-    public Optional<Point2D> getEnd() {
-        return Optional.ofNullable(end);
-    }
-
+    /**
+     * Get Z-Index.
+     *
+     * @return Z-index.
+     */
     public Double getZ() {
         return zIndex;
     }

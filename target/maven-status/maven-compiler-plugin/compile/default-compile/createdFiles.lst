@@ -6,7 +6,6 @@ g3/project/elements/PageElement.class
 g3/project/elements/ScriptElement.class
 g3/project/elements/Includable.class
 g3/project/graphics/FontProps.class
-g3/project/core/Engine$1.class
 g3/project/elements/VisualElement.class
 g3/project/elements/DocElement.class
 g3/project/core/App.class
@@ -15,10 +14,8 @@ g3/project/elements/PlayableElement$1.class
 g3/project/elements/PageElement$1.class
 g3/project/core/Tool.class
 g3/project/xmlIO/Io.class
-g3/project/core/Engine.class
 g3/project/elements/ShapeElement$1.class
 g3/project/elements/ScriptElement$1.class
-g3/project/ui/SizeObj.class
 g3/project/elements/Scriptable.class
 g3/project/core/ToolsFactory.class
 g3/project/elements/TableElement$1.class
@@ -35,7 +32,6 @@ g3/project/core/Tools.class
 g3/project/elements/StrokeElement.class
 g3/project/elements/FontElement$1.class
 g3/project/elements/TextElement.class
-g3/project/ui/LocObj.class
 g3/project/graphics/ExtShape.class
 g3/project/core/Threaded.class
 g3/project/core/RecursiveBindings.class

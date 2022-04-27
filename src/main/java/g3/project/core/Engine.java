@@ -35,9 +35,10 @@ import g3.project.elements.VisualElement;
 import g3.project.graphics.FontProps;
 import g3.project.graphics.StyledTextSeg;
 import g3.project.network.NetThing;
-import g3.project.ui.LocObj;
+import g3.project.graphics.LocObj;
 import g3.project.ui.MainController;
-import g3.project.ui.SizeObj;
+import g3.project.graphics.SizeObj;
+import g3.project.graphics.StrokeProps;
 import g3.project.xmlIO.Io;
 import java.io.File;
 import java.io.IOException;
@@ -256,9 +257,6 @@ public final class Engine extends Threaded {
             handleButtonEvent(event);
         } else if (evSrc instanceof javafx.scene.Node) {
             routeElementEvent(event);
-        } else if (event instanceof KeyEvent) {
-            var kev = (KeyEvent) event;
-            handleKeyEvent(kev);
         }
     }
 
@@ -272,20 +270,30 @@ public final class Engine extends Threaded {
         final var evType = ev.getEventType();
         final var evSrc = (javafx.scene.Node) ev.getSource();
         var elID = evSrc.getId();
-
+        
         if (elID != null) { //Element has an ID
             var elOpt = currentDoc.getElementByID(elID);
             if (evType == MouseEvent.MOUSE_PRESSED || evType == MouseEvent.MOUSE_RELEASED || evType == MouseEvent.MOUSE_CLICKED) {
                 System.out.println(evType);
                 var mev = (MouseEvent) ev;
                 var down = (ev.getEventType() == MouseEvent.MOUSE_PRESSED); //Is the mouse pressed right now?
-                elOpt.ifPresent(el -> elementClicked(el, mev.getButton(), mev.getX(), mev.getY(), down));
+                elOpt.ifPresent(el -> scriptingEngine.invokeOnElement(el, Scripting.CLICK_FN, mev.getButton(), mev.getX(), mev.getY(), down));
+            } else if (evType == KeyEvent.KEY_PRESSED || evType == KeyEvent.KEY_RELEASED || evType == KeyEvent.KEY_TYPED) {
+                //Key has been pressed
+                if (elID.equals("pageScroll")) { //Press routed to page
+                    elOpt = currentDoc.getElementByID(currentPageID);
+                }
+                final var kev = (KeyEvent) ev;
+                final var keyName = kev.getCode().getName();
+                System.out.println(kev);
+                final Boolean down = (evType == KeyEvent.KEY_PRESSED);
+                elOpt.ifPresent(el -> scriptingEngine.invokeOnElement(el, Scripting.KEY_PRESS_FN, keyName, kev.isControlDown(), kev.isAltDown(), kev.isMetaDown(), down));
             } else {
                 System.out.println("Unsupported Element Event: " + ev);
             }
         } else { //No ID - find it's container
             if (evSrc instanceof Hyperlink) {
-                routeHrefEvt(ev);
+                routeHrefEvt((MouseEvent) ev);
             }
         }
     }
@@ -327,18 +335,6 @@ public final class Engine extends Threaded {
     }
 
     /**
-     * Handle a click on an element.
-     *
-     * @param el Element.
-     * @param button Mouse Button pressed.
-     * @param xLoc X Location.
-     * @param yLoc Y Location.
-     */
-    private void elementClicked(final VisualElement el, final MouseButton button, final Double xLoc, final Double yLoc, final Boolean mouseDown) {
-        scriptingEngine.execElementClick(el, button.name(), xLoc, yLoc, mouseDown);
-    }
-
-    /**
      * Handle an event from a button.
      *
      * @param ev Button event.
@@ -364,21 +360,6 @@ public final class Engine extends Threaded {
         if (((Button) target).getId().contains("-jump-card-button")) {
             var id = ((Button) target).getId().replace("-jump-card-button", "");
             this.gotoPage(id, true);
-        }
-    }
-
-    /**
-     * Handle a key-press event.
-     *
-     * @param kev key event.
-     */
-    private void handleKeyEvent(final KeyEvent kev) {
-        switch (kev.getCode()) {
-            case LEFT:
-                gotoPrevPage();
-            case RIGHT:
-                gotoNextPage();
-            default:
         }
     }
 
@@ -490,14 +471,14 @@ public final class Engine extends Threaded {
         }
         final double defImgXY = 20d;
         var sourceOpt = img.getSourceLoc();
-        var locOpt = img.getLoc();
+        var locOpt = img.getOrigin();
         var sizeOpt = img.getSize();
         var id = img.getID();
         Platform.runLater(() -> {
             var source = (sourceOpt.isPresent()) ? sourceOpt.get() : "";
             var loc = (locOpt.isPresent())
                     ? locOpt.get()
-                    : new LocObj(new Point2D(0, 0), null, null, 0d);
+                    : new LocObj(new Point2D(0, 0), 0d);
             var size = (sizeOpt.isPresent())
                     ? sizeOpt.get() : new SizeObj(defImgXY, defImgXY, 0d);
 
@@ -517,10 +498,9 @@ public final class Engine extends Threaded {
         }
         ArrayList<StyledTextSeg> textSegs;
         Color fill;
-        Color strokeCol;
-        Double strokeWidth;
+        StrokeProps stroke;
         var size = shape.getSize();
-        var loc = shape.getLoc();
+        var loc = shape.getOrigin();
         var shapeType = shape.getType();
         var fillOpt = shape.getFillColour();
         var strokeOpt = shape.getStroke();
@@ -538,23 +518,9 @@ public final class Engine extends Threaded {
         }
 
         if (strokeOpt.isPresent()) {
-            var stroke = strokeOpt.get();
-            var strokeColOpt = stroke.getColour();
-            var strokeStyleOpt = stroke.getStyle();
-            var strokeWidthOpt = stroke.getWidth();
-            if (strokeColOpt.isPresent()) {
-                strokeCol = strokeColOpt.get();
-            } else {
-                strokeCol = Color.BLACK;
-            }
-            if (strokeWidthOpt.isPresent()) {
-                strokeWidth = strokeWidthOpt.get();
-            } else {
-                strokeWidth = 0d;
-            }
+            stroke = strokeOpt.get();
         } else {
-            strokeCol = Color.BLACK;
-            strokeWidth = 0d;
+            stroke = new StrokeProps();
         }
 
         if (size.isPresent() && loc.isPresent()) {
@@ -566,8 +532,7 @@ public final class Engine extends Threaded {
                                 loc.get(),
                                 shapeType,
                                 fill,
-                                strokeCol,
-                                strokeWidth,
+                                stroke,
                                 textSegs);
                     });
         }
@@ -649,15 +614,23 @@ public final class Engine extends Threaded {
         if (storeHistory) {
             navHistory.push(currentPageID); // Push previous to stack
         }
+        processEls(page);
+        currentPageID = page.getID();
+        putMessage("Loaded New Card: " + currentPageID, false);
+    }
+
+    /**
+     * Configure the card.
+     *
+     * @param page card to configure display for.
+     */
+    public void configCard(final PageElement page) {
         Platform.runLater(
                 () -> {
                     controller.clearCard(currentPageID);
                     controller.configCard(page.getSize(),
                             page.getFillColour(), page.getID());
                 });
-        processEls(page);
-        currentPageID = page.getID();
-        putMessage("Loaded New Card: " + currentPageID, false);
     }
 
     /**
@@ -719,7 +692,9 @@ public final class Engine extends Threaded {
             runFunction(() -> redrawEl(el));
             return;
         }
-        if (el instanceof ImageElement) {
+        if (el instanceof PageElement) {
+            this.configCard((PageElement) el);
+        } else if (el instanceof ImageElement) {
             this.drawImage((ImageElement) el);
         } else if (el instanceof ShapeElement) {
             this.drawShape((ShapeElement) el);

@@ -47,7 +47,8 @@ import javax.script.ScriptException;
  */
 public final class Scripting {
 
-    private static final String CLICK_FN = "onClick";
+    public static final String CLICK_FN = "onClick";
+    public static final String KEY_PRESS_FN = "onKeyPress";
 
     /**
      * Factory/manager for all script engines.
@@ -60,6 +61,12 @@ public final class Scripting {
     private HashMap<String, ScriptEngine> knownScriptEngines = new HashMap<>();
 
     /**
+     * Top-level bindings to put base functions into.
+     */
+    public static RecursiveBindings TOP_LEVEL_BINDINGS = new RecursiveBindings();
+
+    private final String defaultLang;
+    /**
      * Ref to engine object.
      */
     private final Engine engine;
@@ -69,16 +76,31 @@ public final class Scripting {
      *
      * @todo: Handle case of unknown language.
      *
-     * @param defaultLang Default scripting language.
+     * @param defaultLanguage Default scripting language.
      * @param globalEngine Ref to the engine.
      */
-    public Scripting(final String defaultLang, final Engine globalEngine) {
+    public Scripting(final String defaultLanguage, final Engine globalEngine) {
         // Init script engine manager
         scriptingEngineManager = new ScriptEngineManager();
         var globals = scriptingEngineManager.getBindings();
         globals.put("engine", globalEngine);
         engine = globalEngine;
-        getScriptEngine(defaultLang); //pre-init a script engijne.
+        defaultLang = defaultLanguage;
+        //Load in the custom global functions
+        var fns = Io.getInternalResource("globalFunctions.py", Scripting.class);
+        try {
+            if (fns.isEmpty()) {
+                throw new IOException("Couldn't get functions file");
+            }
+            var fnStr = new String(fns.get(), StandardCharsets.UTF_8);
+            this.evalString(fnStr, defaultLanguage, TOP_LEVEL_BINDINGS);
+        } catch (IOException | NullPointerException | ScriptException ex) {
+            //Default function loading failed.
+            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            //Pre-init a script engine.
+            getScriptEngine(defaultLanguage);
+        }
+
     }
 
     /**
@@ -92,12 +114,13 @@ public final class Scripting {
     public void evalElement(final Scriptable element) throws ScriptException, IOException {
         Io docIo = engine.getDocIO();
         var scrElOpt = element.getScriptEl();
+        //Setup bindings
+        var bindings = element.getScriptingBindings();
+        bindings.put("this", element);
+        element.getParentElementScriptingBindings().ifPresent(p -> bindings.setParent(p));
+
         if (scrElOpt.isPresent()) {
             var scrEl = scrElOpt.get();
-            //Setup bindings
-            var bindings = element.getScriptingBindings();
-            bindings.put("this", element);
-            element.getParentElementScriptingBindings().ifPresent(p -> bindings.setParent(p));
 
             var locOpt = scrEl.getSourceLoc();
             if (locOpt.isEmpty()) {
@@ -112,10 +135,14 @@ public final class Scripting {
             } else {
                 throw new IOException("Couldn't open script file");
             }
+        } else {
+
         }
     }
+
     /**
      * Evaluate a string of code. Provided for testing.
+     *
      * @param code Code to eval.
      * @param lang Language.
      * @param bindings Bindings to use.
@@ -126,7 +153,19 @@ public final class Scripting {
         scrEngine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
         scrEngine.eval(code);
     }
-
+    
+    public void invokeOnElement(final Scriptable element, final String function, final Object... args){
+        var scEng = getDefaultScriptEngine();
+        scEng.setBindings(element.getScriptingBindings(), ScriptContext.ENGINE_SCOPE);
+        try {
+            ((Invocable) scEng).invokeFunction(function, args);
+        } catch (ScriptException ex) {
+            Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NoSuchMethodException ex) {
+            //Ignore nosuchmethod.
+        }
+    }
+    
     /**
      * Execute element's onClick function.
      *
@@ -136,17 +175,27 @@ public final class Scripting {
      * @param y_loc y location.
      */
     public void execElementClick(final Scriptable element, final String button_name, final Double x_loc, final Double y_loc, final Boolean down) {
-        var scrElOpt = element.getScriptEl();
-        if (scrElOpt.isPresent()) {
-            var scrEl = scrElOpt.get();
-            var lang = scrEl.getScriptLang();
-            var engine = getScriptEngine(lang);
-            engine.setBindings(element.getScriptingBindings(), ScriptContext.ENGINE_SCOPE);
-            try {
-                ((Invocable) engine).invokeFunction(CLICK_FN, button_name, x_loc, y_loc, down);
-            } catch (ScriptException | NoSuchMethodException ex) {
-                Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        
+    }
+
+    /**
+     *
+     * @param element Element to use.
+     * @param keyName Key name.
+     * @param ctrlDown Is ctrl down.
+     * @param altDown Is alt down.
+     * @param metaDown Is meta down.
+     * @param keyDown Is the key down.
+     */
+    public void execElementKeyPress(final Scriptable element, final String keyName, final Boolean ctrlDown, final Boolean altDown, final Boolean metaDown, final Boolean keyDown) {
+        var scEng = getDefaultScriptEngine();
+        scEng.setBindings(element.getScriptingBindings(), ScriptContext.ENGINE_SCOPE);
+        try {
+            ((Invocable) scEng).invokeFunction(KEY_PRESS_FN, keyName, ctrlDown, altDown, metaDown, keyDown);
+        } catch (ScriptException ex) {
+            Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NoSuchMethodException ex) {
+            //Ignore nosuchmethod.
         }
     }
 
@@ -166,5 +215,9 @@ public final class Scripting {
             knownScriptEngines.put(lang, scrEngine);
         }
         return scrEngine;
+    }
+
+    private ScriptEngine getDefaultScriptEngine() {
+        return getScriptEngine(defaultLang);
     }
 }

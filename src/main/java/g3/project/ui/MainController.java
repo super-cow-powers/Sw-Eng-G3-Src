@@ -28,6 +28,8 @@
  */
 package g3.project.ui;
 
+import g3.project.graphics.LocObj;
+import g3.project.graphics.SizeObj;
 import javafx.event.*;
 import javafx.fxml.*;
 import javafx.scene.Scene;
@@ -38,6 +40,7 @@ import com.jthemedetecor.OsThemeDetector;
 import g3.project.core.Engine;
 import g3.project.graphics.ExtShape;
 import g3.project.graphics.FontProps;
+import g3.project.graphics.StrokeProps;
 import g3.project.graphics.StyledTextSeg;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -175,7 +178,7 @@ public final class MainController {
      */
     @FXML
     private void handleEvent(final InputEvent event) {
-        event.consume(); //Don't pass to elements below!
+        //event.consume(); //Don't pass to elements below!
         engine.offerEvent(event);
     }
     /**
@@ -320,16 +323,16 @@ public final class MainController {
      * @param text Shape Text and Properties
      */
     public void updateShape(final String id, final SizeObj size, final LocObj loc, final String shapeType, final Color fillColour,
-            final Color strokeColour, final Double strokeWidth, final ArrayList<StyledTextSeg> text) {
+            StrokeProps stroke, final ArrayList<StyledTextSeg> text) {
         ExtShape newShape;
         if (drawnElements.containsKey(id)) {
             newShape = (ExtShape) drawnElements.get(id);
-            newShape.setSize(size.getX(), size.getY());
+            newShape.setSize(size);
             newShape.setFill(fillColour);
-            newShape.setStroke(strokeColour, strokeWidth);
+            newShape.setStroke(stroke);
             newShape.setText(text);
         } else {
-            newShape = new ExtShape(shapeType, id, size.getX(), size.getY(), fillColour, strokeColour, strokeWidth, text);
+            newShape = new ExtShape(shapeType, id, size, fillColour, stroke, text);
             newShape.setRotate(size.getRot());
             drawnElements.put(id, newShape);
             pagePane.getChildren().add(newShape);
@@ -344,8 +347,8 @@ public final class MainController {
                 handleEvent(ev);
             });
         }
-        var start = loc.getStart().get();
-        newShape.relocate(start.getX(), start.getY());
+        var origin = loc.getLoc();
+        newShape.relocate(origin.getX(), origin.getY());
         newShape.setViewOrder(loc.getZ());
     }
 
@@ -369,12 +372,8 @@ public final class MainController {
             pagePane.setRotate(f.getRot());
         });
         //CHECKSTYLE:OFF
-        colour.ifPresent(f -> {
-            var col = String.format("#%02X%02X%02X",
-                    (int) (f.getRed() * 255),
-                    (int) (f.getGreen() * 255),
-                    (int) (f.getBlue() * 255));
-            pagePane.setStyle("-fx-background-color: " + col);
+        colour.ifPresent(c -> {
+            pagePane.setStyle("-fx-background-color: \'" + c.toString() + "\';");
         });
         //CHECKSTYLE:ON
         pagePane.setId(id);
@@ -407,9 +406,9 @@ public final class MainController {
         //CHECKSTYLE:ON
         cardButton.setId(id + "-jump-card-button");
         cardButton.setWrapText(false);
-        cardButton.setOnAction(event -> {
-            clearCard(pagePane.getId());
-            engine.offerEvent(event);
+        cardButton.setOnAction(ev -> {
+            clearCard(id);
+            engine.gotoPage(id, true);
         });
         cardSelBox.getChildren().add(cardButton);
     }
@@ -503,10 +502,8 @@ public final class MainController {
         }
 
         imv.setImage(im);
-        if (loc.getStart().isPresent()) {
-            var start = loc.getStart().get();
-            imv.relocate(start.getX(), start.getY());
-        }
+        var origin = loc.getLoc();
+        imv.relocate(origin.getX(), origin.getY());
         imv.setId(id);
         imv.setViewOrder(loc.getZ());
         imv.setRotate(size.getRot());
@@ -585,8 +582,8 @@ public final class MainController {
         loadingGif = new Image(loadingGifStr);
 
         engine = new Engine(this);
-        pagePane.addEventHandler(MouseEvent.MOUSE_CLICKED, handleInput);
-        pagePane.setViewOrder(-1);
+
+        pagePane.setViewOrder(0);
         pagePane.getChildren()
                 .addListener((Change<? extends Node> c) -> {
                     while (c.next()) {
@@ -598,7 +595,14 @@ public final class MainController {
                             //update item
                         } else {
                             for (Node addedNode : c.getAddedSubList()) {
-                                addedNode.addEventHandler(MouseEvent.ANY, handleInput);
+                                addedNode.addEventHandler(MouseEvent.ANY, (e) -> {
+                                    handleEvent(e);
+                                    e.consume();
+                                });
+                                addedNode.addEventHandler(KeyEvent.ANY, (e) -> {
+                                    handleEvent(e);
+                                    e.consume();
+                                });
                             }
                         }
                     }
@@ -620,13 +624,23 @@ public final class MainController {
                     }
                 });
         Platform.runLater(() -> { //Run when initialised
+            pagePane.addEventHandler(MouseEvent.ANY, handleInput);
+            pagePane.addEventHandler(KeyEvent.ANY, handleInput);
+            pageScroll.addEventFilter(KeyEvent.ANY, event -> {
+                if (event.getCode() == KeyCode.DOWN || event.getCode() == KeyCode.UP || event.getCode() == KeyCode.LEFT || event.getCode() == KeyCode.RIGHT) {
+                    handleEvent(event);
+                    event.consume();
+                }
+            });
+
             engine.start();
         });
+
         pagePane.setOnScroll((e) -> pageScrollEventHandler(e)); //Scaling stuff
-        pageScroll.setOnKeyReleased((e) -> engine.offerEvent(e)); //I'll get the engine to handle the keys
 
         pageScroll.setPannable(true);
-        pagePane.setEffect(new DropShadow());
+        var ds = new DropShadow();
+        pagePane.setEffect(ds);
 
         toggleDarkMode();
     }

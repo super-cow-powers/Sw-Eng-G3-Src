@@ -26,49 +26,43 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package g3.project.ui;
+package g3.project.elements;
 
-import javafx.scene.paint.Color;
-import nu.xom.Node;
+import g3.project.graphics.StyledTextSeg;
+import nu.xom.Attribute;
+import nu.xom.Builder;
+import nu.xom.Element;
 
 /**
  *
- * This is a temporary object for transfer between the engine and UI
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class SizeObj {
-    private final Double x_px;
-    private final Double y_px;
-    private final Double rot_deg;    
-    /**
-    *
-    * Create new object. X and Y are in PX, rot is in degrees. 
-    */
-    public SizeObj(Double x, Double y, Double rot){
-        this.x_px = x;
-        this.y_px = y;
-        this.rot_deg = rot;
+public class ButtonElement extends Element {
+    //CHECKSTYLE:OFF
+
+    private static ThreadLocal builders = new ThreadLocal() {
+
+        protected synchronized Object initialValue() {
+            return new Builder(new ElementFactory());
+        }
+
+    };
+
+    public ButtonElement(String name) {
+        super(name);
     }
-    
-    /**
-     * 
-     * @return Returns X size in PX
-     */
-    public Double getX(){
-        return x_px;
+
+    public ButtonElement(String name, String uri) {
+        super(name, uri);
     }
-    /**
-     * 
-     * @return Returns Y size in PX
-     */
-    public Double getY(){
-        return y_px;
+
+    public ButtonElement(Element element) {
+        super(element);
     }
-    /**
-     * 
-     * @return Returns Rotation in Degrees
-     */
-    public Double getRot(){
-        return rot_deg;
+
+    public ButtonElement(String name, String uri, Object... objs) {
+        super(name, uri);
     }
+
+//CHECKSTYLE:ON
 }

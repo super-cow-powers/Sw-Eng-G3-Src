@@ -83,34 +83,33 @@ public class ExtShape extends Group {
         ;
     };
 
-    public ExtShape(String shapeType, String ID, Double width, Double height, Color fill, Color strokeColour, Double strokeSize, ArrayList<StyledTextSeg> text) {
+    public ExtShape(String shapeType, String ID, SizeObj size, Color fill, StrokeProps strokeProps, ArrayList<StyledTextSeg> text) {
+        var newWidth = size.getX();
+        var newHeight = size.getY();
         switch (shapeType) {
             case "circle":
-                shape = new Ellipse(width / 2, height / 2);
+                shape = new Ellipse(newWidth / 2, newHeight / 2);
                 break;
             case "textbox":
-                shape = new Rectangle(width, height);
+                shape = new Rectangle(newWidth, newHeight);
                 break;
             case "rectangle":
-                shape = new Rectangle(width, height);
+                shape = new Rectangle(newWidth, newHeight);
                 break;
             default:
-                shape = new Rectangle(width, height);
+                shape = new Rectangle(newWidth, newHeight);
                 break;
 
         }
-        this.width = width;
-        this.height = height;
+        this.width = newWidth;
+        this.height = newHeight;
         if (shape == null) {
             return;
         }
         this.setId(ID);
-        if (strokeColour != null) {
-            shape.setStroke(strokeColour);
-        }
-        if (strokeSize != null) {
-            shape.setStrokeWidth(strokeSize);
-        }
+        System.out.println(strokeProps.toCSS());
+        shape.setStyle(strokeProps.toCSS()); //Apply stroke CSS
+
         if (fill != null) {
             shape.setFill(fill);
         }
@@ -152,12 +151,13 @@ public class ExtShape extends Group {
     /**
      * Set the shape size.
      *
-     * @param width Width.
-     * @param height Height.
+     * @param size Size.
      */
-    public final void setSize(final Double width, final Double height) {
-        this.width = width;
-        this.height = height;
+    public final void setSize(final SizeObj size) {
+        var newWidth = size.getX();
+        var newHeight = size.getY();
+        this.width = newWidth;
+        this.height = newHeight;
         if (textFlow != null) {
             textFlow.setPrefWidth(width);
         }
@@ -185,9 +185,8 @@ public class ExtShape extends Group {
      * @param strokeColor Colour of stroke.
      * @param strokeWidth Width of stroke.
      */
-    public final void setStroke(final Color strokeColor, final Double strokeWidth) {
-        shape.setStroke(strokeColor);
-        shape.setStrokeWidth(strokeWidth);
+    public final void setStroke(final StrokeProps stroke) {
+        shape.setStyle(stroke.toCSS());
     }
 
     /**
