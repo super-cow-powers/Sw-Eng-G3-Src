@@ -57,46 +57,49 @@ public class VisualProps extends HashMap<String, Object> {
 <xsd:anyAttribute /> <!-- permit any valid attribute -->
      */
     //CHECKSTYLE:OFF
-    protected static final String SHADE_COL = "shade_colour";
+    public static final String SHADE_COL = "shade_colour";
     protected static final Class SHADE_COL_TYPE = Color.class;
     protected static final Class SHADE_SIZE_TYPE = Double.class;
-    protected static final String L_SHADE_SIZE = "l-shade-px";
-    protected static final String R_SHADE_SIZE = "r-shade-px";
-    protected static final String T_SHADE_SIZE = "t-shade-px";
-    protected static final String B_SHADE_SIZE = "b-shade-px";
-    protected static final String ALPHA = "alpha";
+    public static final String L_SHADE_SIZE = "l-shade-px";
+    public static final String R_SHADE_SIZE = "r-shade-px";
+    public static final String T_SHADE_SIZE = "t-shade-px";
+    public static final String B_SHADE_SIZE = "b-shade-px";
+    public static final String SHADE_SIZE = "ext:shade-px";
+    public static final String ALPHA = "alpha";
     protected static final Class ALPHA_TYPE = Double.class;
-    protected static final String FILL = "fill";
+    public static final String FILL = "fill";
     protected static final Class FILL_TYPE = Color.class;
-    protected static final String DISP_SECS = "disp_duration_s";
+    public static final String DISP_SECS = "disp_duration_s";
     protected static final Class DISP_SECS_TYPE = Double.class;
-    protected static final String DELAY_SECS = "show_after_s";
+    public static final String DELAY_SECS = "show_after_s";
     protected static final Class DELAY_SECS_TYPE = Double.class;
-    protected static final String VISIBLE = "visible";
+    public static final String VISIBLE = "visible";
     protected static final Class VISIBLE_TYPE = Boolean.class;
-    protected static final String SIZE = "size";
+    public static final String SIZE = "size";
     protected static final Class SIZE_TYPE = SizeObj.class;
-    protected static final String LOCATION = "loc";
+    public static final String LOCATION = "loc";
     protected static final Class LOCATION_TYPE = LocObj.class;
+    public static final String ID = "ID";
+    protected static final Class ID_TYPE = String.class;
     //CHECKSTYLE:ON
     /**
      * Contains known props and their classes.
      */
     public static final Map<String, Class> PROPS_MAP = Map.ofEntries(entry(SHADE_COL, SHADE_COL_TYPE),
             entry(L_SHADE_SIZE, SHADE_SIZE_TYPE), entry(R_SHADE_SIZE, SHADE_SIZE_TYPE), entry(T_SHADE_SIZE, SHADE_SIZE_TYPE), entry(B_SHADE_SIZE, SHADE_SIZE_TYPE),
-            entry(ALPHA, ALPHA_TYPE), entry(FILL, FILL_TYPE), entry(DISP_SECS, DISP_SECS_TYPE),
-            entry(DELAY_SECS, DELAY_SECS_TYPE), entry(VISIBLE, VISIBLE_TYPE), entry(LOCATION, LOCATION_TYPE), entry(SIZE, SIZE_TYPE));
+            entry(SHADE_SIZE, SHADE_SIZE_TYPE), entry(ALPHA, ALPHA_TYPE), entry(FILL, FILL_TYPE), entry(DISP_SECS, DISP_SECS_TYPE),
+            entry(DELAY_SECS, DELAY_SECS_TYPE), entry(VISIBLE, VISIBLE_TYPE), entry(LOCATION, LOCATION_TYPE), entry(SIZE, SIZE_TYPE), entry(ID, ID_TYPE));
     /**
      * Contains default values for known props.
      */
     public static final Map<String, Object> PROP_DEFAULTS = Map.ofEntries(entry(SHADE_COL, Color.BLACK),
-            entry(L_SHADE_SIZE, 0), entry(R_SHADE_SIZE, 0), entry(T_SHADE_SIZE, 0), entry(B_SHADE_SIZE, 0),
-            entry(ALPHA, 0), entry(FILL, Color.TRANSPARENT), entry(DISP_SECS, -1), entry(DELAY_SECS, 0), entry(VISIBLE, true),
-            entry(LOCATION, new LocObj(Point2D.ZERO, 0d)), entry(SIZE, new SizeObj(0d, 0d, 0d)));
+            entry(L_SHADE_SIZE, 0d), entry(R_SHADE_SIZE, 0d), entry(T_SHADE_SIZE, 0d), entry(B_SHADE_SIZE, 0d), entry(SHADE_SIZE, 0d),
+            entry(ALPHA, 0d), entry(FILL, Color.TRANSPARENT), entry(DISP_SECS, -1d), entry(DELAY_SECS, 0d), entry(VISIBLE, true),
+            entry(LOCATION, new LocObj(Point2D.ZERO, 0d)), entry(SIZE, new SizeObj(0d, 0d, 0d)), entry(ID, ""));
     /**
      * Contains CSS strings for known CSS props.
      */
-    private static final Map<String, String> CSS = Map.ofEntries(entry(FILL, "-fx-fill: %s;"), entry(VISIBLE, "visibility: %s"));
+    private static final Map<String, String> CSS = Map.ofEntries(entry(FILL, "-fx-fill: \'%s\';"), entry(VISIBLE, "visibility: %s;"));
 
     /**
      * Constructor. Takes map of properties.
@@ -132,6 +135,24 @@ public class VisualProps extends HashMap<String, Object> {
         if (val == null) { //Not Found. Set default.
             val = PROP_DEFAULTS.get(prop);
         }
+        switch (prop) { //These aren't the same types in JFX css as in our files.
+            case FILL: //Fill may have alpha included or use the alpha prop.
+                var alpha = (Double) this.get(ALPHA);
+                if (alpha != null) { //seperate Alpha being used.
+                    var cVal = (Color) val;
+                    val = new Color(cVal.getRed(), cVal.getGreen(), cVal.getBlue(), alpha);
+                }
+                break;
+            case ALPHA: //Alpha may be separate or in fill.
+                var al = (Double) this.get(ALPHA);
+                if (al == null) {
+                    var col = this.get(FILL);
+                    val = ((Color) col).getRed();
+                }
+                break;
+            default:
+                break;
+        }
         //Will be null if invalid. Return optional to limit damage.
         return Optional.ofNullable(val);
     }
@@ -146,21 +167,26 @@ public class VisualProps extends HashMap<String, Object> {
         var r = (Double) this.getProp(R_SHADE_SIZE).get();
         var t = (Double) this.getProp(T_SHADE_SIZE).get();
         var b = (Double) this.getProp(B_SHADE_SIZE).get();
+        var gen = (Double) this.getProp(SHADE_SIZE).get();
+
         var width = l + r;
         var height = t + b;
-        if ((width + height) == 0) { //No shadow set.
+        if (((width + height) == 0) && (gen <= 0)) { //No shadow set.
             return Optional.empty();
+        } else if (gen <= 0) { //Shadow set individually
+            var xOS = r - l;
+            var yOS = b - t;
+            var ds = new DropShadow();
+            ds.setHeight(height);
+            ds.setWidth(width);
+            ds.setOffsetX(xOS);
+            ds.setOffsetY(yOS);
+            return Optional.of(ds);
+        } else {
+            var ds = new DropShadow();
+            ds.setRadius(gen);
+            return Optional.of(ds);
         }
-
-        var xOS = r - l;
-        var yOS = b - t;
-        var ds = new DropShadow();
-        ds.setHeight(height);
-        ds.setWidth(width);
-        ds.setOffsetX(xOS);
-        ds.setOffsetY(yOS);
-
-        return Optional.of(ds);
     }
 
     /**
@@ -173,17 +199,7 @@ public class VisualProps extends HashMap<String, Object> {
         return propsStream.map(p -> {
             var cssFmt = CSS.get(p);
             Object val = this.getProp(p).get();
-            switch (p) { //These aren't the same types in JFX css as in our files.
-                case FILL: //Fill may have alpha included or use the alpha prop.
-                    var alpha = (Double) this.get(ALPHA);
-                    if (alpha != null) {
-                        var cVal = (Color) val;
-                        val = new Color(cVal.getRed(), cVal.getGreen(), cVal.getBlue(), alpha);
-                    }
-                    break;
-                default:
-                    break;
-            }
+
             return String.format(cssFmt, val.toString());
         }).collect(Collectors.joining(" "));
     }

@@ -497,19 +497,10 @@ public final class Engine extends Threaded {
             return;
         }
         ArrayList<StyledTextSeg> textSegs;
-        Color fill;
         StrokeProps stroke;
-        var size = shape.getSize();
-        var loc = shape.getOrigin();
         var shapeType = shape.getType();
-        var fillOpt = shape.getFillColour();
         var strokeOpt = shape.getStroke();
-
-        if (fillOpt.isPresent()) {
-            fill = fillOpt.get();
-        } else {
-            fill = Color.WHITESMOKE;
-        }
+        
         var textOpt = shape.getText();
         if (textOpt.isPresent()) {
             textSegs = textOpt.get();
@@ -523,19 +514,15 @@ public final class Engine extends Threaded {
             stroke = new StrokeProps();
         }
 
-        if (size.isPresent() && loc.isPresent()) {
             Platform.runLater(
                     () -> {
                         controller.updateShape(
-                                shape.getID(),
-                                size.get(),
-                                loc.get(),
                                 shapeType,
-                                fill,
+                                shape.getProps(),
                                 stroke,
                                 textSegs);
                     });
-        }
+        
     }
 
     /**

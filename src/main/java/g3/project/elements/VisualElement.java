@@ -33,6 +33,7 @@ import g3.project.core.RecursiveBindings;
 import g3.project.graphics.LocObj;
 import g3.project.graphics.SizeObj;
 import g3.project.graphics.StrokeProps;
+import g3.project.graphics.VisualProps;
 import java.util.Optional;
 import javafx.geometry.Point2D;
 import javafx.scene.paint.Color;
@@ -89,6 +90,21 @@ public class VisualElement extends Element implements Scriptable {
      */
     public VisualElement(final Element element) {
         super(element);
+    }
+
+    /**
+     * Find qualified attribute from element.
+     *
+     * @param el Element to use.
+     * @param qualifiedName Full attribute name.
+     * @return Maybe attribute.
+     */
+    public static Optional<Attribute> derefAttribute(final Element el, final String qualifiedName) {
+        var nameSplit = qualifiedName.split(":");
+        var attrNS = (nameSplit.length > 1) ? EXT_URI : "";
+        var attrName = (nameSplit.length > 1) ? nameSplit[1] : nameSplit[0];
+        var attr = el.getAttribute(attrName, attrNS);
+        return Optional.ofNullable(attr);
     }
 
     /**
@@ -201,8 +217,6 @@ public class VisualElement extends Element implements Scriptable {
      * @return Optional colour.
      */
     public final Optional<Color> getFillColour() {
-        final int lenRGB = 6;
-        final int lenRGBA = 8;
         var colAttr = Optional.ofNullable(this.getAttribute("fill"));
         /**
          * @todo: Find a nicer looking way of making this work Probably
@@ -219,26 +233,6 @@ public class VisualElement extends Element implements Scriptable {
                 System.err.println("Bad Colour: " + ex);
             }
             return Optional.ofNullable(col);
-            /*
-            switch (colStr.length()) {
-                case lenRGB:
-                    //CHECKSTYLE:OFF
-                    return Optional.of(new Color(
-                            (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
-                            1.0d));
-                //CHECKSTYLE:ON
-                case lenRGBA:
-                    //CHECKSTYLE:OFF
-                    return Optional.of(new Color(
-                            (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(6, 8), 16) / 255));
-                //CHECKSTYLE:ON
-                default:
-            }*/
         }
         return Optional.empty();
     }
@@ -295,6 +289,50 @@ public class VisualElement extends Element implements Scriptable {
     }
 
     /**
+     * Get this element's visual properties map.
+     *
+     * @return visual props. map.
+     */
+    public final VisualProps getProps() {
+        var propsMap = new VisualProps();
+        for (String prop : propsMap.PROPS_MAP.keySet()) {
+            switch (prop) {
+                //Special cases
+                case VisualProps.LOCATION:
+                    var maybeLoc = this.getOrigin();
+                    maybeLoc.ifPresent(l -> propsMap.put(VisualProps.LOCATION, l));
+                    break;
+                case VisualProps.SIZE:
+                    var maybeSize = this.getSize();
+                    maybeSize.ifPresent(l -> propsMap.put(VisualProps.SIZE, l));
+                    break;
+                default: //Not a special case
+                    var attrMaybe = derefAttribute(this, prop);
+                    //this.getAttribute(prop, prop)
+                    if (attrMaybe.isPresent()) {
+                        var attr = attrMaybe.get();
+                        var attrVal = attr.getValue();
+                        Class attrType = propsMap.PROPS_MAP.get(prop);
+                        Object propVal;
+                        //Cast to correct type
+                        if (attrType == Double.class) {
+                            propVal = Double.valueOf(attrVal);
+                        } else if (attrType == Boolean.class) {
+                            propVal = Boolean.valueOf(attrVal);
+                        } else if (attrType == Color.class) {
+                            propVal = Color.web(attrVal);
+                        } else {
+                            propVal = attrVal; //Probably a string.
+                        }
+                        propsMap.put(prop, propVal);
+                    }
+                    break;
+            }
+        }
+        return propsMap;
+    }
+
+    /**
      * Get the local scope for this object.
      *
      * @return my Bindings.
@@ -302,7 +340,7 @@ public class VisualElement extends Element implements Scriptable {
     @Override
     public final RecursiveBindings getScriptingBindings() {
         var parBinOpt = this.getParentElementScriptingBindings();
-        parBinOpt.ifPresent(b->elementScriptBindings.setParent(b)); //Always set parent bindings
+        parBinOpt.ifPresent(b -> elementScriptBindings.setParent(b)); //Always set parent bindings
         return elementScriptBindings;
     }
 

@@ -63,7 +63,7 @@ public final class StrokeProps extends HashMap<String, Object> {
     public static final String DOT_DASH_STYLE = "dot-dash";
     public static final String DASH_STYLE = "dash";
     public static final String DOT_STYLE = "dot";
-    public static final String SOLID_STYLE = "solid";
+    public static final String SOLID_STYLE = "plain";
     //CHECKSTYLE:ON
     /**
      * Contains known props and their classes.
@@ -115,6 +115,27 @@ public final class StrokeProps extends HashMap<String, Object> {
         if (val == null) { //Not Found. Set default.
             val = PROP_DEFAULTS.get(prop);
         }
+        switch (prop) { //These aren't the same types in JFX css as in our files.
+            case LINE_STYLE:
+                switch (((String) val).toLowerCase()) {
+                    case SOLID_STYLE:
+                        break;
+                    case DOT_STYLE:
+                        val = DOT_ARRAY;
+                        break;
+                    case DASH_STYLE:
+                        val = DASH_ARRAY;
+                        break;
+                    case DOT_DASH_STYLE:
+                        val = DOT_DASH_ARRAY;
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            default:
+                break;
+        }
         //Might be null if invalid. Return optional to limit damage
         return Optional.ofNullable(val);
     }
@@ -129,28 +150,8 @@ public final class StrokeProps extends HashMap<String, Object> {
         var props = propsStream.map(p -> {
             var cssFmt = CSS.get(p);
             Object val = this.getProp(p).get();
-            switch (p) { //These aren't the same types in JFX css as in our files.
-                case LINE_STYLE:
-                    switch (((String) val).toLowerCase()) {
-                        case SOLID_STYLE:
-                            return ""; //No dash array for solid style.
-                        case DOT_STYLE:
-                            val = DOT_ARRAY;
-                            break;
-                        case DASH_STYLE:
-                            val = DASH_ARRAY;
-                            break;
-                        case DOT_DASH_STYLE:
-                            val = DOT_DASH_ARRAY;
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
-                default:
-                    break;
-            }
-            return String.format(cssFmt, val.toString());
+            //Return nothing for solid stroke.
+            return (val.toString().equals(SOLID_STYLE)) ? "" : String.format(cssFmt, val.toString());
         }).collect(Collectors.joining(" "));
         System.out.println(props);
         return props;

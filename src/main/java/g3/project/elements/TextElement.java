@@ -28,6 +28,7 @@
  */
 package g3.project.elements;
 
+import g3.project.graphics.FontProps;
 import g3.project.graphics.StyledTextSeg;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -76,10 +77,14 @@ public class TextElement extends Element implements Includable {
      */
     public final ArrayList<StyledTextSeg> getText() {
         var list = new ArrayList<StyledTextSeg>();
+        var maybeAlignment = VisualElement.derefAttribute(this, FontProps.ALIGNMENT);
+
+        var myAlignment = (maybeAlignment.isEmpty()) ? FontProps.PROP_DEFAULTS.get(FontProps.ALIGNMENT) : maybeAlignment.get().getValue();
         for (var ch : this.getChildElements()) {
             if (ch instanceof FontElement) {
                 FontElement chf = (FontElement) ch;
                 var props = chf.getProperties();
+                props.put(FontProps.ALIGNMENT, myAlignment);
                 //Go through the children to find any links
                 for (int i = 0; i < chf.getChildCount(); i++) {
                     var textOrRef = chf.getChild(i);
@@ -98,7 +103,7 @@ public class TextElement extends Element implements Includable {
     }
 
     @Override
-    public Optional<String> getSourceLoc() {
+    public final Optional<String> getSourceLoc() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

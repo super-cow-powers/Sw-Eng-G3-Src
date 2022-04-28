@@ -42,6 +42,7 @@ import g3.project.graphics.ExtShape;
 import g3.project.graphics.FontProps;
 import g3.project.graphics.StrokeProps;
 import g3.project.graphics.StyledTextSeg;
+import g3.project.graphics.VisualProps;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.ArrayList;
@@ -322,18 +323,21 @@ public final class MainController {
      * @param strokeWidth Shape Stroke Width
      * @param text Shape Text and Properties
      */
-    public void updateShape(final String id, final SizeObj size, final LocObj loc, final String shapeType, final Color fillColour,
+    public void updateShape(final String shapeType, final VisualProps props,
             StrokeProps stroke, final ArrayList<StyledTextSeg> text) {
         ExtShape newShape;
+        var id = (String) props.getProp(VisualProps.ID).get();
+        var loc = (LocObj) props.getProp(VisualProps.LOCATION).get();
         if (drawnElements.containsKey(id)) {
             newShape = (ExtShape) drawnElements.get(id);
+            var size = (SizeObj) props.getProp(VisualProps.SIZE).get();
+            var fill = (Color) props.getProp(VisualProps.FILL).get();
             newShape.setSize(size);
-            newShape.setFill(fillColour);
+            newShape.setFill(fill);
             newShape.setStroke(stroke);
             newShape.setText(text);
         } else {
-            newShape = new ExtShape(shapeType, id, size, fillColour, stroke, text);
-            newShape.setRotate(size.getRot());
+            newShape = new ExtShape(shapeType, stroke, props, text);
             drawnElements.put(id, newShape);
             pagePane.getChildren().add(newShape);
             //Set Hyperlink handlers

@@ -79,8 +79,9 @@ public final class FontElement extends Element {
         //Find all extant valid props.
         for (String propKey : FontProps.PROPS_MAP.keySet()) {
             Class propClass = FontProps.PROPS_MAP.get(propKey);
-            var attr = this.getAttribute(propKey);
-            if (attr != null) { //Does the attr exist?
+            var maybeAttr = VisualElement.derefAttribute(this, propKey);
+            if (maybeAttr.isPresent()) { //Does the attr exist?
+                var attr = maybeAttr.get();
                 Object attrVal;
                 String attrStr = attr.getValue();
                 //Get props as right type.

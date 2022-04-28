@@ -51,34 +51,37 @@ public class FontProps extends HashMap<String, Object> {
 					<xsd:attribute name="colour" type="base:colourType" use="optional" />
      */
     //CHECKSTYLE:OFF
-    protected static final String US = "underscore";
+    public static final String US = "underscore";
     protected static final Class US_TYPE = Boolean.class;
-    protected static final String IT = "italic";
+    public static final String IT = "italic";
     protected static final Class IT_TYPE = Boolean.class;
-    protected static final String BOLD = "bold";
+    public static final String BOLD = "bold";
     protected static final Class BOLD_TYPE = Boolean.class;
-    protected static final String SIZE = "size";
+    public static final String SIZE = "size";
     protected static final Class SIZE_TYPE = Double.class;
-    protected static final String FONT = "name";
+    public static final String FONT = "name";
     protected static final Class FONT_TYPE = String.class;
-    protected static final String COLOUR = "colour";
+    public static final String COLOUR = "colour";
     protected static final Class COLOUR_TYPE = Color.class;
+    public static final String ALIGNMENT = "ext:alignment";
+    protected static final Class ALIGNMENT_TYPE = String.class;
+
     //CHECKSTYLE:ON
     /**
      * Contains known props and their classes.
      */
     public static final Map<String, Class> PROPS_MAP = Map.ofEntries(entry(US, US_TYPE),
-            entry(IT, IT_TYPE), entry(BOLD, BOLD_TYPE), entry(SIZE, SIZE_TYPE), entry(FONT, FONT_TYPE), entry(COLOUR, COLOUR_TYPE));
+            entry(IT, IT_TYPE), entry(BOLD, BOLD_TYPE), entry(SIZE, SIZE_TYPE), entry(FONT, FONT_TYPE), entry(COLOUR, COLOUR_TYPE), entry(ALIGNMENT, ALIGNMENT_TYPE));
     /**
      * Contains default values for known props.
      */
     public static final Map<String, Object> PROP_DEFAULTS = Map.ofEntries(entry(US, false), entry(IT, false), entry(BOLD, false),
-            entry(SIZE, 16d), entry(FONT, "monospace"), entry(COLOUR, Color.BLACK));
+            entry(SIZE, 16d), entry(FONT, "monospace"), entry(COLOUR, Color.BLACK), entry(ALIGNMENT, "left"));
     /**
      * Contains CSS strings for known props.
      */
     private static final Map<String, String> CSS = Map.ofEntries(entry(US, "-fx-underline: \'%s\';"), entry(IT, "-fx-font-style: %s;"), entry(BOLD, "-fx-font-weight: %s;"),
-            entry(SIZE, "-fx-font-size: %s;"), entry(FONT, "-fx-font-family: \'%s\';"), entry(COLOUR, "-fx-fill: \'%s\';"));
+            entry(SIZE, "-fx-font-size: %s;"), entry(FONT, "-fx-font-family: \'%s\';"), entry(COLOUR, "-fx-fill: \'%s\';"), entry(ALIGNMENT, "-fx-text-alignment: \'%s\';"));
 
     /**
      * Constructor. Takes map of properties.
@@ -124,7 +127,7 @@ public class FontProps extends HashMap<String, Object> {
      * @return CSS String.
      */
     public String toCSS() {
-        var propsStream = PROPS_MAP.keySet().stream();
+        var propsStream = CSS.keySet().stream();
         return propsStream.map(p -> {
             var cssFmt = CSS.get(p);
             Object val = this.getProp(p).get();

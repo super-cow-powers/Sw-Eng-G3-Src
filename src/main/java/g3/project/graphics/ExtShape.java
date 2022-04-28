@@ -42,6 +42,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Ellipse;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
+import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.shape.StrokeType;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 
@@ -50,14 +52,15 @@ import javafx.scene.text.TextFlow;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public class ExtShape extends Group {
-
+    
     private StackPane stack = new StackPane();
     private Shape shape;
     private TextFlow textFlow = null;
     private Boolean amTextbox = false;
-
+    
     private Double width;
     private Double height;
+    private Double rot;
 
     /**
      * href click handler.
@@ -82,42 +85,45 @@ public class ExtShape extends Group {
     private Consumer<MouseEvent> hrefHovExHandlerConsumer = (evt) -> {
         ;
     };
-
-    public ExtShape(String shapeType, String ID, SizeObj size, Color fill, StrokeProps strokeProps, ArrayList<StyledTextSeg> text) {
-        var newWidth = size.getX();
-        var newHeight = size.getY();
+    
+    public ExtShape(String shapeType, StrokeProps strokeProps, VisualProps visualProps, ArrayList<StyledTextSeg> text) {
+        SizeObj size = (SizeObj) visualProps.getProp(VisualProps.SIZE).get();
+        String id = (String) visualProps.getProp(VisualProps.ID).get();
+        var maybeShadow = visualProps.makeShadow();
+        rot = size.getRot();
         switch (shapeType) {
             case "circle":
-                shape = new Ellipse(newWidth / 2, newHeight / 2);
+                shape = new Ellipse();
                 break;
             case "textbox":
-                shape = new Rectangle(newWidth, newHeight);
+                amTextbox = true;
+                shape = new Rectangle();
                 break;
             case "rectangle":
-                shape = new Rectangle(newWidth, newHeight);
+                shape = new Rectangle();
                 break;
             default:
-                shape = new Rectangle(newWidth, newHeight);
+                shape = new Rectangle();
                 break;
-
+            
         }
-        this.width = newWidth;
-        this.height = newHeight;
         if (shape == null) {
             return;
         }
-        this.setId(ID);
-        System.out.println(strokeProps.toCSS());
-        shape.setStyle(strokeProps.toCSS()); //Apply stroke CSS
+        this.setSize(size);
+        this.setId(id);
+        maybeShadow.ifPresent(sh -> shape.setEffect(sh)); //Apply shadow
+        this.setVisible((Boolean) visualProps.getProp(VisualProps.VISIBLE).get());
+        this.setFill((Color) visualProps.getProp(VisualProps.FILL).get());
+        
+        this.setStroke(strokeProps);
 
-        if (fill != null) {
-            shape.setFill(fill);
-        }
+        //shape.setStyle(strokeProps.toCSS());
         stack.getChildren().add(shape);
         if (text.size() > 0) {
-            setText(text);
+            this.setText(text);
         }
-
+        
         this.getChildren().add(stack);
     }
 
@@ -154,13 +160,14 @@ public class ExtShape extends Group {
      * @param size Size.
      */
     public final void setSize(final SizeObj size) {
-        var newWidth = size.getX();
-        var newHeight = size.getY();
-        this.width = newWidth;
-        this.height = newHeight;
+        this.width = size.getX();
+        this.height = size.getY();
+        this.rot = size.getRot();
         if (textFlow != null) {
             textFlow.setPrefWidth(width);
+            textFlow.setPrefHeight(height);
         }
+        this.setRotate(rot);
         if (shape instanceof Rectangle) {
             ((Rectangle) shape).setWidth(width);
             ((Rectangle) shape).setHeight(height);
@@ -182,11 +189,23 @@ public class ExtShape extends Group {
     /**
      * Configure shape stroke.
      *
-     * @param strokeColor Colour of stroke.
-     * @param strokeWidth Width of stroke.
+     * @param stroke stroke properties.
      */
     public final void setStroke(final StrokeProps stroke) {
-        shape.setStyle(stroke.toCSS());
+        shape.setStroke((Color) stroke.getProp(StrokeProps.COLOUR).get());
+        shape.setStrokeLineCap(StrokeLineCap.valueOf(((String) stroke.getProp(StrokeProps.LINE_CAP).get()).toUpperCase()));
+        shape.setStrokeType(StrokeType.OUTSIDE);
+        shape.getStrokeDashArray().clear();
+        shape.setStrokeWidth((Double) stroke.getProp(StrokeProps.WIDTH).get());
+        var dashArray = (String) stroke.getProp(StrokeProps.LINE_STYLE).get();
+        for (String val : dashArray.split(" ")) { //Build dash array
+            Double num;
+            try {
+                num = Double.parseDouble(val);
+                shape.getStrokeDashArray().add(num);
+            } catch (NumberFormatException e) {
+            }
+        }
     }
 
     /**
@@ -203,6 +222,7 @@ public class ExtShape extends Group {
         textFlow.setPrefWidth(this.width);
         textFlow.getChildren().clear();
         textFlow.setStyle("-fx-background-color:transparent;");
+        textFlow.setStyle("-fx-text-alignment: \'" + text.get(0).getStyle().getProp(FontProps.ALIGNMENT).get() + "\';");
         //Iterate through all segments
         for (final StyledTextSeg seg : text) {
             Node textEl;
@@ -214,9 +234,10 @@ public class ExtShape extends Group {
             } else {
                 textEl = new Text(seg.getString());
             }
+            System.out.println(seg.getStyle().toCSS());
             textEl.setStyle(seg.getStyle().toCSS());
             textFlow.getChildren().add(textEl);
         }
-
+        
     }
 }

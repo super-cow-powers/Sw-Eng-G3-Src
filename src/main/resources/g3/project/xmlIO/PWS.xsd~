@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" xml:lang="EN" xmlns:base="http://PWS_Base" targetNamespace="http://PWS_Base">
+
+	<xsd:attributeGroup name="metadataAttrs">
+		<xsd:annotation>
+			<xsd:documentation>
+        Metadata attribute group. Requires (at minimum) author and version
+      </xsd:documentation>
+		</xsd:annotation>
+		<xsd:attribute name="title" type="xsd:string" use="optional" />
+		<xsd:attribute name="author" type="xsd:string" use="optional" />
+		<xsd:attribute name="version" type="xsd:string" use="optional" />
+		<xsd:attribute name="comment" type="xsd:string" use="optional" />
+	</xsd:attributeGroup>
+
+
+	<xsd:attributeGroup name="locAttrs">
+		<xsd:annotation>
+			<xsd:documentation>
+	Attribute group for display location
+      </xsd:documentation>
+		</xsd:annotation>
+		<xsd:attribute name="x_orig" type="xsd:double" />
+		<xsd:attribute name="y_orig" type="xsd:double" />
+		<xsd:attribute name="z_ind" type="xsd:integer" use="optional" />
+	</xsd:attributeGroup>
+	<xsd:attributeGroup name="sizeAttrs">
+		<xsd:annotation>
+			<xsd:documentation>
+	Attribute group for display size
+      </xsd:documentation>
+		</xsd:annotation>
+		<xsd:attribute name="x_size_px" type="xsd:double" />
+		<xsd:attribute name="y_size_px" type="xsd:double" />
+		<xsd:attribute name="rot_angle" type="xsd:double" use="optional" />
+	</xsd:attributeGroup>
+
+	<xsd:attributeGroup name="hrefAttrs">
+		<xsd:annotation>
+			<xsd:documentation>
+	Attribute group for hrefs
+      </xsd:documentation>
+		</xsd:annotation>
+		<xsd:attribute name="target" type="xsd:anyURI" />
+		<xsd:attribute name="type">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:token">
+					<xsd:enumeration value="internal" />
+					<xsd:enumeration value="external" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+	</xsd:attributeGroup>
+
+	<xsd:simpleType name="percentType">
+		<xsd:annotation>
+			<xsd:documentation>
+			  Generic type for 0-100 percentages
+      </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:double">
+			<xsd:minInclusive value="0" />
+			<xsd:maxInclusive value="100" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="colourType">
+		<xsd:annotation>
+			<xsd:documentation>
+	Flat colour. Hex RGBA format
+      </xsd:documentation>
+		</xsd:annotation>
+		<xsd:union memberTypes="xsd:NMTOKEN">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:token">
+					<xsd:pattern value="#[0-9a-fA-F]{8}" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:union>
+	</xsd:simpleType>
+
+		<xsd:complexType name="strokeType">
+		<xsd:annotation>
+			<xsd:documentation>
+	Shape stroke type
+      </xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:any namespace="PWS_Exts" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+		<xsd:attribute name="width" type="xsd:double" />
+		<xsd:attribute name="dash-style" type="xsd:string">
+			<xsd:annotation>
+				<xsd:documentation>
+	Min known should be:
+	"plain"
+	
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="colour" type="base:colourType" />
+		<xsd:anyAttribute />
+	</xsd:complexType>
+
+	
+	<xsd:complexType name="visualType">
+		<xsd:annotation>
+			<xsd:documentation>
+	Generic visual type definition
+      </xsd:documentation>
+		</xsd:annotation>
+		<xsd:attributeGroup ref="base:locAttrs" />
+		<xsd:attributeGroup ref="base:sizeAttrs" />
+		<xsd:attribute name="ID" type="xsd:ID" /> <!-- Globally Unique ID -->
+		<xsd:attribute name="shade_colour" type="base:colourType" use="optional"/>
+		<xsd:attribute name="l-shade-px" type="xsd:double" use="optional"/>
+		<xsd:attribute name="r-shade-px" type="xsd:double" use="optional"/>
+		<xsd:attribute name="t-shade-px" type="xsd:double" use="optional"/>
+		<xsd:attribute name="b-shade-px" type="xsd:double" use="optional"/>
+		<xsd:attribute name="alpha" type="base:percentType" use="optional" />
+		<xsd:attribute name="fill" type="base:colourType" use="optional" />
+		<xsd:attribute name="disp_duration_s" type="xsd:double" use="optional" />
+		<xsd:attribute name="show_after_s" type="xsd:double" use="optional" />
+		<xsd:anyAttribute /> <!-- permit any valid attribute -->
+	</xsd:complexType>
+	
+	<xsd:complexType name="textType" mixed="true">
+		<xsd:annotation>
+			<xsd:documentation>
+	Text.
+	Mixed type allows mixing elements with text.
+      </xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="font" maxOccurs="unbounded">
+				<xsd:complexType mixed="true">
+					<xsd:sequence minOccurs="0" maxOccurs="unbounded">
+						<xsd:element name="href" minOccurs="0">
+							<xsd:complexType>
+								<xsd:simpleContent>
+									<xsd:extension base="xsd:string">
+										<xsd:attributeGroup ref="base:hrefAttrs" />
+									</xsd:extension>
+								</xsd:simpleContent>
+							</xsd:complexType>
+						</xsd:element>
+						<xsd:any namespace="PWS_Exts" minOccurs="0" maxOccurs="unbounded"/>
+					</xsd:sequence>
+					<xsd:attribute name="underscore" type="xsd:boolean" use="optional" />
+					<xsd:attribute name="italic" type="xsd:boolean" use="optional" />
+					<xsd:attribute name="bold" type="xsd:boolean" use="optional" />
+					<xsd:attribute name="size" type="xsd:double" use="optional" />
+					<xsd:attribute name="name" type="xsd:token" use="optional" />
+					<xsd:attribute name="colour" type="base:colourType" use="optional" />
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:any namespace="PWS_Exts" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
+		<xsd:attribute name="include_source" type="xsd:anyURI" use="optional" />
+		<xsd:anyAttribute />
+	</xsd:complexType>
+	<xsd:complexType name="tableType">
+		<xsd:annotation>
+			<xsd:documentation>
+			  Table. Must contain at least 1 row
+      </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="base:visualType">
+				<xsd:sequence>
+					<xsd:element name="row">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="column" minOccurs="1" maxOccurs="unbounded" type="base:textType" />
+							</xsd:sequence>
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:any minOccurs="0" maxOccurs="unbounded" namespace="PWS_Exts"/>
+				</xsd:sequence>
+				
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="shapeType">
+		<xsd:annotation>
+			<xsd:documentation>
+	A shape
+      </xsd:documentation>
+		</xsd:annotation>
+
+		<xsd:complexContent>
+			<xsd:extension base="base:visualType">
+				<xsd:sequence>
+					<xsd:element name="text" type="base:textType" minOccurs="0" maxOccurs="1" /> <!-- Text always in a container shape -->
+					<xsd:element name="stroke" type="base:strokeType" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="href" minOccurs="0" maxOccurs="1">
+						<xsd:complexType>
+							<xsd:attributeGroup ref="base:hrefAttrs" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:any minOccurs="0" maxOccurs="unbounded" namespace="PWS_Exts"/>
+				</xsd:sequence>
+
+				<xsd:attribute name="x_end" type="xsd:double" use="optional" />
+				<xsd:attribute name="y_end" type="xsd:double" use="optional" />
+				<xsd:attribute name="type" type="xsd:token">
+					<xsd:annotation>
+						<xsd:documentation>
+            Applications should interpret at least:
+            "circle"
+            "textbox"
+            "line" (with use of x/y_end)
+                </xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:anyAttribute />
+			</xsd:extension>
+		</xsd:complexContent>
+
+	</xsd:complexType>
+
+	<xsd:complexType name="playableType">
+		<xsd:annotation>
+			<xsd:documentation>
+	Playable media. Video or Audio
+      </xsd:documentation>
+		</xsd:annotation>
+
+		<xsd:complexContent>
+		  <xsd:extension base="base:visualType">
+		    <xsd:sequence>
+		      <xsd:any minOccurs="0" maxOccurs="unbounded" namespace="PWS_Exts" />
+		    </xsd:sequence>
+				<xsd:attribute name="include_source" type="xsd:anyURI" />
+				<xsd:attribute name="display_player" type="xsd:boolean" use="optional" />
+				<xsd:attribute name="seek_offset" type="xsd:double" use="optional" />
+				<xsd:attribute name="autoplay" type="xsd:boolean" use="optional" />
+				<xsd:attribute name="loop" type="xsd:boolean" use="optional" />
+				<xsd:attribute name="type">
+					<xsd:simpleType>
+						<xsd:restriction base="xsd:token">
+							<xsd:enumeration value="audio" />
+							<xsd:enumeration value="video" />
+						</xsd:restriction>
+					</xsd:simpleType>
+				</xsd:attribute>
+				<xsd:anyAttribute />
+			</xsd:extension>
+		</xsd:complexContent>
+
+	</xsd:complexType>
+
+	<xsd:complexType name="imageType">
+		<xsd:annotation>
+			<xsd:documentation>
+	An image
+      </xsd:documentation>
+		</xsd:annotation>
+
+		<xsd:complexContent>
+		  <xsd:extension base="base:visualType">
+		    <xsd:sequence>
+		      <xsd:any minOccurs="0" maxOccurs="unbounded" namespace="PWS_Exts" />
+		    </xsd:sequence>
+			  <xsd:attribute name="include_source" type="xsd:anyURI" />
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="pageType">
+		<xsd:annotation>
+			<xsd:documentation>
+	A Page/Slide/Whatever
+      </xsd:documentation>
+		</xsd:annotation>
+
+		<xsd:complexContent>
+			<xsd:extension base="base:visualType">
+				<xsd:choice maxOccurs="unbounded" minOccurs="0">
+						<xsd:element name="shape" type="base:shapeType" minOccurs="0" maxOccurs="unbounded"/>
+						<xsd:element name="image" type="base:imageType" minOccurs="0" maxOccurs="unbounded"/>
+						<xsd:element name="playable" type="base:playableType" minOccurs="0" maxOccurs="unbounded"/>
+						<xsd:element name="table" type="base:tableType" minOccurs="0" maxOccurs="unbounded"/>
+						<xsd:any minOccurs="0" maxOccurs="unbounded" namespace="PWS_Exts"/>
+				</xsd:choice>
+				<xsd:attribute name="title" type="xsd:string" />
+				<xsd:anyAttribute />
+			</xsd:extension>
+		</xsd:complexContent>
+
+	</xsd:complexType>
+
+	<xsd:element name="document">
+		<xsd:annotation>
+			<xsd:documentation>
+        Top-level visual document
+      </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="page" minOccurs="0" maxOccurs="unbounded" type="base:pageType" />
+				<xsd:any minOccurs="0" maxOccurs="unbounded" namespace="PWS_Exts"/>
+			</xsd:sequence>
+			<xsd:attributeGroup ref="base:metadataAttrs" />
+			<xsd:anyAttribute />
+		</xsd:complexType>
+	</xsd:element>
+</xsd:schema>
