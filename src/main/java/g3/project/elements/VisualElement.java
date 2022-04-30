@@ -298,10 +298,11 @@ public class VisualElement extends Element implements Scriptable {
         for (String prop : propsMap.PROPS_MAP.keySet()) {
             switch (prop) {
                 //Special cases
-                case VisualProps.LOCATION:
+                case VisualProps.ORIGIN:
                     var maybeLoc = this.getOrigin();
-                    maybeLoc.ifPresent(l -> propsMap.put(VisualProps.LOCATION, l));
+                    maybeLoc.ifPresent(l -> propsMap.put(VisualProps.ORIGIN, l));
                     break;
+
                 case VisualProps.SIZE:
                     var maybeSize = this.getSize();
                     maybeSize.ifPresent(l -> propsMap.put(VisualProps.SIZE, l));

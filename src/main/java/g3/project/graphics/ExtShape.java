@@ -52,12 +52,12 @@ import javafx.scene.text.TextFlow;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public class ExtShape extends Group {
-    
+
     private StackPane stack = new StackPane();
     private Shape shape;
     private TextFlow textFlow = null;
     private Boolean amTextbox = false;
-    
+
     private Double width;
     private Double height;
     private Double rot;
@@ -85,27 +85,40 @@ public class ExtShape extends Group {
     private Consumer<MouseEvent> hrefHovExHandlerConsumer = (evt) -> {
         ;
     };
-    
-    public ExtShape(String shapeType, StrokeProps strokeProps, VisualProps visualProps, ArrayList<StyledTextSeg> text) {
+
+    /**
+     * Shape types.
+     */
+    //CHECKSTYLE:OFF
+    public enum ShapeType {
+        circle,
+        textbox,
+        rectangle,
+        polygon,
+    };
+    //CHECKSTYLE:ON
+
+    public ExtShape(ShapeType shapeType, StrokeProps strokeProps, VisualProps visualProps, ArrayList<StyledTextSeg> text) throws Exception {
         SizeObj size = (SizeObj) visualProps.getProp(VisualProps.SIZE).get();
         String id = (String) visualProps.getProp(VisualProps.ID).get();
         var maybeShadow = visualProps.makeShadow();
         rot = size.getRot();
         switch (shapeType) {
-            case "circle":
+            case circle:
                 shape = new Ellipse();
                 break;
-            case "textbox":
+            case textbox:
                 amTextbox = true;
                 shape = new Rectangle();
                 break;
-            case "rectangle":
+            case rectangle:
                 shape = new Rectangle();
                 break;
+            case polygon:
+                throw new Exception("Invalid Shape.");
             default:
-                shape = new Rectangle();
-                break;
-            
+                throw new Exception("Invalid Shape.");
+
         }
         if (shape == null) {
             return;
@@ -115,7 +128,7 @@ public class ExtShape extends Group {
         maybeShadow.ifPresent(sh -> shape.setEffect(sh)); //Apply shadow
         this.setVisible((Boolean) visualProps.getProp(VisualProps.VISIBLE).get());
         this.setFill((Color) visualProps.getProp(VisualProps.FILL).get());
-        
+
         this.setStroke(strokeProps);
 
         //shape.setStyle(strokeProps.toCSS());
@@ -123,7 +136,7 @@ public class ExtShape extends Group {
         if (text.size() > 0) {
             this.setText(text);
         }
-        
+
         this.getChildren().add(stack);
     }
 
@@ -238,6 +251,6 @@ public class ExtShape extends Group {
             textEl.setStyle(seg.getStyle().toCSS());
             textFlow.getChildren().add(textEl);
         }
-        
+
     }
 }

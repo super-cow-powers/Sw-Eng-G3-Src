@@ -57,6 +57,7 @@ import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ListChangeListener.Change;
 import javafx.geometry.Point2D;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
@@ -314,20 +315,16 @@ public final class MainController {
     /**
      * Redraw shape on screen.
      *
-     * @param id Shape ID
-     * @param size Shape Size
-     * @param loc Shape Location
+     * @param props Shape properties.
      * @param shapeType Shape Type string
-     * @param fillColour Shape Fill Colour
-     * @param strokeColour Shape Stroke Colour
-     * @param strokeWidth Shape Stroke Width
+     * @param stroke Shape Stroke Props
      * @param text Shape Text and Properties
      */
     public void updateShape(final String shapeType, final VisualProps props,
-            StrokeProps stroke, final ArrayList<StyledTextSeg> text) {
+            final StrokeProps stroke, final ArrayList<StyledTextSeg> text) {
         ExtShape newShape;
         var id = (String) props.getProp(VisualProps.ID).get();
-        var loc = (LocObj) props.getProp(VisualProps.LOCATION).get();
+        var loc = (LocObj) props.getProp(VisualProps.ORIGIN).get();
         if (drawnElements.containsKey(id)) {
             newShape = (ExtShape) drawnElements.get(id);
             var size = (SizeObj) props.getProp(VisualProps.SIZE).get();
@@ -337,7 +334,7 @@ public final class MainController {
             newShape.setStroke(stroke);
             newShape.setText(text);
         } else {
-            newShape = new ExtShape(shapeType, stroke, props, text);
+            newShape = new ExtShape(ExtShape.ShapeType.valueOf(shapeType), stroke, props, text);
             drawnElements.put(id, newShape);
             pagePane.getChildren().add(newShape);
             //Set Hyperlink handlers
@@ -354,6 +351,26 @@ public final class MainController {
         var origin = loc.getLoc();
         newShape.relocate(origin.getX(), origin.getY());
         newShape.setViewOrder(loc.getZ());
+    }
+
+    /**
+     * Remove a given element.
+     * @param id ID of element to remove.
+     */
+    public void remove(final String id) {
+        if (this.drawnElements.contains(id)) {
+            var obj = this.drawnElements.get(id);
+            pagePane.getChildren().remove(obj);
+        }
+    }
+
+    /**
+     * Set the cursor type.
+     *
+     * @param cType Cursor.
+     */
+    public void setCursorType(final Cursor cType) {
+        pagePane.getScene().getRoot().setCursor(cType);
     }
 
     /**

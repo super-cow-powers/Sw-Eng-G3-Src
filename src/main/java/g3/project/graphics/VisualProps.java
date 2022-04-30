@@ -77,8 +77,8 @@ public class VisualProps extends HashMap<String, Object> {
     protected static final Class VISIBLE_TYPE = Boolean.class;
     public static final String SIZE = "size";
     protected static final Class SIZE_TYPE = SizeObj.class;
-    public static final String LOCATION = "loc";
-    protected static final Class LOCATION_TYPE = LocObj.class;
+    public static final String ORIGIN = "loc";
+    protected static final Class ORIGIN_TYPE = LocObj.class;
     public static final String ID = "ID";
     protected static final Class ID_TYPE = String.class;
     //CHECKSTYLE:ON
@@ -88,14 +88,14 @@ public class VisualProps extends HashMap<String, Object> {
     public static final Map<String, Class> PROPS_MAP = Map.ofEntries(entry(SHADE_COL, SHADE_COL_TYPE),
             entry(L_SHADE_SIZE, SHADE_SIZE_TYPE), entry(R_SHADE_SIZE, SHADE_SIZE_TYPE), entry(T_SHADE_SIZE, SHADE_SIZE_TYPE), entry(B_SHADE_SIZE, SHADE_SIZE_TYPE),
             entry(SHADE_SIZE, SHADE_SIZE_TYPE), entry(ALPHA, ALPHA_TYPE), entry(FILL, FILL_TYPE), entry(DISP_SECS, DISP_SECS_TYPE),
-            entry(DELAY_SECS, DELAY_SECS_TYPE), entry(VISIBLE, VISIBLE_TYPE), entry(LOCATION, LOCATION_TYPE), entry(SIZE, SIZE_TYPE), entry(ID, ID_TYPE));
+            entry(DELAY_SECS, DELAY_SECS_TYPE), entry(VISIBLE, VISIBLE_TYPE), entry(ORIGIN, ORIGIN_TYPE), entry(SIZE, SIZE_TYPE), entry(ID, ID_TYPE));
     /**
      * Contains default values for known props.
      */
     public static final Map<String, Object> PROP_DEFAULTS = Map.ofEntries(entry(SHADE_COL, Color.BLACK),
             entry(L_SHADE_SIZE, 0d), entry(R_SHADE_SIZE, 0d), entry(T_SHADE_SIZE, 0d), entry(B_SHADE_SIZE, 0d), entry(SHADE_SIZE, 0d),
             entry(ALPHA, 0d), entry(FILL, Color.TRANSPARENT), entry(DISP_SECS, -1d), entry(DELAY_SECS, 0d), entry(VISIBLE, true),
-            entry(LOCATION, new LocObj(Point2D.ZERO, 0d)), entry(SIZE, new SizeObj(0d, 0d, 0d)), entry(ID, ""));
+            entry(ORIGIN, new LocObj(Point2D.ZERO, 0d)), entry(SIZE, new SizeObj(0d, 0d, 0d)), entry(ID, ""));
     /**
      * Contains CSS strings for known CSS props.
      */

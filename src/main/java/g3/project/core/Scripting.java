@@ -33,6 +33,7 @@ import g3.project.xmlIO.Io;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.script.Invocable;
@@ -49,6 +50,9 @@ public final class Scripting {
 
     public static final String CLICK_FN = "onClick";
     public static final String KEY_PRESS_FN = "onKeyPress";
+    public static final String MOUSE_MOVED_FN = "onMouseMoved";
+    public static final String MOUSE_ENTER_FN = "onMouseEnter";
+    public static final String MOUSE_EXIT_FN = "onMouseExit";
 
     /**
      * Factory/manager for all script engines.
@@ -104,6 +108,26 @@ public final class Scripting {
     }
 
     /**
+     * Add an object to global bindings.
+     *
+     * @param name Object name.
+     * @param glob Object.
+     */
+    public void setGlobal(String name, Object glob) {
+        scriptingEngineManager.getBindings().put(name, glob);
+    }
+
+    /**
+     * Get a global variable.
+     *
+     * @param name Variable name.
+     * @return Maybe variable.
+     */
+    public Optional<Object> getGlobal(String name) {
+        return Optional.ofNullable(scriptingEngineManager.getBindings().get(name));
+    }
+
+    /**
      * Evaluate the script on a given element. Required before invoking any
      * functions.
      *
@@ -153,8 +177,13 @@ public final class Scripting {
         scrEngine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
         scrEngine.eval(code);
     }
-    
-    public void invokeOnElement(final Scriptable element, final String function, final Object... args){
+
+    public void invokeOnElement(final Scriptable element, final String function, final Object... args) {
+        /*try { //Re-eval the element.
+            evalElement(element);
+        } catch (Exception e) {
+            System.err.println(e);
+        }*/
         var scEng = getDefaultScriptEngine();
         scEng.setBindings(element.getScriptingBindings(), ScriptContext.ENGINE_SCOPE);
         try {
@@ -165,7 +194,7 @@ public final class Scripting {
             //Ignore nosuchmethod.
         }
     }
-    
+
     /**
      * Execute element's onClick function.
      *
@@ -175,7 +204,7 @@ public final class Scripting {
      * @param y_loc y location.
      */
     public void execElementClick(final Scriptable element, final String button_name, final Double x_loc, final Double y_loc, final Boolean down) {
-        
+
     }
 
     /**

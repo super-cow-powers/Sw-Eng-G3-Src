@@ -7,3 +7,6 @@ def onKeyPress(keyName, ctrlDown, altDown, metaDown, keyDown):
             engine.gotoNextPage()
         else:
             print("Key " + lowkey + " Pressed. No Action")
+
+def setCursorType(cType):
+    engine.setCursorType(cType)
