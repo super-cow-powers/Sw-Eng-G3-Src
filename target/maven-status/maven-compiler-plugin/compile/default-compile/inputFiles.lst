@@ -1,4 +1,6 @@
+/home/david/NetBeansProjects/project-core/src/main/java/g3/project/graphics/ExtEllip.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/graphics/SizeObj.java
+/home/david/NetBeansProjects/project-core/src/main/java/g3/project/graphics/ExtRect.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/core/Scripting.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/Scriptable.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/PageElement.java
@@ -22,11 +24,13 @@
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/Includable.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/core/RecursiveBindings.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/DocElement.java
+/home/david/NetBeansProjects/project-core/src/main/java/g3/project/graphics/ExtShapeFactory.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/ButtonElement.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/ShapeElement.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/graphics/StrokeProps.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/xmlIO/Io.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/network/NetThing.java
+/home/david/NetBeansProjects/project-core/src/main/java/g3/project/graphics/ExtPolygon.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/core/ToolsFactory.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/ElementFactory.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/graphics/VisualProps.java

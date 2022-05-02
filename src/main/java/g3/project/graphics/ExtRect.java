@@ -29,31 +29,32 @@
 package g3.project.graphics;
 
 import java.util.ArrayList;
-import javafx.scene.shape.Polygon;
+import javafx.scene.shape.Ellipse;
 import javafx.scene.shape.Rectangle;
 
 /**
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public final class ExtPolygon extends ExtShape {
+public final class ExtRect extends ExtShape {
 
-    public ExtPolygon() {
-        super(new Polygon());        
+    public ExtRect() {
+        super(new Rectangle());
     }
 
     @Override
     public void setSize(final SizeObj size) {
-        this.setRotate(size.getRot());
-        //Setting x/y size makes little sense for a defined polygon
-    }
+        this.width = size.getX();
+        this.height = size.getY();
+        this.rot = size.getRot();
 
-    public void setPoints(ArrayList<Double> points) throws Exception{
-        if (points.size() % 2 != 0) {
-            throw new Exception("Points array should be even length!");
+        if (textFlow != null) {
+            textFlow.setPrefWidth(width);
+            textFlow.setPrefHeight(height);
         }
-        var internalPoints = ((Polygon) shape).getPoints();
-        internalPoints.clear();
-        internalPoints.addAll(points);
+        this.setRotate(rot);
+        ((Rectangle) shape).setWidth(width);
+        ((Rectangle) shape).setHeight(height);
+
     }
 }

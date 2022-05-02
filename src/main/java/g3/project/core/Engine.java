@@ -565,7 +565,10 @@ public final class Engine extends Threaded {
                             shapeType,
                             shape.getProps(),
                             stroke,
-                            textSegs);
+                            textSegs,
+                            shape.getSize().get(),
+                            shape.getOrigin().get(),
+                            shape.getSegPoints());
                 });
     }
 

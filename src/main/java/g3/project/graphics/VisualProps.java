@@ -30,7 +30,6 @@ package g3.project.graphics;
 
 import java.util.HashMap;
 import javafx.scene.paint.Color;
-import java.lang.reflect.Type;
 import java.util.Map;
 import static java.util.Map.entry;
 import java.util.Optional;
@@ -75,10 +74,6 @@ public class VisualProps extends HashMap<String, Object> {
     protected static final Class DELAY_SECS_TYPE = Double.class;
     public static final String VISIBLE = "visible";
     protected static final Class VISIBLE_TYPE = Boolean.class;
-    public static final String SIZE = "size";
-    protected static final Class SIZE_TYPE = SizeObj.class;
-    public static final String ORIGIN = "loc";
-    protected static final Class ORIGIN_TYPE = LocObj.class;
     public static final String ID = "ID";
     protected static final Class ID_TYPE = String.class;
     //CHECKSTYLE:ON
@@ -88,18 +83,14 @@ public class VisualProps extends HashMap<String, Object> {
     public static final Map<String, Class> PROPS_MAP = Map.ofEntries(entry(SHADE_COL, SHADE_COL_TYPE),
             entry(L_SHADE_SIZE, SHADE_SIZE_TYPE), entry(R_SHADE_SIZE, SHADE_SIZE_TYPE), entry(T_SHADE_SIZE, SHADE_SIZE_TYPE), entry(B_SHADE_SIZE, SHADE_SIZE_TYPE),
             entry(SHADE_SIZE, SHADE_SIZE_TYPE), entry(ALPHA, ALPHA_TYPE), entry(FILL, FILL_TYPE), entry(DISP_SECS, DISP_SECS_TYPE),
-            entry(DELAY_SECS, DELAY_SECS_TYPE), entry(VISIBLE, VISIBLE_TYPE), entry(ORIGIN, ORIGIN_TYPE), entry(SIZE, SIZE_TYPE), entry(ID, ID_TYPE));
+            entry(DELAY_SECS, DELAY_SECS_TYPE), entry(VISIBLE, VISIBLE_TYPE), entry(ID, ID_TYPE));
     /**
      * Contains default values for known props.
      */
     public static final Map<String, Object> PROP_DEFAULTS = Map.ofEntries(entry(SHADE_COL, Color.BLACK),
             entry(L_SHADE_SIZE, 0d), entry(R_SHADE_SIZE, 0d), entry(T_SHADE_SIZE, 0d), entry(B_SHADE_SIZE, 0d), entry(SHADE_SIZE, 0d),
             entry(ALPHA, 0d), entry(FILL, Color.TRANSPARENT), entry(DISP_SECS, -1d), entry(DELAY_SECS, 0d), entry(VISIBLE, true),
-            entry(ORIGIN, new LocObj(Point2D.ZERO, 0d)), entry(SIZE, new SizeObj(0d, 0d, 0d)), entry(ID, ""));
-    /**
-     * Contains CSS strings for known CSS props.
-     */
-    private static final Map<String, String> CSS = Map.ofEntries(entry(FILL, "-fx-fill: \'%s\';"), entry(VISIBLE, "visibility: %s;"));
+            entry(ID, ""));  
 
     /**
      * Constructor. Takes map of properties.
@@ -173,35 +164,20 @@ public class VisualProps extends HashMap<String, Object> {
         var height = t + b;
         if (((width + height) == 0) && (gen <= 0)) { //No shadow set.
             return Optional.empty();
-        } else if (gen <= 0) { //Shadow set individually
+        }
+        var ds = new DropShadow();
+        if (gen <= 0) { //Shadow set individually
             var xOS = r - l;
             var yOS = b - t;
-            var ds = new DropShadow();
+            
             ds.setHeight(height);
             ds.setWidth(width);
             ds.setOffsetX(xOS);
             ds.setOffsetY(yOS);
-            return Optional.of(ds);
         } else {
-            var ds = new DropShadow();
-            ds.setRadius(gen);
-            return Optional.of(ds);
+            ds.setRadius(gen);   
         }
-    }
-
-    /**
-     * Get the JFX CSS for these properties.
-     *
-     * @return CSS String.
-     */
-    public final String toCSS() {
-        var propsStream = CSS.keySet().stream();
-        return propsStream.map(p -> {
-            var cssFmt = CSS.get(p);
-            Object val = this.getProp(p).get();
-
-            return String.format(cssFmt, val.toString());
-        }).collect(Collectors.joining(" "));
+        return Optional.of(ds);
     }
 
 }

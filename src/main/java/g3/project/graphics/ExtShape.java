@@ -51,92 +51,34 @@ import javafx.scene.text.TextFlow;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class ExtShape extends Group {
+public abstract class ExtShape extends Group {
 
-    private StackPane stack = new StackPane();
-    private Shape shape;
-    private TextFlow textFlow = null;
-    private Boolean amTextbox = false;
+    protected StackPane stack = new StackPane();
+    protected Shape shape = null;
+    protected TextFlow textFlow = null;
 
-    private Double width;
-    private Double height;
-    private Double rot;
+    protected Double width;
+    protected Double height;
+    protected Double rot;
 
     /**
      * href click handler.
      */
-    @SuppressWarnings("empty-statement")
-    private Consumer<MouseEvent> hrefClickHandlerConsumer = (evt) -> {
-        ;
-    };
+    private Consumer<MouseEvent> hrefClickHandlerConsumer = null;
 
     /**
      * href mouse roll-over (hover) enter handler.
      */
-    @SuppressWarnings("empty-statement")
-    private Consumer<MouseEvent> hrefHovEntHandlerConsumer = (evt) -> {
-        ;
-    };
+    private Consumer<MouseEvent> hrefHovEntHandlerConsumer = null;
 
     /**
      * href mouse roll-over (hover) exit handler.
      */
-    @SuppressWarnings("empty-statement")
-    private Consumer<MouseEvent> hrefHovExHandlerConsumer = (evt) -> {
-        ;
-    };
+    private Consumer<MouseEvent> hrefHovExHandlerConsumer = null;
 
-    /**
-     * Shape types.
-     */
-    //CHECKSTYLE:OFF
-    public enum ShapeType {
-        circle,
-        textbox,
-        rectangle,
-        polygon,
-    };
-    //CHECKSTYLE:ON
-
-    public ExtShape(ShapeType shapeType, StrokeProps strokeProps, VisualProps visualProps, ArrayList<StyledTextSeg> text) throws Exception {
-        SizeObj size = (SizeObj) visualProps.getProp(VisualProps.SIZE).get();
-        String id = (String) visualProps.getProp(VisualProps.ID).get();
-        var maybeShadow = visualProps.makeShadow();
-        rot = size.getRot();
-        switch (shapeType) {
-            case circle:
-                shape = new Ellipse();
-                break;
-            case textbox:
-                amTextbox = true;
-                shape = new Rectangle();
-                break;
-            case rectangle:
-                shape = new Rectangle();
-                break;
-            case polygon:
-                throw new Exception("Invalid Shape.");
-            default:
-                throw new Exception("Invalid Shape.");
-
-        }
-        if (shape == null) {
-            return;
-        }
-        this.setSize(size);
-        this.setId(id);
-        maybeShadow.ifPresent(sh -> shape.setEffect(sh)); //Apply shadow
-        this.setVisible((Boolean) visualProps.getProp(VisualProps.VISIBLE).get());
-        this.setFill((Color) visualProps.getProp(VisualProps.FILL).get());
-
-        this.setStroke(strokeProps);
-
-        //shape.setStyle(strokeProps.toCSS());
-        stack.getChildren().add(shape);
-        if (text.size() > 0) {
-            this.setText(text);
-        }
-
+    public ExtShape(final Shape myShape) {
+        stack.getChildren().add(myShape);
+        shape = myShape;
         this.getChildren().add(stack);
     }
 
@@ -172,23 +114,7 @@ public class ExtShape extends Group {
      *
      * @param size Size.
      */
-    public final void setSize(final SizeObj size) {
-        this.width = size.getX();
-        this.height = size.getY();
-        this.rot = size.getRot();
-        if (textFlow != null) {
-            textFlow.setPrefWidth(width);
-            textFlow.setPrefHeight(height);
-        }
-        this.setRotate(rot);
-        if (shape instanceof Rectangle) {
-            ((Rectangle) shape).setWidth(width);
-            ((Rectangle) shape).setHeight(height);
-        } else if (shape instanceof Ellipse) {
-            ((Ellipse) shape).setRadiusX(width / 2);
-            ((Ellipse) shape).setRadiusY(height / 2);
-        }
-    }
+    public abstract void setSize(final SizeObj size);
 
     /**
      * Set the shape fill colour.
@@ -222,12 +148,29 @@ public class ExtShape extends Group {
     }
 
     /**
+     * Set visual properties.
+     *
+     * @param visualProps properties.
+     */
+    public final void setProps(final VisualProps visualProps) {
+        var maybeShadow = visualProps.makeShadow();
+        maybeShadow.ifPresent(sh -> {
+            shape.setEffect(sh);
+                }); //Apply shadow
+        this.setVisible((Boolean) visualProps.getProp(VisualProps.VISIBLE).get());
+        this.setFill((Color) visualProps.getProp(VisualProps.FILL).get());
+    }
+
+    /**
      * Set text and style in element.
      *
      * @todo Make work for arbitrary Rich Text.
      * @param text Text to set.
      */
     public final void setText(final ArrayList<StyledTextSeg> text) {
+        if (text.size() <= 0) {
+            return;
+        }
         if (textFlow == null) {
             textFlow = new TextFlow();
             stack.getChildren().add(textFlow);

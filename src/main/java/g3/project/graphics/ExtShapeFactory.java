@@ -30,6 +30,7 @@ package g3.project.graphics;
 
 import g3.project.graphics.StyledTextSeg.REF_TYPE;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import javafx.event.ActionEvent;
@@ -86,32 +87,48 @@ public class ExtShapeFactory {
         textbox,
         rectangle,
         polygon,
+        line
     };
     //CHECKSTYLE:ON//CHECKSTYLE:ON
 
     public ExtShapeFactory() {
-        Shape shape;
+
+    }
+
+    /**
+     * Make a new extended shape.
+     *
+     * @param shapeType Type of shape to make.
+     * @return Maybe shape.
+     */
+    public Optional<ExtShape> makeShape(final ShapeType shapeType) {
+        ExtShape shape = null;
         switch (shapeType) {
             case circle:
-                shape = new Ellipse();
+                shape = new ExtEllip();
                 break;
             case textbox:
-                shape = new Rectangle();
+                shape = new ExtRect();
                 break;
             case rectangle:
-                shape = new Rectangle();
+                shape = new ExtRect();
                 break;
             case polygon:
-                throw new Exception("Invalid Shape.");
+            case line:
+                shape = new ExtPolygon();
             default:
-                throw new Exception("Invalid Shape.");
+                break;
 
         }
-        
+        var maybeShape = Optional.ofNullable(shape);
+        maybeShape.ifPresent(sh -> {
+            sh.setHrefClickHandler(hrefClickHandlerConsumer);
+            sh.setHrefHoverEnterHandler(hrefHovEntHandlerConsumer);
+            sh.setHrefHoverExitHandler(hrefHovExHandlerConsumer);
+        });
+        return maybeShape;
     }
-    
-    public Optional<ExtShape> makeShape(ShapeType shapeType) throws Exception
-    
+
     /**
      * Set the href click handler.
      *
@@ -139,90 +156,4 @@ public class ExtShapeFactory {
         this.hrefHovExHandlerConsumer = handler;
     }
 
-    /**
-     * Set the shape size.
-     *
-     * @param size Size.
-     */
-    public final void setSize(final SizeObj size) {
-        this.width = size.getX();
-        this.height = size.getY();
-        this.rot = size.getRot();
-        if (textFlow != null) {
-            textFlow.setPrefWidth(width);
-            textFlow.setPrefHeight(height);
-        }
-        this.setRotate(rot);
-        if (shape instanceof Rectangle) {
-            ((Rectangle) shape).setWidth(width);
-            ((Rectangle) shape).setHeight(height);
-        } else if (shape instanceof Ellipse) {
-            ((Ellipse) shape).setRadiusX(width / 2);
-            ((Ellipse) shape).setRadiusY(height / 2);
-        }
-    }
-
-    /**
-     * Set the shape fill colour.
-     *
-     * @param fill Fill colour.
-     */
-    public final void setFill(final Color fill) {
-        shape.setFill(fill);
-    }
-
-    /**
-     * Configure shape stroke.
-     *
-     * @param stroke stroke properties.
-     */
-    public final void setStroke(final StrokeProps stroke) {
-        shape.setStroke((Color) stroke.getProp(StrokeProps.COLOUR).get());
-        shape.setStrokeLineCap(StrokeLineCap.valueOf(((String) stroke.getProp(StrokeProps.LINE_CAP).get()).toUpperCase()));
-        shape.setStrokeType(StrokeType.OUTSIDE);
-        shape.getStrokeDashArray().clear();
-        shape.setStrokeWidth((Double) stroke.getProp(StrokeProps.WIDTH).get());
-        var dashArray = (String) stroke.getProp(StrokeProps.LINE_STYLE).get();
-        for (String val : dashArray.split(" ")) { //Build dash array
-            Double num;
-            try {
-                num = Double.parseDouble(val);
-                shape.getStrokeDashArray().add(num);
-            } catch (NumberFormatException e) {
-            }
-        }
-    }
-
-    /**
-     * Set text and style in element.
-     *
-     * @todo Make work for arbitrary Rich Text.
-     * @param text Text to set.
-     */
-    public final void setText(final ArrayList<StyledTextSeg> text) {
-        if (textFlow == null) {
-            textFlow = new TextFlow();
-            stack.getChildren().add(textFlow);
-        }
-        textFlow.setPrefWidth(this.width);
-        textFlow.getChildren().clear();
-        textFlow.setStyle("-fx-background-color:transparent;");
-        textFlow.setStyle("-fx-text-alignment: \'" + text.get(0).getStyle().getProp(FontProps.ALIGNMENT).get() + "\';");
-        //Iterate through all segments
-        for (final StyledTextSeg seg : text) {
-            Node textEl;
-            if (seg.isHref()) {
-                textEl = new Hyperlink(seg.getString());
-                ((Hyperlink) textEl).setOnMouseClicked(e -> hrefClickHandlerConsumer.accept(e));
-                ((Hyperlink) textEl).setOnMouseEntered(e -> hrefHovEntHandlerConsumer.accept(e));
-                ((Hyperlink) textEl).setOnMouseExited(e -> hrefHovExHandlerConsumer.accept(e));
-            } else {
-                textEl = new Text(seg.getString());
-            }
-            System.out.println(seg.getStyle().toCSS());
-            textEl.setStyle(seg.getStyle().toCSS());
-            textFlow.getChildren().add(textEl);
-        }
-
-    }
 }

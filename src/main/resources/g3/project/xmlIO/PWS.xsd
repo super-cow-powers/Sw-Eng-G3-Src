@@ -211,7 +211,7 @@
             Applications should interpret at least:
             "circle"
             "textbox"
-            "line" (with use of x/y_end)
+            "line"
                 </xsd:documentation>
 					</xsd:annotation>
 				</xsd:attribute>

@@ -38,7 +38,9 @@ import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import com.jthemedetecor.OsThemeDetector;
 import g3.project.core.Engine;
+import g3.project.graphics.ExtPolygon;
 import g3.project.graphics.ExtShape;
+import g3.project.graphics.ExtShapeFactory;
 import g3.project.graphics.FontProps;
 import g3.project.graphics.StrokeProps;
 import g3.project.graphics.StyledTextSeg;
@@ -52,6 +54,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
@@ -121,6 +125,8 @@ public final class MainController {
      * Non-blocking message clear future.
      */
     private ScheduledFuture nbMessageClearFuture;
+
+    private ExtShapeFactory extShapeFactory = new ExtShapeFactory();
 
 //CHECKSTYLE:OFF
     //FXML bound objects
@@ -313,48 +319,53 @@ public final class MainController {
     }
 
     /**
-     * Redraw shape on screen.
+     * Draw/Redraw shape on screen.
      *
-     * @param props Shape properties.
-     * @param shapeType Shape Type string
-     * @param stroke Shape Stroke Props
-     * @param text Shape Text and Properties
+     * @param shapeType Type of shape.
+     * @param props Shape visual properties.
+     * @param stroke Stroke properties.
+     * @param text Text segments.
+     * @param size Shape size.
+     * @param loc Shape location.
+     * @param segments Segments for a line or polygon.
      */
-    public void updateShape(final String shapeType, final VisualProps props,
-            final StrokeProps stroke, final ArrayList<StyledTextSeg> text) {
-        ExtShape newShape;
+    public void updateShape(final String shapeType, final VisualProps props, final StrokeProps stroke,
+            final ArrayList<StyledTextSeg> text, final SizeObj size, final LocObj loc, final ArrayList<Double> segments) {
+
         var id = (String) props.getProp(VisualProps.ID).get();
-        var loc = (LocObj) props.getProp(VisualProps.ORIGIN).get();
-        if (drawnElements.containsKey(id)) {
-            newShape = (ExtShape) drawnElements.get(id);
-            var size = (SizeObj) props.getProp(VisualProps.SIZE).get();
-            var fill = (Color) props.getProp(VisualProps.FILL).get();
-            newShape.setSize(size);
-            newShape.setFill(fill);
-            newShape.setStroke(stroke);
-            newShape.setText(text);
-        } else {
-            newShape = new ExtShape(ExtShape.ShapeType.valueOf(shapeType), stroke, props, text);
-            drawnElements.put(id, newShape);
-            pagePane.getChildren().add(newShape);
-            //Set Hyperlink handlers
-            newShape.setHrefClickHandler((ev) -> {
-                handleEvent(ev);
-            });
-            newShape.setHrefHoverEnterHandler((ev) -> {
-                handleEvent(ev);
-            });
-            newShape.setHrefHoverExitHandler((ev) -> {
-                handleEvent(ev);
-            });
-        }
         var origin = loc.getLoc();
-        newShape.relocate(origin.getX(), origin.getY());
-        newShape.setViewOrder(loc.getZ());
+        var drawnShape = drawnElements.get(id);
+
+//Get the shape. Either a new or existing one.
+        Optional<ExtShape> maybeShape = (drawnShape == null)
+                ? extShapeFactory.makeShape(ExtShapeFactory.ShapeType.valueOf(shapeType.toLowerCase())) : Optional.of((ExtShape) drawnShape);
+
+        maybeShape.ifPresent(s -> {
+            //Set-up the shape.
+            drawnElements.put(id, s);
+            if (drawnShape == null) {
+                pagePane.getChildren().add(s);
+            }
+            System.out.println(origin);
+            s.setViewOrder(loc.getZ());
+            s.setId(id);
+            s.setSize(size);
+            s.setText(text);
+            s.setProps(props);
+            s.relocate(origin.getX(), origin.getY());
+            if ((s instanceof ExtPolygon) && (segments != null)) {
+                try {
+                    ((ExtPolygon) s).setPoints(segments);
+                } catch (Exception ex) {
+                    Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
     }
 
     /**
      * Remove a given element.
+     *
      * @param id ID of element to remove.
      */
     public void remove(final String id) {
@@ -657,6 +668,16 @@ public final class MainController {
             engine.start();
         });
 
+        //Set handlers for shapes and text.
+        extShapeFactory.setHrefClickHandler((ev) -> {
+            handleEvent(ev);
+        });
+        extShapeFactory.setHrefHoverEnterHandler((ev) -> {
+            handleEvent(ev);
+        });
+        extShapeFactory.setHrefHoverExitHandler((ev) -> {
+            handleEvent(ev);
+        });
         pagePane.setOnScroll((e) -> pageScrollEventHandler(e)); //Scaling stuff
 
         pageScroll.setPannable(true);
