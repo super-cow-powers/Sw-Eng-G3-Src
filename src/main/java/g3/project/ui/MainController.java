@@ -38,6 +38,7 @@ import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import com.jthemedetecor.OsThemeDetector;
 import g3.project.core.Engine;
+import g3.project.graphics.ExtLine;
 import g3.project.graphics.ExtPolygon;
 import g3.project.graphics.ExtShape;
 import g3.project.graphics.ExtShapeFactory;
@@ -330,10 +331,10 @@ public final class MainController {
      * @param segments Segments for a line or polygon.
      */
     public void updateShape(final String shapeType, final VisualProps props, final StrokeProps stroke,
-            final ArrayList<StyledTextSeg> text, final SizeObj size, final LocObj loc, final ArrayList<Double> segments) {
+            final ArrayList<StyledTextSeg> text, final Optional<SizeObj> size, final Optional<LocObj> loc, final ArrayList<Double> segments) {
 
         var id = (String) props.getProp(VisualProps.ID).get();
-        var origin = loc.getLoc();
+
         var drawnShape = drawnElements.get(id);
 
 //Get the shape. Either a new or existing one.
@@ -346,19 +347,25 @@ public final class MainController {
             if (drawnShape == null) {
                 pagePane.getChildren().add(s);
             }
-            System.out.println(origin);
-            s.setViewOrder(loc.getZ());
-            s.setId(id);
-            s.setSize(size);
-            s.setText(text);
             s.setProps(props);
-            s.relocate(origin.getX(), origin.getY());
-            if ((s instanceof ExtPolygon) && (segments != null)) {
-                try {
+            s.setStroke(stroke);
+            loc.ifPresentOrElse(l -> {
+                s.setViewOrder(l.getZ());
+                var origin = l.getLoc();
+                s.relocate(origin.getX(), origin.getY());
+            },
+                    () -> s.setViewOrder(0));
+            s.setId(id);
+            size.ifPresent(sz -> s.setSize(sz));
+            s.setText(text);
+            try {
+                if (s instanceof ExtPolygon) {
                     ((ExtPolygon) s).setPoints(segments);
-                } catch (Exception ex) {
-                    Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+                } else if (s instanceof ExtLine) {
+                    ((ExtLine) s).setPoints(segments);
                 }
+            } catch (Exception ex) {
+                Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
     }

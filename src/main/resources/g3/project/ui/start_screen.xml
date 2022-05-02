@@ -9,6 +9,9 @@
 			<base:stroke width="2" dash-style="plain" colour="black"/>
 			<ext:script include_source="scripts/tb-0.py" />
 		</base:shape>
+                <base:shape x_orig="30" y_orig="75" x_end="30" y_end="300" z_ind="0" fill="#EEEEEEFF" rot_angle="0" ID="poly-0" disp_duration_s="10" show_after_s="5" type="line">
+                    <base:stroke width="2" dash-style="plain" colour="black"/>
+		</base:shape>
 		<base:image include_source="logo.jpg" x_orig="360" y_orig="100" z_ind="0" x_size_px="250" y_size_px="250" rot_angle="0" ID="im0" disp_duration_s="40" show_after_s="0" />
 		<ext:script include_source="scripts/doc.py" />
 	</base:page>

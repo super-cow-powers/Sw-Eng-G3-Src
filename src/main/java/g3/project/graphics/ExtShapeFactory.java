@@ -52,7 +52,7 @@ import javafx.scene.text.TextFlow;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class ExtShapeFactory {
+public final class ExtShapeFactory {
 
     /**
      * href click handler.
@@ -114,8 +114,11 @@ public class ExtShapeFactory {
                 shape = new ExtRect();
                 break;
             case polygon:
-            case line:
                 shape = new ExtPolygon();
+                break;
+            case line:
+                shape = new ExtLine();
+                break;
             default:
                 break;
 

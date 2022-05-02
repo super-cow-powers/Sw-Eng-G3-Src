@@ -123,16 +123,16 @@ public class ShapeElement extends VisualElement {
     public final ArrayList<Double> getSegPoints() {
         var points = new ArrayList<Double>();
         for (var ch : this.getChildElements()) {
-            if (ch.getLocalName() == "polyseg") {
-                var xAttr = ch.getAttribute("x_start");
-                var yAttr = ch.getAttribute("y_start");
+            if (ch.getLocalName().toLowerCase().equals("polyseg")) {
+                var xAttr = ch.getAttribute("x");
+                var yAttr = ch.getAttribute("y");
                 if (!(xAttr == null || yAttr == null)) {
                     points.add(Double.valueOf(xAttr.getValue()));
                     points.add(Double.valueOf(yAttr.getValue()));
                 }
             }
         }
-        if (this.getType() == "line") { //I'm a line. Check for old line attributes.
+        if (this.getType().equals("line")) { //I'm a line. Check for old line attributes.
             if (points.size() == 0) {
                 var xAttr = this.getAttribute("x_end");
                 var yAttr = this.getAttribute("y_end");
