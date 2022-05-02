@@ -347,7 +347,7 @@ public final class MainController {
             if (drawnShape == null) {
                 pagePane.getChildren().add(s);
             }
-            s.setProps(props);
+            s.setProps(props); //Must do this before relocating!
             s.setStroke(stroke);
             loc.ifPresentOrElse(l -> {
                 s.setViewOrder(l.getZ());
