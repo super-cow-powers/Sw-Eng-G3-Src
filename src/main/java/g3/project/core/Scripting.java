@@ -124,7 +124,8 @@ public final class Scripting {
      * @return Maybe variable.
      */
     public Optional<Object> getGlobal(String name) {
-        return Optional.ofNullable(scriptingEngineManager.getBindings().get(name));
+        var globalVar = scriptingEngineManager.getBindings().get(name);
+        return Optional.ofNullable(globalVar);
     }
 
     /**
