@@ -40,60 +40,53 @@ import java.util.stream.Collectors;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class FontProps extends HashMap<String, Object> {
+public final class StrokeProps extends HashMap<String, Object> {
 
     /*
-    <xsd:attribute name="underscore" type="xsd:boolean" use="optional" />
-					<xsd:attribute name="italic" type="xsd:boolean" use="optional" />
-					<xsd:attribute name="bold" type="xsd:boolean" use="optional" />
-					<xsd:attribute name="size" type="xsd:double" use="optional" />
-					<xsd:attribute name="name" type="xsd:token" use="optional" />
-					<xsd:attribute name="colour" type="base:colourType" use="optional" />
+<xsd:attribute name="width" type="xsd:double" />
+<xsd:attribute name="dash-style" type="xsd:string">
+<xsd:attribute name="colour" type="base:colourType" />
      */
     //CHECKSTYLE:OFF
-    public static final String US = "underscore";
-    protected static final Class US_TYPE = Boolean.class;
-    public static final String IT = "italic";
-    protected static final Class IT_TYPE = Boolean.class;
-    public static final String BOLD = "bold";
-    protected static final Class BOLD_TYPE = Boolean.class;
-    public static final String SIZE = "size";
-    protected static final Class SIZE_TYPE = Double.class;
-    public static final String FONT = "name";
-    protected static final Class FONT_TYPE = String.class;
+    public static final String WIDTH = "width";
+    protected static final Class WIDTH_TYPE = Double.class;
+    public static final String LINE_STYLE = "dash-style";
+    protected static final Class LINE_STYLE_TYPE = String.class;
     public static final String COLOUR = "colour";
     protected static final Class COLOUR_TYPE = Color.class;
-    public static final String ALIGNMENT = "ext:alignment";
-    protected static final Class ALIGNMENT_TYPE = String.class;
-    public static final String VALIGNMENT = "ext:vertalignment";
-    protected static final Class VALIGNMENT_TYPE = String.class;
+    public static final String LINE_CAP = "line-cap";
+    protected static final Class LINE_CAP_TYPE = String.class;
 
+    private static final String DOT_DASH_ARRAY = "12 2 4 2";
+    private static final String DASH_ARRAY = "12 12";
+    private static final String DOT_ARRAY = "2 2";
+    public static final String DOT_DASH_STYLE = "dot-dash";
+    public static final String DASH_STYLE = "dash";
+    public static final String DOT_STYLE = "dot";
+    public static final String SOLID_STYLE = "plain";
     //CHECKSTYLE:ON
     /**
      * Contains known props and their classes.
      */
-    public static final Map<String, Class> PROPS_MAP = Map.ofEntries(entry(US, US_TYPE),
-            entry(IT, IT_TYPE), entry(BOLD, BOLD_TYPE), entry(SIZE, SIZE_TYPE), entry(FONT, FONT_TYPE),
-            entry(COLOUR, COLOUR_TYPE), entry(ALIGNMENT, ALIGNMENT_TYPE), entry(VALIGNMENT, VALIGNMENT_TYPE));
+    public static final Map<String, Class> PROPS_MAP = Map.ofEntries(entry(WIDTH, WIDTH_TYPE),
+            entry(LINE_STYLE, LINE_STYLE_TYPE), entry(COLOUR, COLOUR_TYPE), entry(LINE_CAP, LINE_CAP_TYPE));
     /**
      * Contains default values for known props.
      */
-    public static final Map<String, Object> PROP_DEFAULTS = Map.ofEntries(entry(US, false), entry(IT, false), entry(BOLD, false),
-            entry(SIZE, 16d), entry(FONT, "monospace"), entry(COLOUR, Color.BLACK),
-            entry(ALIGNMENT, "left"), entry(VALIGNMENT, "center_left"));
+    public static final Map<String, Object> PROP_DEFAULTS = Map.ofEntries(entry(WIDTH, 0d),
+            entry(LINE_STYLE, SOLID_STYLE), entry(COLOUR, Color.TRANSPARENT), entry(LINE_CAP, "butt"));
     /**
      * Contains CSS strings for known props.
      */
-    private static final Map<String, String> CSS = Map.ofEntries(entry(US, "-fx-underline: \'%s\';"), entry(IT, "-fx-font-style: %s;"), entry(BOLD, "-fx-font-weight: %s;"),
-            entry(SIZE, "-fx-font-size: %s;"), entry(FONT, "-fx-font-family: \'%s\';"), entry(COLOUR, "-fx-fill: \'%s\';"),
-            entry(ALIGNMENT, "-fx-text-alignment: \'%s\';"));
+    private static final Map<String, String> CSS = Map.ofEntries(entry(WIDTH, "-fx-stroke-width: %s; "),
+            entry(LINE_STYLE, "-fx-stroke-dash-array: %s;"), entry(COLOUR, "-fx-stroke: \'%s\';"), entry(LINE_CAP, "-fx-stroke-line-cap: %s;"));
 
     /**
      * Constructor. Takes map of properties.
      *
      * @param propertiesMap Map of properties conforming to PROPS_MAP.
      */
-    public FontProps(final Map<String, Object> propertiesMap) {
+    public StrokeProps(final Map<String, Object> propertiesMap) {
         super();
         //Check for all known properties.
         for (final String propKey : PROPS_MAP.keySet()) {
@@ -107,7 +100,7 @@ public class FontProps extends HashMap<String, Object> {
     /**
      * Empty constructor.
      */
-    public FontProps() {
+    public StrokeProps() {
         super();
     }
 
@@ -117,10 +110,31 @@ public class FontProps extends HashMap<String, Object> {
      * @param prop Property to get.
      * @return Maybe property. Empty if invalid.
      */
-    public final Optional<Object> getProp(final String prop) {
+    public Optional<Object> getProp(final String prop) {
         var val = super.get(prop);
         if (val == null) { //Not Found. Set default.
             val = PROP_DEFAULTS.get(prop);
+        }
+        switch (prop) { //These aren't the same types in JFX css as in our files.
+            case LINE_STYLE:
+                switch (((String) val).toLowerCase()) {
+                    case SOLID_STYLE:
+                        break;
+                    case DOT_STYLE:
+                        val = DOT_ARRAY;
+                        break;
+                    case DASH_STYLE:
+                        val = DASH_ARRAY;
+                        break;
+                    case DOT_DASH_STYLE:
+                        val = DOT_DASH_ARRAY;
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            default:
+                break;
         }
         //Might be null if invalid. Return optional to limit damage
         return Optional.ofNullable(val);
@@ -132,22 +146,15 @@ public class FontProps extends HashMap<String, Object> {
      * @return CSS String.
      */
     public String toCSS() {
-        var propsStream = CSS.keySet().stream();
-        return propsStream.map(p -> {
+        var propsStream = PROPS_MAP.keySet().stream();
+        var props = propsStream.map(p -> {
             var cssFmt = CSS.get(p);
             Object val = this.getProp(p).get();
-            switch (p) { //These aren't the same types in JFX css as in our files.
-                case IT:
-                    val = (Boolean) val == false ? "normal" : "italic";
-                    break;
-                case BOLD:
-                    val = (Boolean) val == false ? "normal" : "bold";
-                    break;
-                default:
-                    break;
-            }
-            return String.format(cssFmt, val.toString());
+            //Return nothing for solid stroke.
+            return (val.toString().equals(SOLID_STYLE)) ? "" : String.format(cssFmt, val.toString());
         }).collect(Collectors.joining(" "));
+        System.out.println(props);
+        return props;
     }
 
 }

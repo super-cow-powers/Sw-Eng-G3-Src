@@ -30,8 +30,10 @@ package g3.project.elements;
 
 import g3.project.core.Engine;
 import g3.project.core.RecursiveBindings;
-import g3.project.ui.LocObj;
-import g3.project.ui.SizeObj;
+import g3.project.graphics.LocObj;
+import g3.project.graphics.SizeObj;
+import g3.project.graphics.StrokeProps;
+import g3.project.graphics.VisualProps;
 import java.util.Optional;
 import javafx.geometry.Point2D;
 import javafx.scene.paint.Color;
@@ -91,13 +93,28 @@ public class VisualElement extends Element implements Scriptable {
     }
 
     /**
+     * Find qualified attribute from element.
+     *
+     * @param el Element to use.
+     * @param qualifiedName Full attribute name.
+     * @return Maybe attribute.
+     */
+    public static Optional<Attribute> derefAttribute(final Element el, final String qualifiedName) {
+        var nameSplit = qualifiedName.split(":");
+        var attrNS = (nameSplit.length > 1) ? EXT_URI : "";
+        var attrName = (nameSplit.length > 1) ? nameSplit[1] : nameSplit[0];
+        var attr = el.getAttribute(attrName, attrNS);
+        return Optional.ofNullable(attr);
+    }
+
+    /**
      * Get the object's X/Y location. Returns an Optional, which may contain
      * either the location or nothing. The caller can then determine the action
      * to take.
      *
      * @return Optional Location
      */
-    public final Optional<LocObj> getLoc() {
+    public final Optional<LocObj> getOrigin() {
         var x = Optional.ofNullable(this.getAttribute("x_orig"))
                 .map(f -> f.getValue())
                 .map(f -> Double.valueOf(f));
@@ -106,29 +123,20 @@ public class VisualElement extends Element implements Scriptable {
                 .map(f -> Double.valueOf(f));
 
         return (x.isPresent() && y.isPresent())
-                ? Optional.of(new LocObj(new Point2D(x.get(), y.get()), null, null, getZInd())) : Optional.empty();
+                ? Optional.of(new LocObj(new Point2D(x.get(), y.get()), getZInd())) : Optional.empty();
     }
 
     /**
-     * Set the object's X/Y location. Returns the new location.
+     * Set the object's X/Y location.
      *
      * @param loc Location to set
-     * @return Optional Set Location
      */
-    public final Optional<LocObj> setLoc(final LocObj loc) {
-        var start = loc.getStart();
-        var centre = loc.getCentre();
-        var end = loc.getEnd();
+    public final void setOrigin(final LocObj loc) {
+        var point = loc.getLoc();
 
-        /**
-         * @todo Assign centre and end.
-         */
-        start.ifPresent(s -> {
-            this.addAttribute(new Attribute("x_orig", Double.toString(s.getX())));
-            this.addAttribute(new Attribute("y_orig", Double.toString(s.getY())));
-        });
+        this.addAttribute(new Attribute("x_orig", Double.toString(point.getX())));
+        this.addAttribute(new Attribute("y_orig", Double.toString(point.getY())));
         hasUpdated();
-        return this.getLoc();
     }
 
     /**
@@ -186,21 +194,26 @@ public class VisualElement extends Element implements Scriptable {
      * @return Optional size
      */
     public final Optional<SizeObj> getSize() {
-        var x = Optional.ofNullable(this.getAttribute("x_size_px"))
+        var xOpt = Optional.ofNullable(this.getAttribute("x_size_px"))
                 .map(f -> f.getValue())
                 .map(f -> Double.valueOf(f));
-        var y = Optional.ofNullable(this.getAttribute("y_size_px"))
+        var yOpt = Optional.ofNullable(this.getAttribute("y_size_px"))
                 .map(f -> f.getValue())
                 .map(f -> Double.valueOf(f));
-        var rot = Optional.ofNullable(this.getAttribute("rot_angle"))
+        var rotOpt = Optional.ofNullable(this.getAttribute("rot_angle"))
                 .map(f -> f.getValue())
                 .map(f -> Double.valueOf(f));
 
-        return (x.isPresent() && y.isPresent())
-                ? Optional.of(new SizeObj(x.get(),
-                        y.get(),
-                        rot.isPresent() ? rot.get() : 0))
-                : Optional.empty();
+        if (xOpt.isEmpty() && yOpt.isEmpty() && rotOpt.isEmpty()) {
+            //Really is no size given.
+            return Optional.empty();
+        }
+        //Sometimes element may give only some params - set others to 0.
+        final Double x = (xOpt.isEmpty()) ? 0 : xOpt.get();
+        final Double y = (yOpt.isEmpty()) ? 0 : yOpt.get();
+        final Double rot = (rotOpt.isEmpty()) ? 0 : rotOpt.get();
+
+        return Optional.of(new SizeObj(x, y, rot));
     }
 
     /**
@@ -209,37 +222,23 @@ public class VisualElement extends Element implements Scriptable {
      * @return Optional colour.
      */
     public final Optional<Color> getFillColour() {
-        final int lenRGB = 6;
-        final int lenRGBA = 8;
-        var col = Optional.ofNullable(this.getAttribute("fill"));
+        var colAttr = Optional.ofNullable(this.getAttribute("fill"));
         /**
          * @todo: Find a nicer looking way of making this work Probably
          * containing more streams.
          */
-        if (col.isPresent()) {
-            var colStr = col.get().getValue().replace("#", "");
+        if (colAttr.isPresent()) {
 
-            switch (colStr.length()) {
-                case lenRGB:
-                    //CHECKSTYLE:OFF
-                    return Optional.of(new Color(
-                            (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
-                            1.0d));
-                //CHECKSTYLE:ON
-                case lenRGBA:
-                    //CHECKSTYLE:OFF
-                    return Optional.of(new Color(
-                            (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(6, 8), 16) / 255));
-                //CHECKSTYLE:ON
-                default:
+            //var colStr = colAttr.get().getValue().replace("#", "");
+            var colStr = colAttr.get().getValue();
+            Color col = null;
+            try {
+                col = Color.web(colStr);
+            } catch (IllegalArgumentException ex) {
+                System.err.println("Bad Colour: " + ex);
             }
+            return Optional.ofNullable(col);
         }
-
         return Optional.empty();
     }
 
@@ -285,13 +284,49 @@ public class VisualElement extends Element implements Scriptable {
      *
      * @return Optional Stroke Element.
      */
-    public final Optional<StrokeElement> getStroke() {
+    public final Optional<StrokeProps> getStroke() {
         for (Element el : this.getChildElements()) {
             if (el instanceof StrokeElement) {
-                return Optional.of((StrokeElement) el);
+                return Optional.of(((StrokeElement) el).getProps());
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * Get this element's visual properties map.
+     *
+     * @return visual props. map.
+     */
+    public final VisualProps getProps() {
+        var propsMap = new VisualProps();
+        for (String prop : propsMap.PROPS_MAP.keySet()) {
+            switch (prop) {
+                //Special cases
+                default: //Not a special case
+                    var attrMaybe = derefAttribute(this, prop);
+                    //this.getAttribute(prop, prop)
+                    if (attrMaybe.isPresent()) {
+                        var attr = attrMaybe.get();
+                        var attrVal = attr.getValue();
+                        Class attrType = propsMap.PROPS_MAP.get(prop);
+                        Object propVal;
+                        //Cast to correct type
+                        if (attrType == Double.class) {
+                            propVal = Double.valueOf(attrVal);
+                        } else if (attrType == Boolean.class) {
+                            propVal = Boolean.valueOf(attrVal);
+                        } else if (attrType == Color.class) {
+                            propVal = Color.web(attrVal);
+                        } else {
+                            propVal = attrVal; //Probably a string.
+                        }
+                        propsMap.put(prop, propVal);
+                    }
+                    break;
+            }
+        }
+        return propsMap;
     }
 
     /**
@@ -301,6 +336,8 @@ public class VisualElement extends Element implements Scriptable {
      */
     @Override
     public final RecursiveBindings getScriptingBindings() {
+        var parBinOpt = this.getParentElementScriptingBindings();
+        parBinOpt.ifPresent(b -> elementScriptBindings.setParent(b)); //Always set parent bindings
         return elementScriptBindings;
     }
 

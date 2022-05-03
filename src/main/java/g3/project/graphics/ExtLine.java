@@ -26,50 +26,33 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package g3.project.ui;
+package g3.project.graphics;
 
-import java.util.Optional;
-import javafx.geometry.Point2D;
+import java.util.ArrayList;
+import javafx.scene.shape.Polyline;
 
 /**
  *
- * @author david
+ * @author David Miall<dm1306@york.ac.uk>
  */
-public class LocObj {
+public final class ExtLine extends ExtShape {
 
-    private final Point2D start;
-    private final Point2D centre;
-    private final Point2D end;
-    private final Double zIndex;
-
-    /**
-     * Create location container. Any argument may be null
-     *
-     * @param startPoint
-     * @param centrePoint
-     * @param endPoint
-     */
-    public LocObj(Point2D startPoint, Point2D centrePoint, Point2D endPoint, Double z) {
-        start = startPoint;
-        centre = centrePoint;
-        end = endPoint;
-        zIndex = z != null ? z : 0;
+    public ExtLine() {
+        super(new Polyline());        
     }
 
-    public Optional<Point2D> getStart() {
-        return Optional.ofNullable(start);
+    @Override
+    public void setSize(final SizeObj size) {
+        this.setRotate(size.getRot());
+        //Setting x/y size makes little sense for a defined / line
     }
 
-    public Optional<Point2D> getCentre() {
-        return Optional.ofNullable(centre);
+    public void setPoints(ArrayList<Double> points) throws Exception{
+        if (points.size() % 2 != 0) {
+            throw new Exception("Points array should be even length!");
+        }
+        var internalPoints = ((Polyline) shape).getPoints();
+        internalPoints.clear();
+        internalPoints.addAll(points);
     }
-
-    public Optional<Point2D> getEnd() {
-        return Optional.ofNullable(end);
-    }
-
-    public Double getZ() {
-        return zIndex;
-    }
-
 }

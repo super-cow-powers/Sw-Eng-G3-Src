@@ -28,121 +28,196 @@
  */
 package g3.project.graphics;
 
-import java.util.Optional;
+import g3.project.graphics.StyledTextSeg.REF_TYPE;
+import java.util.ArrayList;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import javafx.event.ActionEvent;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
-import javafx.scene.control.Label;
+import javafx.scene.Node;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Ellipse;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
-import javafx.scene.text.Font;
+import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.shape.StrokeType;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+import javafx.scene.text.TextFlow;
 
 /**
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class ExtShape extends Group {
+public abstract class ExtShape extends Group {
 
-    private StackPane stack = new StackPane();
-    private Shape shape;
-    private Label textLabel;
-    private Boolean amTextbox = false;
+    protected StackPane stack = new StackPane();
+    protected Shape shape = null;
+    protected TextFlow textFlow = null;
+    protected VBox textVbox = null;
 
-    public ExtShape(String shapeType, String ID, Double width, Double height, Color fill, Color strokeColour, Double strokeSize, String textCont, FontProps textProps) {
-        switch (shapeType) {
-            case "circle":
-                shape = new Ellipse(width / 2, height / 2);
-                break;
-            case "textbox":
-                shape = new Rectangle(width, height);
-                break;
-            case "rectangle":
-                shape = new Rectangle(width, height);
-                break;
-            default:
-                shape = new Rectangle(width, height);
-                break;
+    protected Double width = 0d;
+    protected Double height = 0d;
+    protected Double rot = 0d;
+    
+    /**
+     * text click handler.
+     */
+    private Consumer<MouseEvent> textClickHandlerConsumer = null;
+    
+    /**
+     * href click handler.
+     */
+    private Consumer<MouseEvent> hrefClickHandlerConsumer = null;
 
-        }
-        if (shape == null) {
-            return;
-        }
-        this.setId(ID);
-        if (strokeColour != null) {
-            shape.setStroke(strokeColour);
-        }
-        if (strokeSize != null) {
-            shape.setStrokeWidth(strokeSize);
-        }
-        if (fill != null) {
-            shape.setFill(fill);
-        }
-        textLabel = new Label(textCont);
-        textLabel.setFont(new Font(textProps.getSize()));
-        textLabel.setTextFill(textProps.getColour());
-        textLabel.setUnderline(textProps.getUnderscore());
+    /**
+     * href mouse roll-over (hover) enter handler.
+     */
+    private Consumer<MouseEvent> hrefHovEntHandlerConsumer = null;
 
-        stack.getChildren().addAll(shape, textLabel);
+    /**
+     * href mouse roll-over (hover) exit handler.
+     */
+    private Consumer<MouseEvent> hrefHovExHandlerConsumer = null;
+
+    public ExtShape(final Shape myShape) {
+        shape = myShape;
+        stack.getChildren().add(shape);
         this.getChildren().add(stack);
+    }
+
+    /**
+     * Set the text click handler.
+     *
+     * @param handler Handler to set.
+     */
+    public final void setTextClickHandler(final Consumer<MouseEvent> handler) {
+        this.textClickHandlerConsumer = handler;
+    }
+
+    /**
+     * Set the href click handler.
+     *
+     * @param handler Handler to set.
+     */
+    public final void setHrefClickHandler(final Consumer<MouseEvent> handler) {
+        this.hrefClickHandlerConsumer = handler;
+    }
+
+    /**
+     * Set the href hover entry handler.
+     *
+     * @param handler Handler to set.
+     */
+    public final void setHrefHoverEnterHandler(final Consumer<MouseEvent> handler) {
+        this.hrefHovEntHandlerConsumer = handler;
+    }
+
+    /**
+     * Set the href hover exit handler.
+     *
+     * @param handler Handler to set.
+     */
+    public final void setHrefHoverExitHandler(final Consumer<MouseEvent> handler) {
+        this.hrefHovExHandlerConsumer = handler;
     }
 
     /**
      * Set the shape size.
      *
-     * @param width Width.
-     * @param height Height.
+     * @param size Size.
      */
-    public void setSize(final Double width, final Double height) {
-        if (shape instanceof Rectangle) {
-            ((Rectangle) shape).setWidth(width);
-            ((Rectangle) shape).setHeight(height);
-        } else if (shape instanceof Ellipse) {
-            ((Ellipse) shape).setRadiusX(width);
-            ((Ellipse) shape).setRadiusY(height);
-        }
-    }
+    public abstract void setSize(final SizeObj size);
 
     /**
      * Set the shape fill colour.
      *
      * @param fill Fill colour.
      */
-    public void setFill(final Color fill) {
+    public final void setFill(final Color fill) {
         shape.setFill(fill);
     }
 
     /**
      * Configure shape stroke.
      *
-     * @param strokeColor Colour of stroke.
-     * @param strokeWidth Width of stroke.
+     * @param stroke stroke properties.
      */
-    public void setStroke(final Color strokeColor, final Double strokeWidth) {
-        shape.setStroke(strokeColor);
-        shape.setStrokeWidth(strokeWidth);
+    public final void setStroke(final StrokeProps stroke) {
+        shape.setStroke((Color) stroke.getProp(StrokeProps.COLOUR).get());
+        shape.setStrokeLineCap(StrokeLineCap.valueOf(((String) stroke.getProp(StrokeProps.LINE_CAP).get()).toUpperCase()));
+        shape.setStrokeType(StrokeType.OUTSIDE);
+        shape.getStrokeDashArray().clear();
+        shape.setStrokeWidth((Double) stroke.getProp(StrokeProps.WIDTH).get());
+        var dashArray = (String) stroke.getProp(StrokeProps.LINE_STYLE).get();
+        for (String val : dashArray.split(" ")) { //Build dash array
+            Double num;
+            try {
+                num = Double.parseDouble(val);
+                shape.getStrokeDashArray().add(num);
+            } catch (NumberFormatException e) {
+            }
+        }
     }
 
     /**
-     * Set text in element.
+     * Set visual properties.
+     *
+     * @param visualProps properties.
+     */
+    public final void setProps(final VisualProps visualProps) {
+        var maybeShadow = visualProps.makeShadow();
+        maybeShadow.ifPresent(sh -> {
+            shape.setEffect(sh);
+        }); //Apply shadow
+        this.setVisible((Boolean) visualProps.getProp(VisualProps.VISIBLE).get());
+        this.setFill((Color) visualProps.getProp(VisualProps.FILL).get());
+    }
+
+    /**
+     * Set text and style in element.
      *
      * @todo Make work for arbitrary Rich Text.
      * @param text Text to set.
+     * @param align Text horizontal alignment.
+     * @param textVertAlign Text vertical alignment.
      */
-    public void setText(final String text) {
-        textLabel.setText(text);
-    }
+    public final void setText(final ArrayList<StyledTextSeg> text, final TextAlignment align, final Pos textVertAlign) {
+        if (text.size() <= 0) {
+            return;
+        }
+        if (textFlow == null) {
+            textFlow = new TextFlow();
+            textVbox = new VBox();
+            textVbox.getChildren().add(textFlow);
+            textVbox.setPrefWidth(this.width);
+            textFlow.setPrefWidth(this.width);
+            stack.getChildren().add(textVbox);
+        }
+        textVbox.setAlignment(textVertAlign);
+        textFlow.getChildren().clear();
+        textFlow.setTextAlignment(align);
+        textFlow.setOnMouseClicked(e -> textClickHandlerConsumer.accept(e));
+        //Iterate through all segments
+        for (final StyledTextSeg seg : text) {
+            Node textEl;
+            if (seg.isHref()) {
+                textEl = new Hyperlink(seg.getString());
+                ((Hyperlink) textEl).setOnMouseClicked(e -> hrefClickHandlerConsumer.accept(e));
+                ((Hyperlink) textEl).setOnMouseEntered(e -> hrefHovEntHandlerConsumer.accept(e));
+                ((Hyperlink) textEl).setOnMouseExited(e -> hrefHovExHandlerConsumer.accept(e));
+            } else {
+                textEl = new Text(seg.getString());
+            }
+            System.out.println(seg.getStyle().toCSS());
+            textEl.setStyle(seg.getStyle().toCSS());
+            textFlow.getChildren().add(textEl);
+        }
 
-    /**
-     * Set font properties.
-     *
-     * @param font Font props.
-     */
-    public void setFont(final FontProps font) {
-        textLabel.setFont(new Font(font.getSize()));
-        textLabel.setTextFill(font.getColour());
-        textLabel.setUnderline(font.getUnderscore());
     }
 }

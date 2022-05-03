@@ -28,6 +28,8 @@
  */
 package g3.project.elements;
 
+import g3.project.graphics.StrokeProps;
+import java.util.HashMap;
 import java.util.Optional;
 import javafx.scene.paint.Color;
 import nu.xom.*;
@@ -66,14 +68,16 @@ public class StrokeElement extends Element {
     public final Optional<Color> getColour() {
         final int lenRGB = 6;
         final int lenRGBA = 8;
-        var col = Optional.ofNullable(this.getAttribute("colour"));
+        var col = Optional.ofNullable(this.getAttribute(StrokeProps.COLOUR));
         /**
          * @todo: Find a nicer looking way of making this work Probably
          * containing more streams.
          */
         if (col.isPresent()) {
-            var colStr = col.get().getValue().replace("#", "");
-
+            //var colStr = col.get().getValue().replace("#", "");
+            var colStr = col.get().getValue();
+            return Optional.ofNullable(Color.web(colStr));
+            /*
             switch (colStr.length()) {
                 case lenRGB:
                     //CHECKSTYLE:OFF
@@ -92,7 +96,7 @@ public class StrokeElement extends Element {
                             (double) Integer.valueOf(colStr.substring(6, 8), 16) / 255));
                 //CHECKSTYLE:ON
                 default:
-            }
+            }*/
         }
 
         return Optional.empty();
@@ -104,7 +108,7 @@ public class StrokeElement extends Element {
      * @param colourString RGBA colour string.
      */
     public final void setColour(final String colourString) {
-        var colAttr = new Attribute("colour", colourString);
+        var colAttr = new Attribute(StrokeProps.COLOUR, colourString);
         this.addAttribute(colAttr);
     }
 
@@ -114,7 +118,7 @@ public class StrokeElement extends Element {
      * @return Optional width.
      */
     public final Optional<Double> getWidth() {
-        var width = Optional.ofNullable(this.getAttribute("width"));
+        var width = Optional.ofNullable(this.getAttribute(StrokeProps.WIDTH));
         if (width.isPresent()) {
             return Optional.of(Double.valueOf(width.get().getValue()));
         }
@@ -127,7 +131,7 @@ public class StrokeElement extends Element {
      * @param width Width.
      */
     public final void setWidth(final Double width) {
-        var widthAttr = new Attribute("width", width.toString());
+        var widthAttr = new Attribute(StrokeProps.WIDTH, width.toString());
         this.addAttribute(widthAttr);
     }
 
@@ -137,7 +141,7 @@ public class StrokeElement extends Element {
      * @return Optional dash style.
      */
     public final Optional<String> getStyle() {
-        var style = Optional.ofNullable(this.getAttribute("dash-style"));
+        var style = Optional.ofNullable(this.getAttribute(StrokeProps.DASH_STYLE));
         if (style.isPresent()) {
             return Optional.of(style.get().getValue());
         }
@@ -150,8 +154,47 @@ public class StrokeElement extends Element {
      * @param style Style.
      */
     public final void setWidth(final String style) {
-        var styleAttr = new Attribute("dash-style", style);
+        var styleAttr = new Attribute(StrokeProps.DASH_STYLE, style);
         this.addAttribute(styleAttr);
     }
 
+    /**
+     * Get stroke properties.
+     *
+     * @return StrokeProps.
+     */
+    public final StrokeProps getProps() {
+        HashMap<String, Object> props = new HashMap<>();
+        for (String prop : StrokeProps.PROPS_MAP.keySet()) {
+            var attr = this.getAttribute(prop);
+            if (attr != null) {
+                var attrVal = attr.getValue();
+                Class attrType = StrokeProps.PROPS_MAP.get(prop);
+                Object propVal;
+                if (attrType == Double.class) {
+                    propVal = Double.valueOf(attrVal);
+                } else if (attrType == Boolean.class) {
+                    propVal = Boolean.valueOf(attrVal);
+                } else if (attrType == Color.class) {
+                    propVal = Color.web(attrVal);
+                } else {
+                    propVal = attrVal; //Probably a string.
+                }
+                props.put(prop, propVal);
+            }
+        }
+        var stroke = new StrokeProps(props);
+        return stroke;
+    }
+
+    /**
+     * Set stroke props/attributes.
+     *
+     * @param props Stroke Properties.
+     */
+    public final void setProps(final StrokeProps props) {
+        for (String prop : props.keySet()) {
+            Attribute newAttr = new Attribute(prop, props.get(prop).toString());
+        }
+    }
 }

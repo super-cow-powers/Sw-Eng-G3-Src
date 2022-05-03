@@ -60,6 +60,10 @@ import nu.xom.*;
  */
 public final class Io {
 
+    private static final String PWS = "PWS.xsd";
+    public static final String PWS_NS = "PWS_Base";
+    private static final String EXT_SCHEMA = "my_exts.xsd";
+    public static final String EXT_NS = "PWS_Exts";
     /**
      * Open Document.
      */
@@ -182,7 +186,7 @@ public final class Io {
      * @param resourceClass Class it is in.
      * @return
      */
-    private Optional<byte[]> getInternalResource(final String path, final Class resourceClass) {
+    public static Optional<byte[]> getInternalResource(final String path, final Class resourceClass) {
         byte[] bytes = null;
         try {
             bytes = resourceClass.getResourceAsStream(path)
@@ -258,8 +262,18 @@ public final class Io {
      */
     private Optional<Document> parseDocXML(final InputStream xmlStream) {
         Builder parser;
+        var xer = (XMLReader) getParser(true);
         try {
-            parser = new Builder((XMLReader) getParser(true), true, new ElementFactory());
+            var pwsURL = Io.class.getResource(PWS);
+            var extURL = Io.class.getResource(EXT_SCHEMA);
+            var schemaString = "http://"+PWS_NS + " " + pwsURL.toString() + " " + "http://"+EXT_NS + " " + extURL.toString();
+            //Set Schemas
+            xer.setProperty("http://apache.org/xml/properties/schema/external-schemaLocation", schemaString);
+        } catch (SAXNotRecognizedException | SAXNotSupportedException ex) {
+            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            parser = new Builder(xer, true, new ElementFactory());
         } catch (Exception e) {
             e.printStackTrace();
             return Optional.empty();

@@ -28,6 +28,8 @@
  */
 package g3.project.ui;
 
+import g3.project.graphics.LocObj;
+import g3.project.graphics.SizeObj;
 import javafx.event.*;
 import javafx.fxml.*;
 import javafx.scene.Scene;
@@ -36,27 +38,39 @@ import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import com.jthemedetecor.OsThemeDetector;
 import g3.project.core.Engine;
+import g3.project.graphics.ExtLine;
+import g3.project.graphics.ExtPolygon;
 import g3.project.graphics.ExtShape;
+import g3.project.graphics.ExtShapeFactory;
 import g3.project.graphics.FontProps;
+import g3.project.graphics.StrokeProps;
+import g3.project.graphics.StyledTextSeg;
+import g3.project.graphics.VisualProps;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ListChangeListener.Change;
 import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Scale;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
@@ -114,6 +128,8 @@ public final class MainController {
      * Non-blocking message clear future.
      */
     private ScheduledFuture nbMessageClearFuture;
+
+    private ExtShapeFactory extShapeFactory = new ExtShapeFactory();
 
 //CHECKSTYLE:OFF
     //FXML bound objects
@@ -173,7 +189,7 @@ public final class MainController {
      */
     @FXML
     private void handleEvent(final InputEvent event) {
-        event.consume(); //Don't pass to elements below!
+        //event.consume(); //Don't pass to elements below!
         engine.offerEvent(event);
     }
     /**
@@ -261,7 +277,7 @@ public final class MainController {
                 new FileChooser.ExtensionFilter("XML", "*.xml"),
                 new FileChooser.ExtensionFilter("SPRES", "*.spres")
         );
-        
+
         var newFile = fileChooser.showOpenDialog(pagePane.getScene().getWindow());
         if (newFile != null) {
             engine.offerNewDoc(newFile);
@@ -366,37 +382,82 @@ public final class MainController {
     }
 
     /**
-     * Redraw shape on screen.
+     * Draw/Redraw shape on screen.
      *
-     * @param id Shape ID
-     * @param size Shape Size
-     * @param loc Shape Location
-     * @param shapeType Shape Type string
-     * @param fillColour Shape Fill Colour
-     * @param strokeColour Shape Stroke Colour
-     * @param strokeWidth Shape Stroke Width
-     * @param textString Shape Text String
-     * @param textProps Shape Text Properties
+     * @param shapeType Type of shape.
+     * @param props Shape visual properties.
+     * @param stroke Stroke properties.
+     * @param text Text segments.
+     * @param size Shape size.
+     * @param loc Shape location.
+     * @param segments Segments for a line or polygon.
      */
-    public void updateShape(final String id, final SizeObj size, final LocObj loc, final String shapeType, final Color fillColour,
-            final Color strokeColour, final Double strokeWidth, final String textString, final FontProps textProps) {
-        ExtShape newShape;
-        if (drawnElements.containsKey(id)) {
-            newShape = (ExtShape) drawnElements.get(id);
-            newShape.setSize(size.getX(), size.getY());
-            newShape.setFill(fillColour);
-            newShape.setStroke(strokeColour, strokeWidth);
-            newShape.setText(textString);
-            newShape.setFont(textProps);
-        } else {
-            newShape = new ExtShape(shapeType, id, size.getX(), size.getY(), fillColour, strokeColour, strokeWidth, textString, textProps);
-            newShape.setRotate(size.getRot());
-            drawnElements.put(id, newShape);
-            pagePane.getChildren().add(newShape);
+    public void updateShape(final String shapeType, final VisualProps props, final StrokeProps stroke,
+            final ArrayList<StyledTextSeg> text, final Optional<SizeObj> size, final Optional<LocObj> loc, final ArrayList<Double> segments) {
+
+        var id = (String) props.getProp(VisualProps.ID).get();
+
+        var drawnShape = drawnElements.get(id);
+
+//Get the shape. Either a new or existing one.
+        Optional<ExtShape> maybeShape = (drawnShape == null)
+                ? extShapeFactory.makeShape(ExtShapeFactory.ShapeType.valueOf(shapeType.toLowerCase())) : Optional.of((ExtShape) drawnShape);
+
+        maybeShape.ifPresent(s -> {
+            //Set-up the shape.
+            drawnElements.put(id, s);
+            if (drawnShape == null) {
+                pagePane.getChildren().add(s);
+            }
+            s.setProps(props); //Must do this before relocating!
+            s.setStroke(stroke);
+            
+            s.setId(id);
+            
+            if (text.size() > 0) {
+                var textAlign = ((String) text.get(0).getStyle().getProp(FontProps.ALIGNMENT).get()).toUpperCase();
+                var textVAlign = ((String) text.get(0).getStyle().getProp(FontProps.VALIGNMENT).get()).toUpperCase();
+                s.setText(text, TextAlignment.valueOf(textAlign), Pos.valueOf(textVAlign));
+            }
+            try {
+                if (s instanceof ExtPolygon) {
+                    ((ExtPolygon) s).setPoints(segments);
+                } else if (s instanceof ExtLine) {
+                    ((ExtLine) s).setPoints(segments);
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            //Move and rotate after everything else is set.
+            size.ifPresent(sz -> s.setSize(sz));
+            loc.ifPresentOrElse(l -> {
+                s.setViewOrder(l.getZ());
+                var origin = l.getLoc();
+                s.relocate(origin.getX(), origin.getY());
+            },
+                    () -> s.setViewOrder(0));
+        });
+    }
+
+    /**
+     * Remove a given element.
+     *
+     * @param id ID of element to remove.
+     */
+    public void remove(final String id) {
+        if (this.drawnElements.contains(id)) {
+            var obj = this.drawnElements.get(id);
+            pagePane.getChildren().remove(obj);
         }
-        var start = loc.getStart().get();
-        newShape.relocate(start.getX(), start.getY());
-        newShape.setViewOrder(loc.getZ());
+    }
+
+    /**
+     * Set the cursor type.
+     *
+     * @param cType Cursor.
+     */
+    public void setCursorType(final Cursor cType) {
+        pagePane.getScene().getRoot().setCursor(cType);
     }
 
     /**
@@ -419,12 +480,8 @@ public final class MainController {
             pagePane.setRotate(f.getRot());
         });
         //CHECKSTYLE:OFF
-        colour.ifPresent(f -> {
-            var col = String.format("#%02X%02X%02X",
-                    (int) (f.getRed() * 255),
-                    (int) (f.getGreen() * 255),
-                    (int) (f.getBlue() * 255));
-            pagePane.setStyle("-fx-background-color: " + col);
+        colour.ifPresent(c -> {
+            pagePane.setStyle("-fx-background-color: \'" + c.toString() + "\';");
         });
         //CHECKSTYLE:ON
         pagePane.setId(id);
@@ -457,9 +514,9 @@ public final class MainController {
         //CHECKSTYLE:ON
         cardButton.setId(id + "-jump-card-button");
         cardButton.setWrapText(false);
-        cardButton.setOnAction(event -> {
-            clearCard(pagePane.getId());
-            engine.offerEvent(event);
+        cardButton.setOnAction(ev -> {
+            clearCard(id);
+            engine.gotoPage(id, true);
         });
         cardSelBox.getChildren().add(cardButton);
     }
@@ -553,10 +610,8 @@ public final class MainController {
         }
 
         imv.setImage(im);
-        if (loc.getStart().isPresent()) {
-            var start = loc.getStart().get();
-            imv.relocate(start.getX(), start.getY());
-        }
+        var origin = loc.getLoc();
+        imv.relocate(origin.getX(), origin.getY());
         imv.setId(id);
         imv.setViewOrder(loc.getZ());
         imv.setRotate(size.getRot());
@@ -635,8 +690,8 @@ public final class MainController {
         loadingGif = new Image(loadingGifStr);
 
         engine = new Engine(this);
-        pagePane.addEventHandler(MouseEvent.MOUSE_CLICKED, handleInput);
-        pagePane.setViewOrder(-1);
+
+        pagePane.setViewOrder(0);
         pagePane.getChildren()
                 .addListener((Change<? extends Node> c) -> {
                     while (c.next()) {
@@ -648,7 +703,14 @@ public final class MainController {
                             //update item
                         } else {
                             for (Node addedNode : c.getAddedSubList()) {
-                                addedNode.addEventHandler(MouseEvent.ANY, handleInput);
+                                addedNode.addEventHandler(MouseEvent.ANY, (e) -> {
+                                    handleEvent(e);
+                                    e.consume();
+                                });
+                                addedNode.addEventHandler(KeyEvent.ANY, (e) -> {
+                                    handleEvent(e);
+                                    e.consume();
+                                });
                             }
                         }
                     }
@@ -670,13 +732,33 @@ public final class MainController {
                     }
                 });
         Platform.runLater(() -> { //Run when initialised
+            pagePane.addEventHandler(MouseEvent.ANY, handleInput);
+            pagePane.addEventHandler(KeyEvent.ANY, handleInput);
+            pageScroll.addEventFilter(KeyEvent.ANY, event -> {
+                if (event.getCode() == KeyCode.DOWN || event.getCode() == KeyCode.UP || event.getCode() == KeyCode.LEFT || event.getCode() == KeyCode.RIGHT) {
+                    handleEvent(event);
+                    event.consume();
+                }
+            });
+
             engine.start();
         });
+
+        //Set handlers for shapes and text.
+        extShapeFactory.setHrefClickHandler((ev) -> {
+            handleEvent(ev);
+        });
+        extShapeFactory.setHrefHoverEnterHandler((ev) -> {
+            handleEvent(ev);
+        });
+        extShapeFactory.setHrefHoverExitHandler((ev) -> {
+            handleEvent(ev);
+        });
         pagePane.setOnScroll((e) -> pageScrollEventHandler(e)); //Scaling stuff
-        pageScroll.setOnKeyReleased((e) -> engine.offerEvent(e)); //I'll get the engine to handle the keys
 
         pageScroll.setPannable(true);
-        pagePane.setEffect(new DropShadow());
+        var ds = new DropShadow();
+        pagePane.setEffect(ds);
 
         toggleDarkMode();
     }

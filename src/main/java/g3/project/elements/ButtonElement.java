@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software
+ *   be used to endorse or promote products derived from this software 
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -28,43 +28,41 @@
  */
 package g3.project.elements;
 
-import nu.xom.*;
+import g3.project.graphics.StyledTextSeg;
+import nu.xom.Attribute;
+import nu.xom.Builder;
+import nu.xom.Element;
 
 /**
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public final class ElementFactory extends NodeFactory {
+public class ButtonElement extends Element {
+    //CHECKSTYLE:OFF
 
-    @Override
-    public Element startMakingElement(final String name, final String namespaceURI) {
-        switch (name.toLowerCase()) {
-            case "base:document":
-                return new DocElement(name, namespaceURI);
-            case "base:page":
-                return new PageElement(name, namespaceURI);
-            case "base:shape":
-                return new ShapeElement(name, namespaceURI);
-            case "base:image":
-                return new ImageElement(name, namespaceURI);
-            case "base:playable":
-                return new PlayableElement(name, namespaceURI);
-            case "base:table":
-                return new TableElement(name, namespaceURI);
-            case "base:text":
-                return new TextElement(name, namespaceURI);
-            case "base:stroke":
-                return new StrokeElement(name, namespaceURI);
-            case "base:font":
-                return new FontElement(name, namespaceURI);
-            case "base:href":
-                return new RefElement(name, namespaceURI);
-            case "ext:script":
-                return new ScriptElement(name, namespaceURI);
-            case "script":
-                return new ScriptElement(name, namespaceURI);
-            default:
-                return new Element(name, namespaceURI);
+    private static ThreadLocal builders = new ThreadLocal() {
+
+        protected synchronized Object initialValue() {
+            return new Builder(new ElementFactory());
         }
+
+    };
+
+    public ButtonElement(String name) {
+        super(name);
     }
+
+    public ButtonElement(String name, String uri) {
+        super(name, uri);
+    }
+
+    public ButtonElement(Element element) {
+        super(element);
+    }
+
+    public ButtonElement(String name, String uri, Object... objs) {
+        super(name, uri);
+    }
+
+//CHECKSTYLE:ON
 }

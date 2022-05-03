@@ -30,6 +30,7 @@ package g3.project.elements;
 
 import g3.project.core.Engine;
 import g3.project.core.RecursiveBindings;
+import g3.project.core.Scripting;
 import java.util.Optional;
 import java.util.ArrayList;
 import java.util.Random;
@@ -208,23 +209,18 @@ public final class DocElement extends Element implements Scriptable {
 
     @Override
     public RecursiveBindings getScriptingBindings() {
+        elementScriptBindings.setParent(this.getParentElementScriptingBindings().get());
         return elementScriptBindings;
     }
 
     /**
-     * Get Local Script Bindings of parent node, if parent node is another
-     * Scriptable element.
+     * Get the program-base definitions.
      *
      * @return Optional Bindings
      */
     @Override
     public Optional<RecursiveBindings> getParentElementScriptingBindings() {
-        var parent = this.getParent();
-        if (parent instanceof Scriptable) {
-            return Optional.of(((Scriptable) parent).getScriptingBindings());
-        } else {
-            return Optional.empty();
-        }
+        return Optional.of(Scripting.TOP_LEVEL_BINDINGS);
     }
 
     /**

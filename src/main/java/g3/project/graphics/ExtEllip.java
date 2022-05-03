@@ -26,49 +26,32 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package g3.project.ui;
+package g3.project.graphics;
 
-import javafx.scene.paint.Color;
-import nu.xom.Node;
+import java.util.ArrayList;
+import javafx.scene.shape.Ellipse;
 
 /**
  *
- * This is a temporary object for transfer between the engine and UI
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class SizeObj {
-    private final Double x_px;
-    private final Double y_px;
-    private final Double rot_deg;    
-    /**
-    *
-    * Create new object. X and Y are in PX, rot is in degrees. 
-    */
-    public SizeObj(Double x, Double y, Double rot){
-        this.x_px = x;
-        this.y_px = y;
-        this.rot_deg = rot;
-    }
+public final class ExtEllip extends ExtShape {
     
-    /**
-     * 
-     * @return Returns X size in PX
-     */
-    public Double getX(){
-        return x_px;
+    public ExtEllip() {
+        super(new Ellipse());
     }
-    /**
-     * 
-     * @return Returns Y size in PX
-     */
-    public Double getY(){
-        return y_px;
-    }
-    /**
-     * 
-     * @return Returns Rotation in Degrees
-     */
-    public Double getRot(){
-        return rot_deg;
+
+    @Override
+    public void setSize(final SizeObj size) {
+        this.width = size.getX();
+        this.height = size.getY();
+        this.rot = size.getRot();
+
+        if (textVbox != null) {
+            textVbox.setPrefWidth(this.width);
+        }
+        this.setRotate(rot);
+        ((Ellipse) shape).setRadiusX(width / 2);
+        ((Ellipse) shape).setRadiusY(height / 2);
     }
 }

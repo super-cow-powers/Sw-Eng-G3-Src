@@ -26,45 +26,48 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package g3.project.elements;
+package g3.project.graphics;
 
-import nu.xom.*;
+import javafx.geometry.Point2D;
 
 /**
  *
- * @author David Miall<dm1306@york.ac.uk>
+ * @author david
  */
-public final class ElementFactory extends NodeFactory {
+public final class LocObj {
+//CHECKSTYLE:OFF
 
-    @Override
-    public Element startMakingElement(final String name, final String namespaceURI) {
-        switch (name.toLowerCase()) {
-            case "base:document":
-                return new DocElement(name, namespaceURI);
-            case "base:page":
-                return new PageElement(name, namespaceURI);
-            case "base:shape":
-                return new ShapeElement(name, namespaceURI);
-            case "base:image":
-                return new ImageElement(name, namespaceURI);
-            case "base:playable":
-                return new PlayableElement(name, namespaceURI);
-            case "base:table":
-                return new TableElement(name, namespaceURI);
-            case "base:text":
-                return new TextElement(name, namespaceURI);
-            case "base:stroke":
-                return new StrokeElement(name, namespaceURI);
-            case "base:font":
-                return new FontElement(name, namespaceURI);
-            case "base:href":
-                return new RefElement(name, namespaceURI);
-            case "ext:script":
-                return new ScriptElement(name, namespaceURI);
-            case "script":
-                return new ScriptElement(name, namespaceURI);
-            default:
-                return new Element(name, namespaceURI);
-        }
+    private final Point2D locXY;
+    private final Double zIndex;
+//CHECKSTYLE:ON
+
+    /**
+     * Create location container. Any argument may be null
+     *
+     * @param loc X/Y Location.
+     * @param z Z-Index.
+     */
+    public LocObj(final Point2D loc, final Double z) {
+        locXY = loc;
+        zIndex = z != null ? z : 0;
     }
+
+    /**
+     * Get X/Y Coordinates.
+     *
+     * @return Location.
+     */
+    public Point2D getLoc() {
+        return locXY;
+    }
+
+    /**
+     * Get Z-Index.
+     *
+     * @return Z-index.
+     */
+    public Double getZ() {
+        return zIndex;
+    }
+
 }

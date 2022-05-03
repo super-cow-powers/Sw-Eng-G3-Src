@@ -29,6 +29,7 @@
 package g3.project.elements;
 
 import g3.project.graphics.FontProps;
+import g3.project.graphics.StyledTextSeg;
 import java.util.Optional;
 import javafx.scene.paint.Color;
 import nu.xom.*;
@@ -59,10 +60,12 @@ public final class FontElement extends Element {
     public FontElement(final Element element) {
         super(element);
     }
-    
-    public FontElement(final String name, String uri, String textString) {
+
+    public FontElement(final String name, String uri, StyledTextSeg textSeg) {
         super(name, uri);
-        this.insertChild(textString, 0); //Add text
+        this.insertChild(textSeg.getString(), 0); //Add text
+        this.setProperties(textSeg.getStyle()); //Set the style props.
+
     }
 //CHECKSTYLE:ON
 
@@ -72,80 +75,73 @@ public final class FontElement extends Element {
      * @return FontProps properties.
      */
     public FontProps getProperties() {
-        final double defSize = 10d;
-        var usA = this.getAttribute("underscore");
-        var bldA = this.getAttribute("bold");
-        var itA = this.getAttribute("italic");
-        var sizeA = this.getAttribute("size");
-        var nameA = this.getAttribute("name");
-        var colOpt = this.getCol();
-        Color col = Color.BLACK;
-        boolean us = false;
-        boolean bld = false;
-        boolean it = false;
-        var size = defSize;
-        String name = "";
+        FontProps myProps = new FontProps();
+        //Find all extant valid props.
+        for (String propKey : FontProps.PROPS_MAP.keySet()) {
+            Class propClass = FontProps.PROPS_MAP.get(propKey);
+            var maybeAttr = VisualElement.derefAttribute(this, propKey);
+            if (maybeAttr.isPresent()) { //Does the attr exist?
+                var attr = maybeAttr.get();
+                Object attrVal;
+                String attrStr = attr.getValue();
+                //Get props as right type.
+                if (propClass == Boolean.class) {
+                    attrVal = Boolean.parseBoolean(attrStr);
+                } else if (propClass == Double.class) {
+                    attrVal = Double.valueOf(attrStr);
+                } else {
+                    attrVal = attrStr;
+                }
+                myProps.put(propKey, attrVal);
+            }
+        }
+        return myProps;
+    }
 
-        if (usA != null) {
-            us = Boolean.parseBoolean(usA.getValue());
+    /**
+     * Set the font properties.
+     *
+     * @param props Properties to set.
+     */
+    private void setProperties(final FontProps props) {
+        for (String propKey : props.keySet()) {
+            var attr = new Attribute(propKey, props.get(propKey).toString());
+            this.addAttribute(attr);
         }
-        if (bldA != null) {
-            bld = Boolean.getBoolean(bldA.getValue());
-        }
-        if (itA != null) {
-            it = Boolean.getBoolean(itA.getValue());
-        }
-        if (sizeA != null) {
-            size = Double.valueOf(sizeA.getValue());
-        }
-        if (nameA != null) {
-            name = nameA.getValue();
-        }
-        if (colOpt.isPresent()) {
-            col = colOpt.get();
-        }
-        return new FontProps(us, it, bld, size, name, col);
     }
 
     /**
      * Get font colour.
      *
+     * @param colString Colour string to convert.
      * @return Optional font colour.
      */
-    private Optional<Color> getCol() {
+    public static Optional<Color> convCol(final String colString) {
         final int lenRGB = 6;
         final int lenRGBA = 8;
-        var colA = Optional.ofNullable(this.getAttribute("colour"));
-        /**
-         * @todo: Find a nicer looking way of making this work Probably
-         * containing more streams
-         */
-        if (colA.isPresent()) {
-            var colStr = colA.get().getValue().replace("#", "");
 
-            switch (colStr.length()) {
-                case lenRGB:
-                    //CHECKSTYLE:OFF
-                    return Optional.of(new Color(
-                            (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
-                            1.0d));
-                    //CHECKSTYLE:ON
-                case lenRGBA:
-                    //CHECKSTYLE:OFF
-                    return Optional.of(new Color(
-                            (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(6, 8), 16) / 255));
-                    //CHECKSTYLE:ON
-                default:
-                    return Optional.empty();
+        var colStr = colString.replace("#", "");
+        switch (colStr.length()) {
+            case lenRGB:
+                //CHECKSTYLE:OFF
+                return Optional.of(new Color(
+                        (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
+                        (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
+                        (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
+                        1.0d));
+            //CHECKSTYLE:ON
+            case lenRGBA:
+                //CHECKSTYLE:OFF
+                return Optional.of(new Color(
+                        (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
+                        (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
+                        (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
+                        (double) Integer.valueOf(colStr.substring(6, 8), 16) / 255));
+            //CHECKSTYLE:ON
+            default:
+                return Optional.empty();
 
-            }
-        } else { //No colour specified
-            return Optional.empty();
         }
+
     }
 }

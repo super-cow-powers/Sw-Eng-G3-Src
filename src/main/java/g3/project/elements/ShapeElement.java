@@ -28,7 +28,11 @@
  */
 package g3.project.elements;
 
+import g3.project.graphics.LocObj;
+import g3.project.graphics.StyledTextSeg;
+import java.util.ArrayList;
 import java.util.Optional;
+import javafx.geometry.Point2D;
 import nu.xom.*;
 
 /**
@@ -67,24 +71,104 @@ public class ShapeElement extends VisualElement {
         return this.getType();
     }
 
-    public Optional<TextElement> getText() {
-        TextElement text = null;
+    /**
+     * Set segment points for polygon or alt-line.
+     *
+     * @param points Segment points.
+     * @throws java.lang.Exception
+     */
+    public final void setSegPoints(final ArrayList<Double> points) throws Exception {
+        if (points.size() % 2 > 0) {
+            throw new Exception("Points list must have even length!");
+        }
+        for (Integer i = 0; i < points.size(); i++) {
+            var segEl = new Element("polyseg", this.EXT_URI);
+            Attribute segAttr;
+            if (i % 2 == 0) {
+                segAttr = new Attribute("x_start", EXT_URI, String.valueOf(points.get(i)));
+            } else {
+                segAttr = new Attribute("y_start", EXT_URI, String.valueOf(points.get(i)));
+            }
+            segEl.addAttribute(segAttr);
+            this.appendChild(segEl);
+        }
+        if (this.getType() == "line") { //I'm a line. Also define old attributes for compatibility.
+            if (points.size() < 4) {
+                throw new Exception("Too few points!");
+            }
+            this.removeAttribute(this.getAttribute("x_end"));
+            this.removeAttribute(this.getAttribute("y_end"));
+            Attribute segAttr = new Attribute("x_end", String.valueOf(points.get(2)));
+            this.addAttribute(segAttr);
+            segAttr = new Attribute("y_end", String.valueOf(points.get(3)));
+            this.addAttribute(segAttr);
+            var origin = this.getOrigin();
+            origin.ifPresentOrElse(o -> {
+                var newOrig = new LocObj(new Point2D(points.get(0), points.get(1)), o.getZ());
+                this.setOrigin(newOrig);
+            },
+                    () -> {
+                        var newOrig = new LocObj(new Point2D(points.get(0), points.get(1)), 1d);
+                        this.setOrigin(newOrig);
+                    });
+        }
+
+    }
+
+    /**
+     * Get a list of points if the element is a line or polygon.
+     *
+     * @return List of points if line or polygon, else returns an empty list.
+     */
+    public final ArrayList<Double> getSegPoints() {
+        var points = new ArrayList<Double>();
+        for (var ch : this.getChildElements()) {
+            if (ch.getLocalName().toLowerCase().equals("polyseg")) {
+                var xAttr = ch.getAttribute("x");
+                var yAttr = ch.getAttribute("y");
+                if (!(xAttr == null || yAttr == null)) {
+                    points.add(Double.valueOf(xAttr.getValue()));
+                    points.add(Double.valueOf(yAttr.getValue()));
+                }
+            }
+        }
+        if (this.getType().equals("line")) { //I'm a line. Check for old line attributes.
+            if (points.size() == 0) {
+                var xAttr = this.getAttribute("x_end");
+                var yAttr = this.getAttribute("y_end");
+                var maybeStart = this.getOrigin();
+                if (!(xAttr == null || yAttr == null || maybeStart.isEmpty())) {
+                    var start = maybeStart.get();
+                    points.add(start.getLoc().getX());
+                    points.add(start.getLoc().getY());
+                    points.add(Double.valueOf(xAttr.getValue()));
+                    points.add(Double.valueOf(yAttr.getValue()));
+                }
+
+            }
+        }
+        return points;
+    }
+
+    public Optional<ArrayList<StyledTextSeg>> getText() {
+        ArrayList<StyledTextSeg> text = null;
         for (var ch : this.getChildElements()) {
             if (ch instanceof TextElement) {
-                text = (TextElement) ch;
+                text = ((TextElement) ch).getText();
             }
         }
         return Optional.ofNullable(text);
     }
 
-    public final void setText(String textString) {
+    public final void setText(ArrayList<StyledTextSeg> text) {
         for (var ch : this.getChildElements()) {
             if (ch instanceof TextElement) {
+                this.removeChild(ch);
                 ch.detach();
             }
         }
-        var text = new TextElement("base:text", BASE_URI, textString);
-        this.appendChild(text);
+        var textEl = new TextElement("base:text", BASE_URI, text);
+        this.appendChild(textEl);
         hasUpdated();
     }
 
