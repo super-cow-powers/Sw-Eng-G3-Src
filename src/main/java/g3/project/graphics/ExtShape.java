@@ -33,11 +33,13 @@ import java.util.ArrayList;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import javafx.event.ActionEvent;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Ellipse;
 import javafx.scene.shape.Rectangle;
@@ -45,6 +47,7 @@ import javafx.scene.shape.Shape;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.shape.StrokeType;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 
 /**
@@ -56,11 +59,17 @@ public abstract class ExtShape extends Group {
     protected StackPane stack = new StackPane();
     protected Shape shape = null;
     protected TextFlow textFlow = null;
+    protected VBox textVbox = null;
 
     protected Double width;
     protected Double height;
     protected Double rot;
-
+    
+    /**
+     * text click handler.
+     */
+    private Consumer<MouseEvent> textClickHandlerConsumer = null;
+    
     /**
      * href click handler.
      */
@@ -77,9 +86,18 @@ public abstract class ExtShape extends Group {
     private Consumer<MouseEvent> hrefHovExHandlerConsumer = null;
 
     public ExtShape(final Shape myShape) {
-        stack.getChildren().add(myShape);
         shape = myShape;
+        stack.getChildren().add(shape);
         this.getChildren().add(stack);
+    }
+
+    /**
+     * Set the text click handler.
+     *
+     * @param handler Handler to set.
+     */
+    public final void setTextClickHandler(final Consumer<MouseEvent> handler) {
+        this.textClickHandlerConsumer = handler;
     }
 
     /**
@@ -156,7 +174,7 @@ public abstract class ExtShape extends Group {
         var maybeShadow = visualProps.makeShadow();
         maybeShadow.ifPresent(sh -> {
             shape.setEffect(sh);
-                }); //Apply shadow
+        }); //Apply shadow
         this.setVisible((Boolean) visualProps.getProp(VisualProps.VISIBLE).get());
         this.setFill((Color) visualProps.getProp(VisualProps.FILL).get());
     }
@@ -166,19 +184,25 @@ public abstract class ExtShape extends Group {
      *
      * @todo Make work for arbitrary Rich Text.
      * @param text Text to set.
+     * @param align Text horizontal alignment.
+     * @param textVertAlign Text vertical alignment.
      */
-    public final void setText(final ArrayList<StyledTextSeg> text) {
+    public final void setText(final ArrayList<StyledTextSeg> text, final TextAlignment align, final Pos textVertAlign) {
         if (text.size() <= 0) {
             return;
         }
         if (textFlow == null) {
             textFlow = new TextFlow();
-            stack.getChildren().add(textFlow);
+            textVbox = new VBox();
+            textVbox.getChildren().add(textFlow);
+            textVbox.setPrefWidth(this.width);
+            textFlow.setPrefWidth(this.width);
+            stack.getChildren().add(textVbox);
         }
-        textFlow.setPrefWidth(this.width);
+        textVbox.setAlignment(textVertAlign);
         textFlow.getChildren().clear();
-        textFlow.setStyle("-fx-background-color:transparent;");
-        textFlow.setStyle("-fx-text-alignment: \'" + text.get(0).getStyle().getProp(FontProps.ALIGNMENT).get() + "\';");
+        textFlow.setTextAlignment(align);
+        textFlow.setOnMouseClicked(e -> textClickHandlerConsumer.accept(e));
         //Iterate through all segments
         for (final StyledTextSeg seg : text) {
             Node textEl;

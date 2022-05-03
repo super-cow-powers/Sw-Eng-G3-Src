@@ -62,6 +62,7 @@ import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ListChangeListener.Change;
 import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.effect.DropShadow;
@@ -69,6 +70,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Scale;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
@@ -357,7 +359,11 @@ public final class MainController {
                     () -> s.setViewOrder(0));
             s.setId(id);
             size.ifPresent(sz -> s.setSize(sz));
-            s.setText(text);
+            if (text.size() > 0) {
+                var textAlign = ((String) text.get(0).getStyle().getProp(FontProps.ALIGNMENT).get()).toUpperCase();
+                var textVAlign = ((String) text.get(0).getStyle().getProp(FontProps.VALIGNMENT).get()).toUpperCase();
+                s.setText(text, TextAlignment.valueOf(textAlign), Pos.valueOf(textVAlign));
+            }
             try {
                 if (s instanceof ExtPolygon) {
                     ((ExtPolygon) s).setPoints(segments);

@@ -47,9 +47,8 @@ public final class ExtEllip extends ExtShape {
         this.height = size.getY();
         this.rot = size.getRot();
 
-        if (textFlow != null) {
-            textFlow.setPrefWidth(width);
-            textFlow.setPrefHeight(height);
+        if (textVbox != null) {
+            textVbox.setPrefWidth(this.width);
         }
         this.setRotate(rot);
         ((Ellipse) shape).setRadiusX(width / 2);

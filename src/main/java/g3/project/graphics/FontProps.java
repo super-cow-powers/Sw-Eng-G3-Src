@@ -65,18 +65,21 @@ public class FontProps extends HashMap<String, Object> {
     protected static final Class COLOUR_TYPE = Color.class;
     public static final String ALIGNMENT = "ext:alignment";
     protected static final Class ALIGNMENT_TYPE = String.class;
+    public static final String VALIGNMENT = "ext:vertalignment";
+    protected static final Class VALIGNMENT_TYPE = String.class;
 
     //CHECKSTYLE:ON
     /**
      * Contains known props and their classes.
      */
     public static final Map<String, Class> PROPS_MAP = Map.ofEntries(entry(US, US_TYPE),
-            entry(IT, IT_TYPE), entry(BOLD, BOLD_TYPE), entry(SIZE, SIZE_TYPE), entry(FONT, FONT_TYPE), entry(COLOUR, COLOUR_TYPE), entry(ALIGNMENT, ALIGNMENT_TYPE));
+            entry(IT, IT_TYPE), entry(BOLD, BOLD_TYPE), entry(SIZE, SIZE_TYPE), entry(FONT, FONT_TYPE),
+            entry(COLOUR, COLOUR_TYPE), entry(ALIGNMENT, ALIGNMENT_TYPE), entry(VALIGNMENT, VALIGNMENT_TYPE));
     /**
      * Contains default values for known props.
      */
     public static final Map<String, Object> PROP_DEFAULTS = Map.ofEntries(entry(US, false), entry(IT, false), entry(BOLD, false),
-            entry(SIZE, 16d), entry(FONT, "monospace"), entry(COLOUR, Color.BLACK), entry(ALIGNMENT, "left"));
+            entry(SIZE, 16d), entry(FONT, "monospace"), entry(COLOUR, Color.BLACK), entry(ALIGNMENT, "left"), entry(VALIGNMENT, "center_left"));
     /**
      * Contains CSS strings for known props.
      */

@@ -21,6 +21,7 @@
             </xsd:complexType>
         </xsd:element>
 
-	<xsd:attribute name="alignment" type="xsd:string" />
+        <xsd:attribute name="alignment" type="xsd:string" />
+        <xsd:attribute name="vertalignment" type="xsd:string" />
 	<xsd:attribute name="shade-px" type="xsd:double" />
 </xsd:schema>
