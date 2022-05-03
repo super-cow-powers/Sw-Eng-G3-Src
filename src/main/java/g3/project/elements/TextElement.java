@@ -78,13 +78,16 @@ public class TextElement extends Element implements Includable {
     public final ArrayList<StyledTextSeg> getText() {
         var list = new ArrayList<StyledTextSeg>();
         var maybeAlignment = VisualElement.derefAttribute(this, FontProps.ALIGNMENT);
+        var maybeVAlignment = VisualElement.derefAttribute(this, FontProps.VALIGNMENT);
 
         var myAlignment = (maybeAlignment.isEmpty()) ? FontProps.PROP_DEFAULTS.get(FontProps.ALIGNMENT) : maybeAlignment.get().getValue();
+        var myVAlignment = (maybeVAlignment.isEmpty()) ? FontProps.PROP_DEFAULTS.get(FontProps.VALIGNMENT) : maybeVAlignment.get().getValue();
         for (var ch : this.getChildElements()) {
             if (ch instanceof FontElement) {
                 FontElement chf = (FontElement) ch;
                 var props = chf.getProperties();
                 props.put(FontProps.ALIGNMENT, myAlignment);
+                props.put(FontProps.VALIGNMENT, myVAlignment);
                 //Go through the children to find any links
                 for (int i = 0; i < chf.getChildCount(); i++) {
                     var textOrRef = chf.getChild(i);

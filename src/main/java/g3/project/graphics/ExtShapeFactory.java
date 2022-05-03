@@ -28,32 +28,24 @@
  */
 package g3.project.graphics;
 
-import g3.project.graphics.StyledTextSeg.REF_TYPE;
-import java.util.ArrayList;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import javafx.event.ActionEvent;
-import javafx.scene.Group;
-import javafx.scene.Node;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Ellipse;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Shape;
-import javafx.scene.shape.StrokeLineCap;
-import javafx.scene.shape.StrokeType;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 
 /**
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
 public final class ExtShapeFactory {
-
+    
+    /**
+     * text click handler.
+     */
+    @SuppressWarnings("empty-statement")
+    private Consumer<MouseEvent> textClickHandlerConsumer = (evt) -> {
+        ;
+    };
+    
     /**
      * href click handler.
      */
@@ -132,6 +124,15 @@ public final class ExtShapeFactory {
         return maybeShape;
     }
 
+    /**
+     * Set the text click handler.
+     *
+     * @param handler Handler to set.
+     */
+    public final void setTextClickHandler(final Consumer<MouseEvent> handler) {
+        this.textClickHandlerConsumer = handler;
+    }
+    
     /**
      * Set the href click handler.
      *
