@@ -351,14 +351,9 @@ public final class MainController {
             }
             s.setProps(props); //Must do this before relocating!
             s.setStroke(stroke);
-            loc.ifPresentOrElse(l -> {
-                s.setViewOrder(l.getZ());
-                var origin = l.getLoc();
-                s.relocate(origin.getX(), origin.getY());
-            },
-                    () -> s.setViewOrder(0));
+            
             s.setId(id);
-            size.ifPresent(sz -> s.setSize(sz));
+            
             if (text.size() > 0) {
                 var textAlign = ((String) text.get(0).getStyle().getProp(FontProps.ALIGNMENT).get()).toUpperCase();
                 var textVAlign = ((String) text.get(0).getStyle().getProp(FontProps.VALIGNMENT).get()).toUpperCase();
@@ -373,6 +368,14 @@ public final class MainController {
             } catch (Exception ex) {
                 Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
             }
+            //Move and rotate after everything else is set.
+            size.ifPresent(sz -> s.setSize(sz));
+            loc.ifPresentOrElse(l -> {
+                s.setViewOrder(l.getZ());
+                var origin = l.getLoc();
+                s.relocate(origin.getX(), origin.getY());
+            },
+                    () -> s.setViewOrder(0));
         });
     }
 

@@ -194,21 +194,26 @@ public class VisualElement extends Element implements Scriptable {
      * @return Optional size
      */
     public final Optional<SizeObj> getSize() {
-        var x = Optional.ofNullable(this.getAttribute("x_size_px"))
+        var xOpt = Optional.ofNullable(this.getAttribute("x_size_px"))
                 .map(f -> f.getValue())
                 .map(f -> Double.valueOf(f));
-        var y = Optional.ofNullable(this.getAttribute("y_size_px"))
+        var yOpt = Optional.ofNullable(this.getAttribute("y_size_px"))
                 .map(f -> f.getValue())
                 .map(f -> Double.valueOf(f));
-        var rot = Optional.ofNullable(this.getAttribute("rot_angle"))
+        var rotOpt = Optional.ofNullable(this.getAttribute("rot_angle"))
                 .map(f -> f.getValue())
                 .map(f -> Double.valueOf(f));
 
-        return (x.isPresent() && y.isPresent())
-                ? Optional.of(new SizeObj(x.get(),
-                        y.get(),
-                        rot.isPresent() ? rot.get() : 0))
-                : Optional.empty();
+        if (xOpt.isEmpty() && yOpt.isEmpty() && rotOpt.isEmpty()) {
+            //Really is no size given.
+            return Optional.empty();
+        }
+        //Sometimes element may give only some params - set others to 0.
+        final Double x = (xOpt.isEmpty()) ? 0 : xOpt.get();
+        final Double y = (yOpt.isEmpty()) ? 0 : yOpt.get();
+        final Double rot = (rotOpt.isEmpty()) ? 0 : rotOpt.get();
+
+        return Optional.of(new SizeObj(x, y, rot));
     }
 
     /**

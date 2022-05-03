@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- This is an example of a specific extension schema -->
+<!-- These are our PWS Extensions -->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" xml:lang="EN" xmlns:target="http://PWS_Exts" targetNamespace="http://PWS_Exts">
 
 	<xsd:element name="script">
@@ -23,5 +23,7 @@
 
         <xsd:attribute name="alignment" type="xsd:string" />
         <xsd:attribute name="vertalignment" type="xsd:string" />
+        <xsd:attribute name="highlight" type="xsd:string" />
+        
 	<xsd:attribute name="shade-px" type="xsd:double" />
 </xsd:schema>

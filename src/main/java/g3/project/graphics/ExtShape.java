@@ -61,9 +61,9 @@ public abstract class ExtShape extends Group {
     protected TextFlow textFlow = null;
     protected VBox textVbox = null;
 
-    protected Double width;
-    protected Double height;
-    protected Double rot;
+    protected Double width = 0d;
+    protected Double height = 0d;
+    protected Double rot = 0d;
     
     /**
      * text click handler.

@@ -70,7 +70,7 @@ public class StyledTextSeg {
      * @param target href target.
      * @param type href target type.
      */
-    public final void SetHRef(final String target, final REF_TYPE type) {
+    public final void setHRef(final String target, final REF_TYPE type) {
         myRef = new RefProps(type, target);
     }
 
