@@ -1,0 +1,22 @@
+What's an ExtShape?
+An extshape is an OpenJFX Group, containing a StackPane as the immediate child, which then contains a Shape and a VBox containing any text in a TextFlow.
+
+How do I get one?
+Create an ExtShapeFactory and call makeShape on it, specifying your required shape type.
+The Factory will create ExtShapes with default callback handlers - call the appropriate Factory method to set these.
+    Callback Handlers: These should be a standard Java Consumer - any old Lambda will do.
+
+Properties:
+ExtShapes use StrokeProperties to - get this - define their stroke properties (setStroke), and  VisualProperties to set their shadow, fill, and if the shape is visible.
+FontProps are used to style text segments. 
+The properties types are all a type of HashMap with a bunch of Static known properties (they could be more efficient, but I've got too much to do to care).
+The public static String fields contain an XML attribute (e.g. StrokeProps.WIDTH == "width") for the associated element and property.
+Some have a toCSS method -call it and you'll get some JFX CSS for some of the properties, but no promises it'll give CSS for everything (some don't translate well to JFX CSS).
+Realistically, you shouldn't need to care about these details, just stick the properties from your XML into them and you should be golden.
+
+Showing Text:
+In the PWS, you'll see that all text is within a shape - so it is with this stuff.
+You draw text by calling the setText method on an ExtShape - word of warning though, don't add text to a straight line (almost a 1D thing), it'd look odd.
+
+Preparing Text:
+Text is fed to your ExtShape in an array of StyledTextSegs, which have a string of text plus a FontProperties

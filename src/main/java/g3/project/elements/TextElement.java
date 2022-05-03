@@ -96,7 +96,7 @@ public class TextElement extends Element implements Includable {
                         list.add(seg);
                     } else if (textOrRef instanceof RefElement) {
                         var seg = new StyledTextSeg(props, textOrRef.getValue());
-                        seg.SetHRef(((RefElement) textOrRef).getTarget(), ((RefElement) textOrRef).getType());
+                        seg.setHRef(((RefElement) textOrRef).getTarget(), ((RefElement) textOrRef).getType());
                         list.add(seg);
                     }
                 }

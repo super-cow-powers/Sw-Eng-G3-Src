@@ -44,7 +44,7 @@ public final class ExtLine extends ExtShape {
     @Override
     public void setSize(final SizeObj size) {
         this.setRotate(size.getRot());
-        //Setting x/y size makes little sense for a defined polygon
+        //Setting x/y size makes little sense for a defined / line
     }
 
     public void setPoints(ArrayList<Double> points) throws Exception{

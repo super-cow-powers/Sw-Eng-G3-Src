@@ -76,6 +76,7 @@ public final class ExtShapeFactory {
     //CHECKSTYLE:OFF
     public enum ShapeType {
         circle,
+        ellipse,
         textbox,
         rectangle,
         polygon,
@@ -97,6 +98,7 @@ public final class ExtShapeFactory {
         ExtShape shape = null;
         switch (shapeType) {
             case circle:
+            case ellipse:
                 shape = new ExtEllip();
                 break;
             case textbox:
@@ -129,7 +131,7 @@ public final class ExtShapeFactory {
      *
      * @param handler Handler to set.
      */
-    public final void setTextClickHandler(final Consumer<MouseEvent> handler) {
+    public void setTextClickHandler(final Consumer<MouseEvent> handler) {
         this.textClickHandlerConsumer = handler;
     }
     
@@ -138,7 +140,7 @@ public final class ExtShapeFactory {
      *
      * @param handler Handler to set.
      */
-    public final void setHrefClickHandler(final Consumer<MouseEvent> handler) {
+    public void setHrefClickHandler(final Consumer<MouseEvent> handler) {
         this.hrefClickHandlerConsumer = handler;
     }
 
@@ -147,7 +149,7 @@ public final class ExtShapeFactory {
      *
      * @param handler Handler to set.
      */
-    public final void setHrefHoverEnterHandler(final Consumer<MouseEvent> handler) {
+    public void setHrefHoverEnterHandler(final Consumer<MouseEvent> handler) {
         this.hrefHovEntHandlerConsumer = handler;
     }
 
@@ -156,7 +158,7 @@ public final class ExtShapeFactory {
      *
      * @param handler Handler to set.
      */
-    public final void setHrefHoverExitHandler(final Consumer<MouseEvent> handler) {
+    public void setHrefHoverExitHandler(final Consumer<MouseEvent> handler) {
         this.hrefHovExHandlerConsumer = handler;
     }
 

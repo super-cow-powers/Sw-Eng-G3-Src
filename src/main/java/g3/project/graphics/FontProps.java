@@ -79,12 +79,14 @@ public class FontProps extends HashMap<String, Object> {
      * Contains default values for known props.
      */
     public static final Map<String, Object> PROP_DEFAULTS = Map.ofEntries(entry(US, false), entry(IT, false), entry(BOLD, false),
-            entry(SIZE, 16d), entry(FONT, "monospace"), entry(COLOUR, Color.BLACK), entry(ALIGNMENT, "left"), entry(VALIGNMENT, "center_left"));
+            entry(SIZE, 16d), entry(FONT, "monospace"), entry(COLOUR, Color.BLACK),
+            entry(ALIGNMENT, "left"), entry(VALIGNMENT, "center_left"));
     /**
      * Contains CSS strings for known props.
      */
     private static final Map<String, String> CSS = Map.ofEntries(entry(US, "-fx-underline: \'%s\';"), entry(IT, "-fx-font-style: %s;"), entry(BOLD, "-fx-font-weight: %s;"),
-            entry(SIZE, "-fx-font-size: %s;"), entry(FONT, "-fx-font-family: \'%s\';"), entry(COLOUR, "-fx-fill: \'%s\';"), entry(ALIGNMENT, "-fx-text-alignment: \'%s\';"));
+            entry(SIZE, "-fx-font-size: %s;"), entry(FONT, "-fx-font-family: \'%s\';"), entry(COLOUR, "-fx-fill: \'%s\';"),
+            entry(ALIGNMENT, "-fx-text-alignment: \'%s\';"));
 
     /**
      * Constructor. Takes map of properties.
