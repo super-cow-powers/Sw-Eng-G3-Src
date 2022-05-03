@@ -4,7 +4,13 @@ An extshape is an OpenJFX Group, containing a StackPane as the immediate child, 
 How do I get one?
 Create an ExtShapeFactory and call makeShape on it, specifying your required shape type.
 The Factory will create ExtShapes with default callback handlers - call the appropriate Factory method to set these.
-    Callback Handlers: These should be a standard Java Consumer - any old Lambda will do.
+You can also set each ExtShape's handler individually with the methods on the shape.
+    Callback Handlers: These should be a standard Java Consumer, consuming a MouseEvent.
+    	     You get:
+	     TextClickHandler: Clicked on the TextFlow
+	     HrefClickHandler: Clicked on an Href
+	     HrefHoverEnterHandler: Mouse hover started on Href
+	     HrefHoverExitHandler: Mouse hover finished on Href
 
 Properties:
 ExtShapes use StrokeProperties to - get this - define their stroke properties (setStroke), and  VisualProperties to set their shadow, fill, and if the shape is visible.
@@ -17,3 +23,16 @@ Realistically, you shouldn't need to care about these details, just stick the pr
 Showing Text:
 In the PWS, you'll see that all text is within a shape - so it is with this stuff.
 You draw text by calling the setText method on an ExtShape - word of warning though, don't add text to a straight line (almost a 1D thing), it'd look odd.
+
+Preparing Text:
+Text is fed to your ExtShape in an array of StyledTextSegs, which have a string of text plus a FontProps. These segments can also BE an href,
+to turn one into a link call setHref with a target and the type (either internal - goes to another part of the doc, or external - goes to a file or site or whatever).
+Except for the setHref bit, these StyledTextSegs are immutable (but props. maps aren't...) - so make a new one to change the contents.
+
+Sizes:
+When everything else is set up, call setSize with a SizeObj - these are immutable records containing an x/y size and rotation in degrees.
+
+Locations:
+Locations are stored in an immutable LocObj containing X/Y location and Z-index - you are not obliged to use this. 
+When everything else is set up, call the Group's setViewOrder method with the Z-index, and call the Group's relocate method
+with the X/Y location. Both of these are standard JFX methods.
