@@ -31,6 +31,7 @@ package g3.project.core;
 import g3.project.elements.Scriptable;
 import g3.project.xmlIO.Io;
 import java.io.IOException;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Optional;
@@ -70,6 +71,8 @@ public final class Scripting {
     public static RecursiveBindings TOP_LEVEL_BINDINGS = new RecursiveBindings();
 
     private final String defaultLang;
+
+    private final Writer defaultWriter;
     /**
      * Ref to engine object.
      */
@@ -82,14 +85,16 @@ public final class Scripting {
      *
      * @param defaultLanguage Default scripting language.
      * @param globalEngine Ref to the engine.
+     * @param writer Default Output writer.
      */
-    public Scripting(final String defaultLanguage, final Engine globalEngine) {
+    public Scripting(final String defaultLanguage, final Engine globalEngine, final Writer writer) {
         // Init script engine manager
         scriptingEngineManager = new ScriptEngineManager();
         var globals = scriptingEngineManager.getBindings();
         globals.put("engine", globalEngine);
         engine = globalEngine;
         defaultLang = defaultLanguage;
+        defaultWriter = writer;
         //Load in the custom global functions
         var fns = Io.getInternalResource("globalFunctions.py", Scripting.class);
         try {
@@ -174,17 +179,40 @@ public final class Scripting {
      * @throws ScriptException Bad script.
      */
     protected void evalString(final String code, final String lang, final RecursiveBindings bindings) throws ScriptException {
-        var scrEngine = getScriptEngine(lang);
-        scrEngine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
-        scrEngine.eval(code);
+        evalString(code, lang, bindings, defaultWriter);
     }
 
+    /**
+     * Evaluate a string in the top-level context.
+     *
+     * @param code Code to evaluate.
+     * @param lang Language code is.
+     * @throws ScriptException Bad code.
+     */
+    public void evalString(final String code, final String lang) throws ScriptException {
+        evalString(code, lang, TOP_LEVEL_BINDINGS);
+    }
+/**
+ * Evaluate a string in the given bindings, with the specified output.
+ * @param code Code to evaluate.
+ * @param lang Language code is.
+ * @param bindings Bindings to use.
+ * @param outWriter Output Writer.
+ * @throws ScriptException Bad code.
+ */
+    private void evalString(final String code, final String lang, final RecursiveBindings bindings, final Writer outWriter) throws ScriptException {
+        var scrEngine = getScriptEngine(lang);
+        scrEngine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+        scrEngine.getContext().setWriter(outWriter);
+        scrEngine.eval(code);
+    }
+/**
+ * Invoke function on element.
+ * @param element Element to start with.
+ * @param function Function to try and call.
+ * @param args Arguments to function.
+ */
     public void invokeOnElement(final Scriptable element, final String function, final Object... args) {
-        /*try { //Re-eval the element.
-            evalElement(element);
-        } catch (Exception e) {
-            System.err.println(e);
-        }*/
         var scEng = getDefaultScriptEngine();
         scEng.setBindings(element.getScriptingBindings(), ScriptContext.ENGINE_SCOPE);
         try {

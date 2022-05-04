@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="g3.project.ui.MainController">
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1" fx:controller="g3.project.ui.MainController">
     <children>
         <MenuBar>
             <menus>
@@ -31,6 +31,9 @@
                         <MenuItem mnemonicParsing="false" text="Duplicate" />
                         <MenuItem mnemonicParsing="false" text="Delete" />
                     </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="View">
+                    <MenuItem mnemonicParsing="false" text="Show Console" onAction="#showConsole"/>
                 </Menu>
                 <Menu mnemonicParsing="false" text="Help">
                     <items>
