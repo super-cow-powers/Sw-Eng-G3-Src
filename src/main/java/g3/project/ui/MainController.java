@@ -675,20 +675,32 @@ public final class MainController {
                             for (Node addedNode : c.getAddedSubList()) {
                                 addedNode.addEventHandler(MouseEvent.ANY, (e) -> {
                                     var handle = true;
-                                    if (amEditable) {
-                                        handle = false;
-                                        if (e.getEventType() == MouseEvent.MOUSE_DRAGGED) {
+
+                                    if (e.getEventType() == MouseEvent.MOUSE_DRAGGED) {
+                                        if (amEditable) {
                                             addedNode.relocate(e.getSceneX() + dragDelta.getX(), e.getSceneY() + dragDelta.getY());
-                                        } else if (e.getEventType() == MouseEvent.MOUSE_PRESSED) {
+                                        }
+                                    } else if (e.getEventType() == MouseEvent.MOUSE_PRESSED) {
+                                        if (amEditable) {
+                                            handle = false;
                                             addedNode.setCursor(Cursor.MOVE);
                                             dragDelta = new Point2D(addedNode.getLayoutX() - e.getSceneX(), addedNode.getLayoutY() - e.getSceneY());
-                                        } else if (e.getEventType() == MouseEvent.MOUSE_RELEASED) {
-                                            addedNode.setCursor(Cursor.MOVE);
-                                            dragDelta = new Point2D(addedNode.getLayoutX() - e.getSceneX(), addedNode.getLayoutY() - e.getSceneY());
-                                        } else if (e.getEventType() == MouseEvent.MOUSE_ENTERED) {
+                                        }
+                                    } else if (e.getEventType() == MouseEvent.MOUSE_RELEASED) {
+                                        if (amEditable) {
+                                            handle = false;
                                             addedNode.setCursor(Cursor.HAND);
+                                            dragDelta = new Point2D(addedNode.getLayoutX() - e.getSceneX(), addedNode.getLayoutY() - e.getSceneY());
+                                        }
+                                    } else if (e.getEventType() == MouseEvent.MOUSE_ENTERED) {
+                                        if (amEditable) {
+                                            handle = false;
+                                            addedNode.setCursor(Cursor.HAND);
+                                        } else {
+                                            addedNode.setCursor(Cursor.DEFAULT);
                                         }
                                     }
+
                                     if (handle) {
                                         handleEvent(e);
                                     }
