@@ -21,6 +21,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>uk.co.caprica</groupId>
+            <artifactId>vlcj</artifactId>
+            <version>4.7.1</version>
+        </dependency>
+        <dependency>
             <groupId>org.mozilla</groupId>
             <artifactId>rhino-engine</artifactId>
             <version>1.7.14</version>
@@ -82,30 +87,30 @@
                 <dependency>
                     <groupId>org.openjfx</groupId>
                     <artifactId>javafx-base</artifactId>
-                    <version>11</version>
+                    <version>14</version>
                     <scope>system</scope>
-                    <systemPath>/usr/lib/jvm/openjfx-11/libs/javafx.base.jar</systemPath>
+                    <systemPath>/usr/lib/jvm/openjfx-14/libs/javafx.base.jar</systemPath>
                 </dependency>
                 <dependency>
                     <groupId>org.openjfx</groupId>
                     <artifactId>javafx-controls</artifactId>
                     <scope>system</scope>
-                    <systemPath>/usr/lib/jvm/openjfx-11/libs/javafx.controls.jar</systemPath>
-                    <version>11</version>
+                    <systemPath>/usr/lib/jvm/openjfx-14/libs/javafx.controls.jar</systemPath>
+                    <version>14</version>
                 </dependency>
                 <dependency>
                     <groupId>org.openjfx</groupId>
                     <artifactId>javafx-fxml</artifactId>
                     <scope>system</scope>
-                    <systemPath>/usr/lib/jvm/openjfx-11/libs/javafx.fxml.jar</systemPath>
-                    <version>11</version>
+                    <systemPath>/usr/lib/jvm/openjfx-14/libs/javafx.fxml.jar</systemPath>
+                    <version>14</version>
                 </dependency>
                 <dependency>
                     <groupId>org.openjfx</groupId>
                     <artifactId>javafx-graphics</artifactId>
                     <scope>system</scope>
-                    <systemPath>/usr/lib/jvm/openjfx-11/libs/javafx.graphics.jar</systemPath>
-                    <version>11</version>
+                    <systemPath>/usr/lib/jvm/openjfx-14/libs/javafx.graphics.jar</systemPath>
+                    <version>14</version>
                 </dependency>
             </dependencies>
         </profile>
@@ -157,22 +162,22 @@
                 <dependency>
                     <groupId>org.openjfx</groupId>
                     <artifactId>javafx-base</artifactId>
-                    <version>11</version>
+                    <version>14</version>
                 </dependency>
                 <dependency>
                     <groupId>org.openjfx</groupId>
                     <artifactId>javafx-controls</artifactId>
-                    <version>11</version>
+                    <version>14</version>
                 </dependency>
                 <dependency>
                     <groupId>org.openjfx</groupId>
                     <artifactId>javafx-fxml</artifactId>
-                    <version>11</version>
+                    <version>14</version>
                 </dependency>
                 <dependency>
                     <groupId>org.openjfx</groupId>
                     <artifactId>javafx-graphics</artifactId>
-                    <version>11</version>
+                    <version>14</version>
                 </dependency>
             </dependencies>
         </profile>
