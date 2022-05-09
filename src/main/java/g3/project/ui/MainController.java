@@ -45,6 +45,7 @@ import g3.project.graphics.FontProps;
 import g3.project.graphics.StrokeProps;
 import g3.project.graphics.StyledTextSeg;
 import g3.project.graphics.VisualProps;
+import g3.project.playable.Player;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.ArrayList;
@@ -512,6 +513,7 @@ public final class MainController {
 
     /**
      * Show or update image on screen.
+     * The image will be cached based on its' path.
      *
      * @param id Image ID.
      * @param size Image Size.

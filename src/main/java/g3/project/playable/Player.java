@@ -26,22 +26,33 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package playable;
+package g3.project.playable;
 
 import java.nio.ByteBuffer;
+import javafx.application.Platform;
 import javafx.scene.Group;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelBuffer;
+import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
+import uk.co.caprica.vlcj.player.base.MediaPlayer;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 import uk.co.caprica.vlcj.player.embedded.videosurface.CallbackVideoSurface;
+import uk.co.caprica.vlcj.player.embedded.videosurface.VideoSurfaceAdapters;
+import uk.co.caprica.vlcj.player.embedded.videosurface.callback.BufferFormat;
+import uk.co.caprica.vlcj.player.embedded.videosurface.callback.BufferFormatCallback;
+import uk.co.caprica.vlcj.player.embedded.videosurface.callback.RenderCallback;
+import uk.co.caprica.vlcj.player.embedded.videosurface.callback.format.RV32BufferFormat;
 
 /**
  *
  * @author David Miall<dm1306@york.ac.uk>
+ *
+ * Based on:
+ * https://github.com/caprica/vlcj-javafx-demo/commit/a057335a1a0ad5761e6d78c469afe1b5a80a9f86
  */
-public class Player extends Group{
+public class Player extends Group {
 
     private MediaPlayerFactory mediaPlayerFactory;
 
@@ -57,11 +68,51 @@ public class Player extends Group{
         mediaPlayerFactory = new MediaPlayerFactory();
         embeddedMediaPlayer = mediaPlayerFactory.mediaPlayers().newEmbeddedMediaPlayer();
         embeddedMediaPlayer.videoSurface().set(new VideoSurface());
+        videoImageView = new ImageView();
+        videoImageView.setPreserveRatio(true);
+        this.getChildren().add(videoImageView);
     }
-    
+
+    public void play(String mrl) {
+        embeddedMediaPlayer.media().play(mrl);
+    }
+
     private class VideoSurface extends CallbackVideoSurface {
+
         VideoSurface() {
             super(new FXBufferFormatCallback(), new FXRenderCallback(), true, VideoSurfaceAdapters.getVideoSurfaceAdapter());
+        }
+    }
+
+    private class FXBufferFormatCallback implements BufferFormatCallback {
+
+        private int sourceWidth;
+        private int sourceHeight;
+
+        @Override
+        public BufferFormat getBufferFormat(int sourceWidth, int sourceHeight) {
+            this.sourceWidth = sourceWidth;
+            this.sourceHeight = sourceHeight;
+            return new RV32BufferFormat(sourceWidth, sourceHeight);
+        }
+
+        @Override
+        public void allocatedBuffers(ByteBuffer[] buffers) {
+            assert buffers[0].capacity() == sourceWidth * sourceHeight * 4;
+            PixelFormat<ByteBuffer> pixelFormat = PixelFormat.getByteBgraPreInstance();
+            videoPixelBuffer = new PixelBuffer<>(sourceWidth, sourceHeight, buffers[0], pixelFormat);
+            videoImage = new WritableImage(videoPixelBuffer);
+            videoImageView.setImage(videoImage);
+        }
+    }
+
+    private class FXRenderCallback implements RenderCallback {
+
+        @Override
+        public void display(MediaPlayer mediaPlayer, ByteBuffer[] nativeBuffers, BufferFormat bufferFormat) {
+            Platform.runLater(() -> {
+                videoPixelBuffer.updateBuffer(pb -> null);
+            });
         }
     }
 }

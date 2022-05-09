@@ -9,6 +9,7 @@ g3/project/elements/Includable.class
 g3/project/graphics/FontProps.class
 g3/project/graphics/StyledTextSeg.class
 g3/project/elements/ButtonElement.class
+g3/project/playable/Player.class
 g3/project/core/Engine$1.class
 g3/project/graphics/StrokeProps.class
 g3/project/elements/RefElement$1.class
@@ -26,6 +27,7 @@ g3/project/elements/RefElement.class
 g3/project/elements/PageElement$1.class
 g3/project/core/Tool.class
 g3/project/xmlIO/Io.class
+g3/project/playable/Player$FXBufferFormatCallback.class
 g3/project/core/Engine.class
 g3/project/graphics/ExtLine.class
 g3/project/elements/ShapeElement$1.class
@@ -36,6 +38,7 @@ g3/project/core/ToolsFactory.class
 g3/project/elements/TableElement$1.class
 g3/project/graphics/ExtShapeFactory.class
 g3/project/network/NetThing.class
+g3/project/playable/Player$VideoSurface.class
 g3/project/elements/TextElement$1.class
 g3/project/core/Tool$1.class
 g3/project/ui/MainController.class
@@ -53,6 +56,7 @@ g3/project/graphics/ExtShapeFactory$1.class
 g3/project/graphics/ExtShapeFactory$ShapeType.class
 g3/project/graphics/ExtEllip.class
 g3/project/graphics/ExtShape.class
+g3/project/playable/Player$FXRenderCallback.class
 g3/project/core/Threaded.class
 g3/project/core/RecursiveBindings.class
 g3/project/elements/ShapeElement.class

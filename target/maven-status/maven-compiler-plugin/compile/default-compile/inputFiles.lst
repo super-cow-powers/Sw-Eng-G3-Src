@@ -14,7 +14,6 @@
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/graphics/StyledTextSeg.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/VisualElement.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/StrokeElement.java
-/home/david/NetBeansProjects/project-core/src/main/java/playable/Player.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/graphics/LocObj.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/RefElement.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/PlayableElement.java
@@ -23,6 +22,7 @@
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/core/Cursor.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/graphics/FontProps.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/FontElement.java
+/home/david/NetBeansProjects/project-core/src/main/java/g3/project/playable/Player.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/Includable.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/core/RecursiveBindings.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/DocElement.java
