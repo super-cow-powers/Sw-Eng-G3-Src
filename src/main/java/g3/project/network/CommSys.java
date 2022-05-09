@@ -148,6 +148,8 @@ public final class CommSys extends Threaded {
                     connectToRemote(connectionQueue.take());
                 } else if (!txEventQueue.isEmpty()) { //Event to send?
                     transmitEvent(txEventQueue.take());
+                } else if (!callQueue.isEmpty()) { //Call to make?
+                    callQueue.take().run();
                 } else {
                     suspended.set(true); // Nothing from enngine
                 }
