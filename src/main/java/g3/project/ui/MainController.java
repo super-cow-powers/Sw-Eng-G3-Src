@@ -296,7 +296,7 @@ public final class MainController {
                 new File(System.getProperty("user.home"))
         );
         fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("XML", "*.xml"),
+                new FileChooser.ExtensionFilter("ZIP", "*.zip"),
                 new FileChooser.ExtensionFilter("SPRES", "*.spres")
         );
 

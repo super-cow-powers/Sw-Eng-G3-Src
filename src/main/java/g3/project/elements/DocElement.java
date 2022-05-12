@@ -86,14 +86,6 @@ public final class DocElement extends Element implements Scriptable {
     }
 
 //CHECKSTYLE:ON
-    /**
-     * Set document base directory.
-     *
-     * @param dir Directory string.
-     */
-    public void setBaseDir(final String dir) {
-        containingDirStr = dir;
-    }
 
     /**
      * Set change callback.
@@ -111,15 +103,6 @@ public final class DocElement extends Element implements Scriptable {
      */
     public Consumer<VisualElement> getChangeCallback() {
         return updateCallback;
-    }
-
-    /**
-     * Get document base directory.
-     *
-     * @return Directory string.
-     */
-    public Optional<String> getBaseDir() {
-        return Optional.ofNullable(containingDirStr);
     }
 
     /**

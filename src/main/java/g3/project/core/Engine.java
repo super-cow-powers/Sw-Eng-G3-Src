@@ -54,6 +54,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -137,6 +139,9 @@ public final class Engine extends Threaded {
      * Writer for the scripting engine.
      */
     private final Writer scrWriter;
+
+    private final String startScreenFileName = "start_screen.spres";
+    private final String emptyFileName = "empty.spres";
 
     /**
      * Constructor.
@@ -409,12 +414,15 @@ public final class Engine extends Threaded {
     }
 
     /**
-     * Parse a new XML document.
+     * Parse a new document archive.
      *
-     * @param xmlFile Doc to parse
+     * @param xmlFile Doc to load
      */
     private void parseNewDoc(final File xmlFile) { // Load a new doc
-        docIO = new Io(xmlFile);
+        if (docIO != null) {
+            docIO.close(); //Close the previous
+        }
+        docIO = new Io(xmlFile.getAbsolutePath());
         var parsed = docIO.getDoc();
         if (parsed.isPresent()) {
             initDoc(parsed.get());
@@ -425,12 +433,18 @@ public final class Engine extends Threaded {
     }
 
     /**
-     * Parse an (currently internal) XML document from stream.
+     * Parse an internal document archive from stream.
      *
-     * @param docStream Doc to parse
+     * @param archStream Doc to load
      */
-    private void parseNewDoc(final InputStream docStream) {
-        docIO = new Io(docStream, "internal_ui");
+    private void parseNewDoc(final InputStream archStream) {
+        eventQueue.clear();
+        callQueue.clear();
+        docQueue.clear();
+        if (docIO != null) {
+            docIO.close(); //Close the previous
+        }
+        docIO = new Io(archStream);
         var parsed = docIO.getDoc();
         if (parsed.isPresent()) {
             initDoc(parsed.get());
@@ -458,8 +472,9 @@ public final class Engine extends Threaded {
             currentDoc = (DocElement) child;
             scriptingEngine.setGlobal("document", currentDoc); //Expose the doc to the scripting engine.
             var valErrs = currentDoc.getValidationErrors();
-            for (var err : valErrs) {
-                System.out.println(err);
+            if (valErrs.size() > 0) {
+                var errStr = String.join("\n", valErrs);
+                putMessage("Validation Errors Found:\n" + errStr, true);
             }
             //When the doc changes, redraw the element that has changed.
             currentDoc.setChangeCallback(
@@ -794,7 +809,7 @@ public final class Engine extends Threaded {
      * @return Optional<Tools>
      */
     private Optional<Tools> loadTools() {
-        var toolsXMLPath = Engine.class.getResource("tools.xml").getPath();
+        /*var toolsXMLPath = Engine.class.getResource("tools.xml").getPath();
         toolIO = new Io(new File(toolsXMLPath), new ToolsFactory());
         var parsedDoc = toolIO.getDoc();
         var root
@@ -802,7 +817,8 @@ public final class Engine extends Threaded {
                         .filter(d -> d.getRootElement() instanceof Tools)
                         .map(d -> (Tools) d.getRootElement());
         this.putMessage("Tools Loaded", false);
-        return root;
+        return root;*/
+        return Optional.empty();
     }
 
     /**
@@ -845,6 +861,36 @@ public final class Engine extends Threaded {
     }
 
     /**
+     * Attempt to save the current doc.
+     */
+    public void saveCurrentDoc() {
+        try {
+            docIO.save();
+        } catch (IOException ex) {
+            Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+            putMessage("Saving Failed: " + ex, true);
+            return;
+        }
+        putMessage("Saved!", false);
+    }
+
+    /**
+     * Attempt to save current doc to new location.
+     *
+     * @param newPath new location to save to.
+     */
+    public void saveCurrentDocAs(final String newPath) {
+        try {
+            docIO.saveAs(newPath);
+        } catch (IOException ex) {
+            Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+            putMessage("Saving Failed: " + ex, true);
+            return;
+        }
+        putMessage("Saved!", false);
+    }
+
+    /**
      * Loads the start screen.
      */
     public void showStartScreen() {
@@ -852,13 +898,19 @@ public final class Engine extends Threaded {
             runFunction(() -> showStartScreen());
             return;
         }
-        eventQueue.clear();
-        callQueue.clear();
-        docQueue.clear();
         //Load the start screen
         var startXmlStream = MainController.class
-                .getResourceAsStream("start_screen.xml");
+                .getResourceAsStream(startScreenFileName);
         parseNewDoc(startXmlStream);
+    }
+
+    /**
+     * Load an empty document.
+     */
+    public void loadEmptyDoc() {
+        var emptyDocFile = MainController.class
+                .getResourceAsStream(emptyFileName);
+        parseNewDoc(emptyDocFile);
     }
 
     /**

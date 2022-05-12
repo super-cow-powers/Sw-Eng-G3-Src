@@ -30,6 +30,7 @@
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/elements/ShapeElement.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/graphics/StrokeProps.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/xmlIO/Io.java
+/home/david/NetBeansProjects/project-core/src/main/java/g3/project/xmlIO/Parse.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/network/NetThing.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/ui/Console.java
 /home/david/NetBeansProjects/project-core/src/main/java/g3/project/graphics/ExtPolygon.java
