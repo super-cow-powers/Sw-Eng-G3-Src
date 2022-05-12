@@ -21,6 +21,13 @@
 
     <dependencies>
         <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>5.11.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/jna.jar</systemPath>
+        </dependency>
+        <dependency>
             <groupId>uk.co.caprica</groupId>
             <artifactId>vlcj</artifactId>
             <version>4.7.1</version>
@@ -76,23 +83,6 @@
     </dependencies>
     <profiles>
         <profile>
-            <id>not-ppc64</id>
-            <activation>
-                <os>
-                    <name>*</name>
-                    <arch>!ppc64</arch>
-                </os>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>net.java.dev.jna</groupId>
-                    <artifactId>jna</artifactId>
-                    <version>5.11.0</version>
-                </dependency>
-            </dependencies>
-        </profile>
-        
-        <profile>
             <id>ppc64</id>
             <activation>
                 <os>
@@ -102,13 +92,6 @@
             </activation>
             
             <dependencies>
-                <dependency>
-                    <groupId>net.java.dev.jna</groupId>
-                    <artifactId>jna</artifactId>
-                    <version>5.11.0</version>
-                    <scope>system</scope>
-                    <systemPath>${project.basedir}/jna.jar</systemPath>
-                </dependency>
                 <dependency>
                     <groupId>org.openjfx</groupId>
                     <artifactId>javafx-base</artifactId>
