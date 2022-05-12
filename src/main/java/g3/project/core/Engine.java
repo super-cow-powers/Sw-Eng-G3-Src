@@ -136,7 +136,7 @@ public final class Engine extends Threaded {
      */
     private final MainController controller;
     /**
-     * Writer for the scripting engine.
+     * Writer for the scripting engine output.
      */
     private final Writer scrWriter;
 
@@ -153,19 +153,19 @@ public final class Engine extends Threaded {
         this.controller = uiController;
         scrWriter = new Writer() {
             @Override
-            public void write(char[] chars, int i, int i1) throws IOException {
+            public void write(final char[] chars, final int i, final int i1) throws IOException {
                 var newChars = Arrays.copyOfRange(chars, i1, i1);
-                putMessage(newChars.toString(), true);
+                putMessage(newChars.toString() + "\n", true);
             }
 
             @Override
-            public void write(String str) {
+            public void write(final String str) {
                 putMessage(str, true);
             }
 
             @Override
             public void flush() throws IOException {
-                putMessage("", Boolean.TRUE);
+                putMessage("\n", Boolean.TRUE);
             }
 
             @Override
@@ -318,6 +318,12 @@ public final class Engine extends Threaded {
         }
     }
 
+    /**
+     * Route a MouseEvent to the correct location.
+     *
+     * @param mev Event.
+     * @param elID Element.
+     */
     private void routeMouseEvent(final MouseEvent mev, final String elID) {
         final var evType = mev.getEventType();
         var elOpt = currentDoc.getElementByID(elID);
@@ -333,14 +339,21 @@ public final class Engine extends Threaded {
         }
     }
 
-    private void routeKeyEvent(final KeyEvent kev, String elID) {
+    /**
+     * Route a KeyEvent to the correct location.
+     *
+     * @param kev Event.
+     * @param elID Element.
+     */
+    private void routeKeyEvent(final KeyEvent kev, final String elID) {
         final var evType = kev.getEventType();
+        var id = elID;
         if (evType == KeyEvent.KEY_PRESSED || evType == KeyEvent.KEY_RELEASED || evType == KeyEvent.KEY_TYPED) {
             //Key has been pressed
-            if (elID.equals("pageScroll")) { //Press routed to page
-                elID = currentPageID;
+            if (id.equals("pageScroll")) { //Press routed to page scroll rather than page
+                id = currentPageID;
             }
-            var elOpt = currentDoc.getElementByID(elID);
+            var elOpt = currentDoc.getElementByID(id);
             final var keyName = kev.getCode().getName();
             System.out.println(kev);
             final Boolean down = (evType == KeyEvent.KEY_PRESSED);
@@ -351,9 +364,9 @@ public final class Engine extends Threaded {
     /**
      * Route an event for an hyperlink.
      *
-     * @param ev
+     * @param ev Mouse event on an hyperlink.
      */
-    private void routeHrefEvt(MouseEvent ev) {
+    private void routeHrefEvt(final MouseEvent ev) {
         var evSrc = (javafx.scene.Node) ev.getSource();
         var parEl = evSrc.getParent();
         var parID = parEl.getId();
@@ -374,7 +387,7 @@ public final class Engine extends Threaded {
                         var segStr = seg.getString();
                         var hlStr = ((Hyperlink) evSrc).getText();
                         if (segStr.equals(hlStr)) {
-                            System.out.println("We got it: " + seg);
+                            handleHrefEvt(seg, ev);
                         }
                     }
                 }
@@ -382,6 +395,38 @@ public final class Engine extends Threaded {
                 putMessage("Warning: Bad href parent type" + el.getRealType(), false);
             }
         });
+    }
+
+    /**
+     * Handle an event on an hyperlink.
+     *
+     * @param hrefSeg
+     * @param mev
+     */
+    private void handleHrefEvt(final StyledTextSeg hrefSeg, final MouseEvent mev) {
+        System.out.println("We got it: " + hrefSeg);
+        if (hrefSeg.getRefType() == StyledTextSeg.REF_TYPE.EXTERNAL) {
+            if (mev.getEventType() == MouseEvent.MOUSE_CLICKED) {
+                var os = System.getProperty("os.name").toLowerCase();
+                try {
+                    if (os.contains("win")) { //Windows apparently works like this:
+                        Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + hrefSeg.getRefTarget());
+                    } else if (os.contains("mac")) {
+                        //MacOS has the open command
+                        Runtime.getRuntime().exec("open " + hrefSeg.getRefTarget());
+                    } else if (os.contains("lin")) { //Most Linuxen have xdg-open
+                        Runtime.getRuntime().exec("xdg-open " + hrefSeg.getRefTarget());
+                    } else if (os.contains("nix")) { //Might be a BSD - firefox is the best bet.
+                        Runtime.getRuntime().exec("firefox " + hrefSeg.getRefTarget());
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        } else { //Must be an internal ref.
+            var targetEl = currentDoc.getElementByID(hrefSeg.getRefTarget());
+        }
+
     }
 
     /**
