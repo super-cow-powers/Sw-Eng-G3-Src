@@ -43,7 +43,10 @@ import g3.project.xmlIO.Io;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.BlockingQueue;
@@ -58,9 +61,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.paint.Color;
 import javax.script.ScriptException;
 import nu.xom.Document;
 import nu.xom.Element;
@@ -126,6 +127,10 @@ public final class Engine extends Threaded {
      * Ref to the UI controller.
      */
     private final MainController controller;
+    /**
+     * Writer for the scripting engine.
+     */
+    private final Writer scrWriter;
 
     /**
      * Constructor.
@@ -135,6 +140,28 @@ public final class Engine extends Threaded {
     public Engine(final MainController uiController) {
         super();
         this.controller = uiController;
+        scrWriter = new Writer() {
+            @Override
+            public void write(char[] chars, int i, int i1) throws IOException {
+                var newChars = Arrays.copyOfRange(chars, i1, i1);
+                putMessage(newChars.toString(), true);
+            }
+
+            @Override
+            public void write(String str) {
+                putMessage(str, true);
+            }
+
+            @Override
+            public void flush() throws IOException {
+                putMessage("", Boolean.TRUE);
+            }
+
+            @Override
+            public void close() throws IOException {
+
+            }
+        };
     }
 
     /**
@@ -176,7 +203,7 @@ public final class Engine extends Threaded {
             //Start communication system.
             netComms.start();
             //Init Scripting Engine
-            scriptingEngine = new Scripting("python", this);
+            scriptingEngine = new Scripting("python", this, scrWriter);
             scriptingEngine.setGlobal("pages", currentPages);
             //Show Start Screen
             showStartScreen();
@@ -729,6 +756,23 @@ public final class Engine extends Threaded {
     }
 
     /**
+     * Evaluate a python string.
+     *
+     * @param code Code string.
+     */
+    public void evalPyStr(String code) {
+        if (Thread.currentThread() != myThread) {
+            runFunction(() -> evalPyStr(code));
+            return;
+        }
+        try {
+            scriptingEngine.evalString(code, "python");
+        } catch (ScriptException ex) {
+            putMessage(ex.getMessage(), true);
+        }
+    }
+
+    /**
      * Load Tools from XML.
      *
      * @return Optional<Tools>
@@ -765,6 +809,15 @@ public final class Engine extends Threaded {
     }
 
     /**
+     * Toggle if the display is editable.
+     *
+     * @param editable Is it editable?
+     */
+    public void toggleEdit(final Boolean editable) {
+        Platform.runLater(() -> controller.toggleEditable(editable));
+    }
+
+    /**
      * Request the UI to show a doc chooser.
      */
     public void showDocChooser() {
@@ -790,5 +843,12 @@ public final class Engine extends Threaded {
         var startXmlStream = MainController.class
                 .getResourceAsStream("start_screen.xml");
         parseNewDoc(startXmlStream);
+    }
+
+    /**
+     * Exit Application.
+     */
+    public void exit() {
+        Platform.runLater(() -> controller.gracefulExit());
     }
 }

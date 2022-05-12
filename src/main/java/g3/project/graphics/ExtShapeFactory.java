@@ -122,6 +122,7 @@ public final class ExtShapeFactory {
             sh.setHrefClickHandler(hrefClickHandlerConsumer);
             sh.setHrefHoverEnterHandler(hrefHovEntHandlerConsumer);
             sh.setHrefHoverExitHandler(hrefHovExHandlerConsumer);
+            sh.setTextClickHandler(textClickHandlerConsumer);
         });
         return maybeShape;
     }

@@ -29,6 +29,7 @@
 package g3.project.core;
 
 import g3.project.elements.Scriptable;
+import java.io.OutputStreamWriter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -79,7 +80,7 @@ public class ScriptingTest {
         RecursiveBindings pyBindings = new RecursiveBindings();
         RecursiveBindings rhinoBindings = new RecursiveBindings();
         
-        Scripting instance = new Scripting("python", null);
+        Scripting instance = new Scripting("python", null, new OutputStreamWriter(System.out));
         //Test Jython/python
         instance.evalString(pyCode, pyLang, pyBindings);
         //Test Rhino/JS

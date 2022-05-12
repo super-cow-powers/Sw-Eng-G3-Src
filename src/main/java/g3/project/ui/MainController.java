@@ -32,7 +32,6 @@ import g3.project.graphics.LocObj;
 import g3.project.graphics.SizeObj;
 import javafx.event.*;
 import javafx.fxml.*;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
@@ -59,7 +58,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ListChangeListener.Change;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
@@ -73,6 +71,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Scale;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import jfxtras.styles.jmetro.*;
 
@@ -92,13 +91,14 @@ public final class MainController {
     private boolean darkMode = false;
 
     /**
+     * Can the scene be edited?
+     */
+    private boolean amEditable = false;
+
+    /**
      * App's Engine.
      */
     private Engine engine;
-    /**
-     * Main scene.
-     */
-    private Scene scene;
     /**
      * Scale for zooming page.
      */
@@ -129,7 +129,20 @@ public final class MainController {
      */
     private ScheduledFuture nbMessageClearFuture;
 
+    /**
+     * Shape factory.
+     */
     private ExtShapeFactory extShapeFactory = new ExtShapeFactory();
+
+    /**
+     * Object drag delta.
+     */
+    private Point2D dragDelta;
+
+    /**
+     * IO Console.
+     */
+    private Console console;
 
 //CHECKSTYLE:OFF
     //FXML bound objects
@@ -192,6 +205,15 @@ public final class MainController {
         //event.consume(); //Don't pass to elements below!
         engine.offerEvent(event);
     }
+
+    /**
+     * Show the Python console.
+     */
+    @FXML
+    public void showConsole() {
+        console.show();
+    }
+
     /**
      * Event handler for input events.
      */
@@ -411,9 +433,9 @@ public final class MainController {
             }
             s.setProps(props); //Must do this before relocating!
             s.setStroke(stroke);
-            
+
             s.setId(id);
-            
+
             if (text.size() > 0) {
                 var textAlign = ((String) text.get(0).getStyle().getProp(FontProps.ALIGNMENT).get()).toUpperCase();
                 var textVAlign = ((String) text.get(0).getStyle().getProp(FontProps.VALIGNMENT).get()).toUpperCase();
@@ -644,7 +666,8 @@ public final class MainController {
      * @param message message to show.
      */
     public void showBlockingMessage(final String message) {
-        showNonBlockingMessage(message);
+        console.show();
+        console.putMessage(message);
     }
 
     /**
@@ -679,6 +702,13 @@ public final class MainController {
         //containerPane.getStylesheets().add(style.getStyleStylesheetURL());
     }
 
+    public void toggleEditable(Boolean editable) {
+        this.amEditable = editable;
+        if (!editable) {
+            setCursorType(Cursor.DEFAULT);
+        }
+    }
+
     /**
      * Initialise the main UI.
      */
@@ -704,9 +734,39 @@ public final class MainController {
                         } else {
                             for (Node addedNode : c.getAddedSubList()) {
                                 addedNode.addEventHandler(MouseEvent.ANY, (e) -> {
-                                    handleEvent(e);
+                                    var handle = true;
+
+                                    if (e.getEventType() == MouseEvent.MOUSE_DRAGGED) {
+                                        if (amEditable) {
+                                            addedNode.relocate(e.getSceneX() + dragDelta.getX(), e.getSceneY() + dragDelta.getY());
+                                        }
+                                    } else if (e.getEventType() == MouseEvent.MOUSE_PRESSED) {
+                                        if (amEditable) {
+                                            handle = false;
+                                            addedNode.setCursor(Cursor.MOVE);
+                                            dragDelta = new Point2D(addedNode.getLayoutX() - e.getSceneX(), addedNode.getLayoutY() - e.getSceneY());
+                                        }
+                                    } else if (e.getEventType() == MouseEvent.MOUSE_RELEASED) {
+                                        if (amEditable) {
+                                            handle = false;
+                                            addedNode.setCursor(Cursor.HAND);
+                                            dragDelta = new Point2D(addedNode.getLayoutX() - e.getSceneX(), addedNode.getLayoutY() - e.getSceneY());
+                                        }
+                                    } else if (e.getEventType() == MouseEvent.MOUSE_ENTERED) {
+                                        if (amEditable) {
+                                            handle = false;
+                                            addedNode.setCursor(Cursor.HAND);
+                                        } else {
+                                            addedNode.setCursor(Cursor.DEFAULT);
+                                        }
+                                    }
+
+                                    if (handle) {
+                                        handleEvent(e);
+                                    }
                                     e.consume();
                                 });
+
                                 addedNode.addEventHandler(KeyEvent.ANY, (e) -> {
                                     handleEvent(e);
                                     e.consume();
@@ -734,6 +794,7 @@ public final class MainController {
         Platform.runLater(() -> { //Run when initialised
             pagePane.addEventHandler(MouseEvent.ANY, handleInput);
             pagePane.addEventHandler(KeyEvent.ANY, handleInput);
+            console = new Console((Stage) pagePane.getScene().getWindow(), (s -> engine.evalPyStr(s)));
             pageScroll.addEventFilter(KeyEvent.ANY, event -> {
                 if (event.getCode() == KeyCode.DOWN || event.getCode() == KeyCode.UP || event.getCode() == KeyCode.LEFT || event.getCode() == KeyCode.RIGHT) {
                     handleEvent(event);

@@ -1,3 +1,9 @@
+def gotoNextPage():
+    engine.gotoNextPage()
+
+def gotoPrevPage():
+    engine.gotoPrevPage()
+
 def onKeyPress(keyName, ctrlDown, altDown, metaDown, keyDown):
     if keyDown == False:
         lowkey = keyName.lower()
@@ -10,3 +16,7 @@ def onKeyPress(keyName, ctrlDown, altDown, metaDown, keyDown):
 
 def setCursorType(cType):
     engine.setCursorType(cType)
+
+def quit():
+    engine.exit()
+
