@@ -123,7 +123,8 @@ public final class Io {
      * @param presStream Stream containing archive.
      */
     public Io(final InputStream presStream) {
-        var tempPath = Paths.get(System.getProperty("java.io.tmpdir") + "/" + tempFilePrefix + "unknown.zip");
+        docName = "unknown.spres";
+        var tempPath = Paths.get(System.getProperty("java.io.tmpdir") + "/" + tempFilePrefix + docName);
         Optional<FileSystem> fsOpt = Optional.empty();
         try {
             var pres = presStream.readAllBytes();
@@ -139,6 +140,7 @@ public final class Io {
             zipFs = fs;
             return retrieveDoc(fs);
         });
+        
     }
 
     /**
@@ -223,18 +225,22 @@ public final class Io {
      * @throws IOException bad file.
      */
     public void saveAs(final String newPath) throws IOException {
-        if (!allowSave || zipFs == null || myDoc.isEmpty()) {
-            return;
+        if ( zipFs == null || myDoc.isEmpty()) {
+            throw new IOException("Can't save.");
+        } else if (!newPath.matches("^.*\\.(zip|ZIP|spres|SPRES)$")){
+            throw new IOException("Bad File Name!");
         }
         var docPath = zipFs.getPath(xmlFileName);
         var newPathPath = Paths.get(newPath);
-        Serializer serializer = new Serializer(new FileOutputStream(docPath.toFile()), "ISO-8859-1");
+        var fileOutStream = Files.newOutputStream(docPath);
+        Serializer serializer = new Serializer(fileOutStream, "ISO-8859-1");
         serializer.write(myDoc.get());
         //Copy the temp file to the expected place
         Files.copy(Paths.get(System.getProperty("java.io.tmpdir") + "/" + tempFilePrefix + docName),
                 newPathPath,
                 StandardCopyOption.REPLACE_EXISTING);
         origZip = newPathPath.toFile();
+        allowSave = true;
     }
 
     /**

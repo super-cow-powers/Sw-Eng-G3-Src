@@ -265,6 +265,7 @@ public final class MainController {
      */
     @FXML
     private void handleSaveAction(final ActionEvent event) {
+        engine.saveCurrentDoc();
     }
 
     /**
@@ -274,6 +275,7 @@ public final class MainController {
      */
     @FXML
     private void handleSaveAsAction(final ActionEvent event) {
+        showSavePicker();
     }
 
     /**
@@ -296,13 +298,36 @@ public final class MainController {
                 new File(System.getProperty("user.home"))
         );
         fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("ZIP", "*.zip"),
-                new FileChooser.ExtensionFilter("SPRES", "*.spres")
+                new FileChooser.ExtensionFilter("SuperPres", "*.spres"),
+                new FileChooser.ExtensionFilter("ZIP", "*.zip")
         );
-
+        
         var newFile = fileChooser.showOpenDialog(pagePane.getScene().getWindow());
         if (newFile != null) {
             engine.offerNewDoc(newFile);
+        }
+    }
+
+    /**
+     * Shows a document save window, then saves the doc.
+     */
+    public void showSavePicker() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save As");
+        fileChooser.setInitialDirectory(
+                new File(System.getProperty("user.home"))
+        );
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("SuperPres", "*.spres"),
+                new FileChooser.ExtensionFilter("ZIP", "*.zip")
+        );
+
+        var newFile = fileChooser.showSaveDialog(pagePane.getScene().getWindow());
+        if (newFile != null) {
+            if (!newFile.getName().endsWith(".spress")) {
+                newFile = new File(newFile.getAbsolutePath() + ".spres");
+            }
+            engine.saveCurrentDocAs(newFile.getAbsolutePath());
         }
     }
 

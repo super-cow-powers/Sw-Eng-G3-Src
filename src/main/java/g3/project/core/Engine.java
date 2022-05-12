@@ -909,6 +909,10 @@ public final class Engine extends Threaded {
      * Attempt to save the current doc.
      */
     public void saveCurrentDoc() {
+        if (docIO.canSave() == false){
+            Platform.runLater(()->controller.showSavePicker());
+            return;
+        }
         try {
             docIO.save();
         } catch (IOException ex) {
