@@ -46,8 +46,11 @@ import g3.project.graphics.StrokeProps;
 import g3.project.graphics.StyledTextSeg;
 import g3.project.graphics.VisualProps;
 import g3.project.playable.Player;
+import g3.project.playable.PlayerFactory;
+import g3.project.xmlIO.Io;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -104,6 +107,11 @@ public final class MainController {
      * Scale for zooming page.
      */
     private Scale viewportScale = new Scale(1, 1);
+
+    /**
+     * Media player factory.
+     */
+    private PlayerFactory playerFact = new PlayerFactory();
 
     /**
      * Scene graph nodes hashed by their ID.
@@ -337,6 +345,7 @@ public final class MainController {
      */
     public void gracefulExit() {
         engine.stop();
+        playerFact.freeAll(); //Free all native resources.
         executorSvc.shutdown();
         Platform.exit();
     }
@@ -484,7 +493,13 @@ public final class MainController {
     public void clearCard(final String id) {
         pagePane.getChildren().clear();
         pagePane.setStyle("-fx-background-color: #FFFFFF");
-        drawnElements.clear();
+        //Some elements require cleanup - ffs.
+        drawnElements.forEach((elid, node) -> {
+            if (node instanceof Player) {
+                ((Player) node).free();
+            }
+            drawnElements.remove(elid);
+        });
     }
 
     /**
@@ -538,8 +553,37 @@ public final class MainController {
     }
 
     /**
-     * Show or update image on screen.
-     * The image will be cached based on its' path.
+     * Show some playable media.
+     *
+     * @param id media object ID.
+     * @param size Player size.
+     * @param loc Player location.
+     * @param path Path to media.
+     */
+    public void showPlayable(final String id, final SizeObj size, final LocObj loc, final String path) {
+        var player = playerFact.newPlayer(size.getX(), size.getY());
+        drawnElements.put(id, player);
+        //Get a resource from the archive. This is typically slower, as the player will copy the resource out.
+        if (Io.isUriInternal(path)) {
+            var resMaybe = engine.getDocIO().getResource(path);
+            resMaybe.ifPresent(r -> {
+                try {
+                    player.load(r);
+                } catch (IOException ex) {
+                    Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+        } else { //Play straight from a path.
+            player.load(path.replace("file:", ""));
+        }
+        pagePane.getChildren().add(player);
+        player.relocate(loc.getLoc().getX(), loc.getLoc().getY());
+        player.setViewOrder(loc.getZ());
+    }
+
+    /**
+     * Show or update image on screen. The image will be cached based on its'
+     * path.
      *
      * @param id Image ID.
      * @param size Image Size.

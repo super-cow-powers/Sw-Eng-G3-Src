@@ -140,7 +140,7 @@ public final class Io {
             zipFs = fs;
             return retrieveDoc(fs);
         });
-        
+
     }
 
     /**
@@ -225,9 +225,9 @@ public final class Io {
      * @throws IOException bad file.
      */
     public void saveAs(final String newPath) throws IOException {
-        if ( zipFs == null || myDoc.isEmpty()) {
+        if (zipFs == null || myDoc.isEmpty()) {
             throw new IOException("Can't save.");
-        } else if (!newPath.matches("^.*\\.(zip|ZIP|spres|SPRES)$")){
+        } else if (!newPath.matches("^.*\\.(zip|ZIP|spres|SPRES)$")) {
             throw new IOException("Bad File Name!");
         }
         var docPath = zipFs.getPath(xmlFileName);
@@ -251,7 +251,14 @@ public final class Io {
      */
     public synchronized Optional<byte[]> getResource(final String path) {
         byte[] arr = null;
-        if (path.startsWith("http")) { //Get a web resource
+        if (isUriInternal(path)) { //Get an internal resource
+            var fPath = zipFs.getPath(path);
+            try {
+                arr = Files.readAllBytes(fPath);
+            } catch (IOException ex) {
+                Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } else { //Get an external resource
             try {
                 var uri = new URI(path);
                 var is = uri.toURL().openStream();
@@ -259,15 +266,24 @@ public final class Io {
             } catch (URISyntaxException | MalformedURIException | IOException ex) {
                 Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } else { //Get a local resource
-            var fPath = zipFs.getPath(path);
-            try {
-                arr = Files.readAllBytes(fPath);
-            } catch (IOException ex) {
-                Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
-            }
         }
         return Optional.ofNullable(arr);
+    }
+
+    /**
+     * Check if given URI will be returned from the ZIP archive.
+     *
+     * @param uri URI to check.
+     * @return True or False.
+     */
+    public static Boolean isUriInternal(final String uri) {
+        if (uri.startsWith("http")) {
+            return false;
+        } else if (uri.startsWith("file:")) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     /**
@@ -356,8 +372,7 @@ public final class Io {
     }
 
     /**
-     * Closes associated File Systems.
-     * Must be run when object is finished with.
+     * Closes associated File Systems. Must be run when object is finished with.
      */
     public void close() {
         if (zipFs != null) {

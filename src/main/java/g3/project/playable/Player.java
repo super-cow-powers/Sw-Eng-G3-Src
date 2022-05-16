@@ -28,15 +28,48 @@
  */
 package g3.project.playable;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.DoublePropertyBase;
+import javafx.beans.property.FloatProperty;
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleFloatProperty;
+import javafx.beans.property.SimpleLongProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelBuffer;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
+import uk.co.caprica.vlcj.media.Media;
+import uk.co.caprica.vlcj.media.MediaEventListener;
+import uk.co.caprica.vlcj.media.MediaParsedStatus;
+import uk.co.caprica.vlcj.media.MediaRef;
+import uk.co.caprica.vlcj.media.Meta;
+import uk.co.caprica.vlcj.media.Picture;
 import uk.co.caprica.vlcj.player.base.MediaPlayer;
+import uk.co.caprica.vlcj.player.base.State;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 import uk.co.caprica.vlcj.player.embedded.videosurface.CallbackVideoSurface;
 import uk.co.caprica.vlcj.player.embedded.videosurface.VideoSurfaceAdapters;
@@ -52,31 +85,142 @@ import uk.co.caprica.vlcj.player.embedded.videosurface.callback.format.RV32Buffe
  * Based on:
  * https://github.com/caprica/vlcj-javafx-demo/commit/a057335a1a0ad5761e6d78c469afe1b5a80a9f86
  */
-public class Player extends Group {
+public final class Player extends Group {
 
-    private MediaPlayerFactory mediaPlayerFactory;
+    private final MediaPlayerFactory mediaPlayerFactory;
 
-    private EmbeddedMediaPlayer embeddedMediaPlayer;
+    private final EmbeddedMediaPlayer embeddedMediaPlayer;
+
+    private final VBox playerVbox = new VBox();
+
+    private final HBox controlHbox = new HBox();
+
+    private final ImageView videoImageView;
 
     private WritableImage videoImage;
 
     private PixelBuffer<ByteBuffer> videoPixelBuffer;
+    /**
+     * Target width.
+     */
+    private final DoubleProperty targetWidth = new SimpleDoubleProperty(0);
+    /**
+     * Target height.
+     */
+    private final DoubleProperty targetHeight = new SimpleDoubleProperty(0);
 
-    private ImageView videoImageView;
+    private Slider controlSlider = new Slider();
+    private Label timeLabel = new Label();
+    private Button playPauseButton = new Button();
 
-    public Player(int width, int height) {
+    /**
+     * Temporary file path if required.
+     */
+    private Path tempFilePath = null;
+
+    /**
+     * Constructor. Make a new player.
+     *
+     * @param width Initial target width.
+     * @param height Initial target height.
+     */
+    protected Player(final double width, final double height) {
+        targetWidth.set(width);
+        targetHeight.set(height);
         mediaPlayerFactory = new MediaPlayerFactory();
         embeddedMediaPlayer = mediaPlayerFactory.mediaPlayers().newEmbeddedMediaPlayer();
         embeddedMediaPlayer.videoSurface().set(new VideoSurface());
         videoImageView = new ImageView();
         videoImageView.setPreserveRatio(true);
-        this.getChildren().add(videoImageView);
+        videoImageView.fitWidthProperty().bind(targetWidth);
+        videoImageView.fitHeightProperty().bind(targetHeight);
+
+        controlHbox.setMinWidth(width);
+        controlHbox.setStyle("-fx-background-color: lightgray;");
+        playerVbox.setAlignment(Pos.CENTER);
+        controlHbox.setAlignment(Pos.CENTER);
+        playPauseButton.setText("▶");
+
+        playPauseButton.setOnAction(a -> {
+            var ctxt = playPauseButton.getText();
+            String ntxt;
+            if (ctxt.equals("⏸")) {
+                ntxt = "▶";
+                embeddedMediaPlayer.controls().pause();
+            } else {
+                ntxt = "⏸";
+                embeddedMediaPlayer.controls().play();
+            }
+            playPauseButton.setText(ntxt);
+        });
+
+        timeLabel.setText("00:00:00");
+        controlSlider.valueProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(final ObservableValue<? extends Number> observable, final Number oldValue, final Number newValue) {
+                var ms = newValue.doubleValue();
+                if (controlSlider.isValueChanging()) {
+                    embeddedMediaPlayer.controls().setTime((long) ms);
+                }
+                long seconds = Duration.ofMillis((long) ms).getSeconds();
+                long HH = seconds / 3600;
+                long MM = (seconds % 3600) / 60;
+                long SS = seconds % 60;
+                timeLabel.setText(String.format("%02d:%02d:%02d", HH, MM, SS));
+            }
+        });
+
+        controlHbox.getChildren().addAll(playPauseButton, controlSlider, timeLabel);
+        playerVbox.getChildren().addAll(videoImageView, controlHbox);
+        this.getChildren().add(playerVbox);
     }
 
-    public void play(String mrl) {
-        embeddedMediaPlayer.media().play(mrl);
+    /**
+     * Play media from an MRL.
+     *
+     * @param mrl Media location.
+     */
+    public void load(final String mrl) {
+        embeddedMediaPlayer.media().prepare(mrl);
+        embeddedMediaPlayer.media().events().addMediaEventListener(new MediaEventCallback());
+        controlSlider.setValue(0d);
+        controlSlider.setMin(0);
+        controlSlider.setMax(1);
     }
 
+    /**
+     * Play media "from" an input stream.Warning: I'm writing your stream to a
+     * temp file as vlcj really doesn't enjoy streams. As such, this is really
+     * slow.
+     *
+     * @param mediaBytes media in memory as bytes.
+     * @throws java.io.IOException Couldn't open or write to temp file.
+     */
+    public void load(final byte[] mediaBytes) throws IOException {
+        tempFilePath = Files.createTempFile("spres-media", null);
+        Files.write(tempFilePath, mediaBytes);
+        var tempMrl = tempFilePath.toAbsolutePath().toUri().toString();
+        this.load(tempMrl);
+    }
+
+    /**
+     * Pause the media if possible.
+     */
+    public void pause() {
+        embeddedMediaPlayer.controls().pause();
+    }
+
+    /**
+     * Play the media if possible.
+     */
+    public void play() {
+        embeddedMediaPlayer.controls().play();
+    }
+
+    /**
+     * Private class provides a JFX compatible video surface, responding to
+     * callbacks from vlcj.
+     */
     private class VideoSurface extends CallbackVideoSurface {
 
         VideoSurface() {
@@ -84,21 +228,38 @@ public class Player extends Group {
         }
     }
 
+    /**
+     * Private class to get an RV32 buffer format object when requested.
+     */
     private class FXBufferFormatCallback implements BufferFormatCallback {
 
         private int sourceWidth;
         private int sourceHeight;
 
+        /**
+         * Return an RV32 buffer format object for the given width/height.
+         *
+         * @param newSourceWidth Width of source.
+         * @param newSourceHeight Height of source.
+         * @return RV32 buffer.
+         */
         @Override
-        public BufferFormat getBufferFormat(int sourceWidth, int sourceHeight) {
-            this.sourceWidth = sourceWidth;
-            this.sourceHeight = sourceHeight;
+        public BufferFormat getBufferFormat(final int newSourceWidth, final int newSourceHeight) {
+            this.sourceWidth = newSourceWidth;
+            this.sourceHeight = newSourceHeight;
             return new RV32BufferFormat(sourceWidth, sourceHeight);
         }
 
+        /**
+         * Called when a new buffer is allocated.
+         *
+         * @param buffers Allocated buffers.
+         */
         @Override
-        public void allocatedBuffers(ByteBuffer[] buffers) {
-            assert buffers[0].capacity() == sourceWidth * sourceHeight * 4;
+        public void allocatedBuffers(final ByteBuffer[] buffers) {
+            //CHECKSTYLE:OFF
+            assert buffers[0].capacity() == sourceWidth * sourceHeight * 4; //Buffers are 32-bit RV32 format)
+            //CHECKSTYLE:ON
             PixelFormat<ByteBuffer> pixelFormat = PixelFormat.getByteBgraPreInstance();
             videoPixelBuffer = new PixelBuffer<>(sourceWidth, sourceHeight, buffers[0], pixelFormat);
             videoImage = new WritableImage(videoPixelBuffer);
@@ -106,13 +267,135 @@ public class Player extends Group {
         }
     }
 
+    /**
+     * Called when rendering required.
+     */
     private class FXRenderCallback implements RenderCallback {
 
+        /**
+         * Render information.
+         *
+         * @param mediaPlayer Rendering player.
+         * @param nativeBuffers Frame data.
+         * @param bufferFormat Format of frame.
+         */
         @Override
-        public void display(MediaPlayer mediaPlayer, ByteBuffer[] nativeBuffers, BufferFormat bufferFormat) {
+        public void display(final MediaPlayer mediaPlayer, final ByteBuffer[] nativeBuffers, final BufferFormat bufferFormat) {
             Platform.runLater(() -> {
-                videoPixelBuffer.updateBuffer(pb -> null);
+                //CHECKSTYLE:OFF
+                if (!controlSlider.isValueChanging()) {
+                    controlSlider.setValue((double) mediaPlayer.status().time());
+                }
+                //CHECKSTYLE:ON
+                videoPixelBuffer.updateBuffer(pb -> null); //Redraw buffer.
             });
+        }
+    }
+
+    /**
+     * Release native resources.
+     */
+    public void free() {
+        embeddedMediaPlayer.release();
+        if (tempFilePath != null) {
+            //We made a temp file, so should now remove it.
+            try {
+                Files.delete(tempFilePath);
+            } catch (IOException ex) {
+                //Yikes! We made the file, but can't delete it.
+                Logger.getLogger(Player.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    /**
+     * Called when media changes.
+     */
+    private class MediaEventCallback implements MediaEventListener {
+
+        /**
+         * Metadata updated.
+         *
+         * @param media Media.
+         * @param meta Media metadata.
+         */
+        @Override
+        public void mediaMetaChanged(Media media, Meta meta) {
+        }
+
+        /**
+         * .
+         * @param media Media.
+         * @param mr Ref to media.
+         */
+        @Override
+        public void mediaSubItemAdded(Media media, MediaRef mr) {
+        }
+
+        /**
+         * Duration of media changed.
+         *
+         * @param media Media.
+         * @param l Duration (mS).
+         */
+        @Override
+        public void mediaDurationChanged(Media media, long l) {
+            controlSlider.setMax((double) l);
+        }
+
+        /**
+         * Media has been parsed.
+         *
+         * @param media Media.
+         * @param mps Status of parsing.
+         */
+        @Override
+        public void mediaParsedChanged(Media media, MediaParsedStatus mps) {
+        }
+
+        /**
+         * Media behind has been freed.
+         *
+         * @param media Media.
+         * @param mr Ref to media.
+         */
+        @Override
+        public void mediaFreed(Media media, MediaRef mr) {
+        }
+
+        /**
+         * Some state has changed.
+         *
+         * @param media Media.
+         * @param state State update.
+         */
+        @Override
+        public void mediaStateChanged(Media media, State state) {
+        }
+
+        /**
+         * .
+         * @param media Media.
+         * @param mr Ref to media.
+         */
+        @Override
+        public void mediaSubItemTreeAdded(Media media, MediaRef mr) {
+        }
+
+        /**
+         * Thumbnail for media is now available.
+         *
+         * @param media Media.
+         * @param pctr Thumbnail.
+         */
+        @Override
+        public void mediaThumbnailGenerated(Media media, Picture pctr) {
+            if (!embeddedMediaPlayer.status().isPlaying()) {
+                var img = new Image(new ByteArrayInputStream(pctr.buffer()));
+                videoImageView.setImage(img);
+
+            }
+            System.out.println("Got thumb");
         }
     }
 }

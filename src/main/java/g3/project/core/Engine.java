@@ -479,6 +479,7 @@ public final class Engine extends Threaded {
             docIO.close(); //Close the previous
         }
         initDoc(new Io(archStream));
+        Platform.runLater(() -> controller.showPlayable("test-player", new SizeObj(300d, 300d, 0d), new LocObj(new Point2D(50d, 50d), 0d), "file:/home/david/Videos/Popcornarchive-aClockworkOrange1971.mp4"));
     }
 
     /**
@@ -905,8 +906,8 @@ public final class Engine extends Threaded {
      * Attempt to save the current doc.
      */
     public void saveCurrentDoc() {
-        if (docIO.canSave() == false){
-            Platform.runLater(()->controller.showSavePicker());
+        if (docIO.canSave() == false) {
+            Platform.runLater(() -> controller.showSavePicker());
             return;
         }
         try {
