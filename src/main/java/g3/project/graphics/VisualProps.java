@@ -33,8 +33,6 @@ import javafx.scene.paint.Color;
 import java.util.Map;
 import static java.util.Map.entry;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import javafx.geometry.Point2D;
 import javafx.scene.effect.DropShadow;
 
 /**

@@ -28,6 +28,9 @@
  */
 package g3.project.playable;
 
+import g3.project.graphics.VisualProps;
+import g3.project.ui.MainController;
+import g3.project.ui.Visual;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,6 +62,7 @@ import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
@@ -85,8 +89,9 @@ import uk.co.caprica.vlcj.player.embedded.videosurface.callback.format.RV32Buffe
  * Based on:
  * https://github.com/caprica/vlcj-javafx-demo/commit/a057335a1a0ad5761e6d78c469afe1b5a80a9f86
  */
-public final class Player extends Group {
+public final class Player extends Group implements Visual {
 
+    private static final double CTRL_MAX_HEIGHT = 50d;
     private final MediaPlayerFactory mediaPlayerFactory;
 
     private final EmbeddedMediaPlayer embeddedMediaPlayer;
@@ -110,6 +115,8 @@ public final class Player extends Group {
     private final DoubleProperty targetHeight = new SimpleDoubleProperty(0);
 
     private Slider controlSlider = new Slider();
+    private Slider volSlider = new Slider(0, 100, 0);
+    private Label volLabel = new Label(" 🔊");
     private Label timeLabel = new Label();
     private Button playPauseButton = new Button();
 
@@ -119,12 +126,16 @@ public final class Player extends Group {
     private Path tempFilePath = null;
 
     /**
-     * Constructor. Make a new player.
+     * Constructor.Make a new player.
      *
      * @param width Initial target width.
      * @param height Initial target height.
+     * @param dispPlayer Display the Player controls.
+     * @param offset Offset in seconds to play from.
+     * @param loop Loop playback.
+     * @param autoPlay Auto-play.
      */
-    protected Player(final double width, final double height) {
+    protected Player(final double width, final double height, final Boolean dispPlayer, final double offset, final Boolean autoPlay, final Boolean loop) {
         targetWidth.set(width);
         targetHeight.set(height);
         mediaPlayerFactory = new MediaPlayerFactory();
@@ -135,7 +146,14 @@ public final class Player extends Group {
         videoImageView.fitWidthProperty().bind(targetWidth);
         videoImageView.fitHeightProperty().bind(targetHeight);
 
+        playerVbox.setMaxHeight(height + CTRL_MAX_HEIGHT);
+        playerVbox.setMinWidth(width);
+        playerVbox.setMinHeight(height);
+        VBox.setVgrow(playerVbox, Priority.ALWAYS);
+        playerVbox.setStyle("-fx-background-color: black;");
+
         controlHbox.setMinWidth(width);
+        controlHbox.setMaxHeight(CTRL_MAX_HEIGHT);
         controlHbox.setStyle("-fx-background-color: lightgray;");
         playerVbox.setAlignment(Pos.CENTER);
         controlHbox.setAlignment(Pos.CENTER);
@@ -143,15 +161,12 @@ public final class Player extends Group {
 
         playPauseButton.setOnAction(a -> {
             var ctxt = playPauseButton.getText();
-            String ntxt;
             if (ctxt.equals("⏸")) {
-                ntxt = "▶";
-                embeddedMediaPlayer.controls().pause();
+                pause();
             } else {
-                ntxt = "⏸";
-                embeddedMediaPlayer.controls().play();
+                play();
             }
-            playPauseButton.setText(ntxt);
+
         });
 
         timeLabel.setText("00:00:00");
@@ -163,14 +178,33 @@ public final class Player extends Group {
                     embeddedMediaPlayer.controls().setTime((long) ms);
                 }
                 long seconds = Duration.ofMillis((long) ms).getSeconds();
+
                 long HH = seconds / 3600;
                 long MM = (seconds % 3600) / 60;
                 long SS = seconds % 60;
+                //CHECKSTYLE:ON
                 timeLabel.setText(String.format("%02d:%02d:%02d", HH, MM, SS));
             }
         });
 
-        controlHbox.getChildren().addAll(playPauseButton, controlSlider, timeLabel);
+        volSlider.setMaxWidth(100d);
+        volSlider.setVisible(false);
+        volSlider.valueProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(final ObservableValue<? extends Number> observable, final Number oldValue, final Number newValue) {
+                if (volSlider.isValueChanging()) {
+                    embeddedMediaPlayer.audio().setVolume(newValue.intValue());
+                }
+            }
+        });
+
+        volSlider.setManaged(volSlider.isVisible());
+        volLabel.setOnMouseClicked(e -> {
+            volSlider.setVisible(!volSlider.isVisible());
+            volSlider.setManaged(volSlider.isVisible());
+        });
+
+        controlHbox.getChildren().addAll(playPauseButton, controlSlider, timeLabel, volLabel, volSlider);
         playerVbox.getChildren().addAll(videoImageView, controlHbox);
         this.getChildren().add(playerVbox);
     }
@@ -181,15 +215,17 @@ public final class Player extends Group {
      * @param mrl Media location.
      */
     public void load(final String mrl) {
-        embeddedMediaPlayer.media().prepare(mrl);
+        embeddedMediaPlayer.media().play(mrl);
         embeddedMediaPlayer.media().events().addMediaEventListener(new MediaEventCallback());
+        embeddedMediaPlayer.controls().setTime(0l);
+        pause();
         controlSlider.setValue(0d);
         controlSlider.setMin(0);
         controlSlider.setMax(1);
     }
 
     /**
-     * Play media "from" an input stream.Warning: I'm writing your stream to a
+     * Play media "from" an input stream. Warning: I'm writing your stream to a
      * temp file as vlcj really doesn't enjoy streams. As such, this is really
      * slow.
      *
@@ -207,14 +243,26 @@ public final class Player extends Group {
      * Pause the media if possible.
      */
     public void pause() {
-        embeddedMediaPlayer.controls().pause();
+        embeddedMediaPlayer.controls().setPause(true);
+        playPauseButton.setText("▶");
     }
 
     /**
      * Play the media if possible.
      */
     public void play() {
-        embeddedMediaPlayer.controls().play();
+        embeddedMediaPlayer.controls().setPause(false);
+        playPauseButton.setText("⏸");
+    }
+
+    /**
+     * Set properties.
+     *
+     * @param visualProps Properties.
+     */
+    @Override
+    public void setProps(final VisualProps visualProps) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     /**
@@ -296,6 +344,7 @@ public final class Player extends Group {
      * Release native resources.
      */
     public void free() {
+        embeddedMediaPlayer.controls().stop();
         embeddedMediaPlayer.release();
         if (tempFilePath != null) {
             //We made a temp file, so should now remove it.
@@ -341,6 +390,7 @@ public final class Player extends Group {
         @Override
         public void mediaDurationChanged(Media media, long l) {
             controlSlider.setMax((double) l);
+
         }
 
         /**
@@ -371,6 +421,10 @@ public final class Player extends Group {
          */
         @Override
         public void mediaStateChanged(Media media, State state) {
+            if (state == State.PLAYING || state == State.PAUSED) {
+                //We should now be able to set the volume slider correctly.
+                volSlider.setValue(embeddedMediaPlayer.audio().volume());
+            }
         }
 
         /**

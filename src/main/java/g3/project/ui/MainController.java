@@ -428,12 +428,35 @@ public final class MainController {
             //Move and rotate after everything else is set.
             size.ifPresent(sz -> s.setSize(sz));
             loc.ifPresentOrElse(l -> {
-                s.setViewOrder(l.getZ());
-                var origin = l.getLoc();
-                s.relocate(origin.getX(), origin.getY());
+                moveElement(id, l);
             },
                     () -> s.setViewOrder(0));
         });
+    }
+
+    /**
+     * Moves the given element to the specified location.
+     *
+     * @param id Element ID.
+     * @param loc Location to go to.
+     */
+    public void moveElement(final String id, final LocObj loc) {
+        var el = drawnElements.get(id);
+        el.relocate(loc.getLoc().getX(), loc.getLoc().getY());
+        el.setViewOrder(loc.getZ());
+    }
+
+    /**
+     * Set props on Visual Element.
+     *
+     * @param id Element ID.
+     * @param props Properties.
+     */
+    public void setVisualProps(final String id, final VisualProps props) {
+        var el = drawnElements.get(id);
+        if (el instanceof Visual) {
+            ((Visual) el).setProps(props);
+        }
     }
 
     /**
@@ -561,7 +584,7 @@ public final class MainController {
      * @param path Path to media.
      */
     public void showPlayable(final String id, final SizeObj size, final LocObj loc, final String path) {
-        var player = playerFact.newPlayer(size.getX(), size.getY());
+        var player = playerFact.newPlayer(size.getX(), size.getY(), true, 0d, false, false);
         drawnElements.put(id, player);
         //Get a resource from the archive. This is typically slower, as the player will copy the resource out.
         if (Io.isUriInternal(path)) {

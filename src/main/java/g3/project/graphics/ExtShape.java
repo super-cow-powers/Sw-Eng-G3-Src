@@ -29,6 +29,7 @@
 package g3.project.graphics;
 
 import g3.project.graphics.StyledTextSeg.REF_TYPE;
+import g3.project.ui.Visual;
 import java.util.ArrayList;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -54,7 +55,7 @@ import javafx.scene.text.TextFlow;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public abstract class ExtShape extends Group {
+public abstract class ExtShape extends Group implements Visual {
 
     protected StackPane stack = new StackPane();
     protected Shape shape = null;
