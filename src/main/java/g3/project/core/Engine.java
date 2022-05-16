@@ -54,6 +54,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -134,9 +136,12 @@ public final class Engine extends Threaded {
      */
     private final MainController controller;
     /**
-     * Writer for the scripting engine.
+     * Writer for the scripting engine output.
      */
     private final Writer scrWriter;
+
+    private final String startScreenFileName = "start_screen.spres";
+    private final String emptyFileName = "empty.spres";
 
     /**
      * Constructor.
@@ -148,19 +153,19 @@ public final class Engine extends Threaded {
         this.controller = uiController;
         scrWriter = new Writer() {
             @Override
-            public void write(char[] chars, int i, int i1) throws IOException {
+            public void write(final char[] chars, final int i, final int i1) throws IOException {
                 var newChars = Arrays.copyOfRange(chars, i1, i1);
-                putMessage(newChars.toString(), true);
+                putMessage(newChars.toString() + "\n", true);
             }
 
             @Override
-            public void write(String str) {
+            public void write(final String str) {
                 putMessage(str, true);
             }
 
             @Override
             public void flush() throws IOException {
-                putMessage("", Boolean.TRUE);
+                putMessage("\n", Boolean.TRUE);
             }
 
             @Override
@@ -229,9 +234,7 @@ public final class Engine extends Threaded {
                             t -> myTools = t.getTools(),
                             () -> {
                                 myTools = new ArrayList<Tool>();
-                                Platform.runLater(() -> controller.
-                                showNonBlockingMessage("Failed Loading"
-                                        + " Tools!"));
+                                putMessage("Failed Loading Tools!", false);
                             });
             // Add tool buttons
             var iterTool = myTools.iterator();
@@ -313,6 +316,12 @@ public final class Engine extends Threaded {
         }
     }
 
+    /**
+     * Route a MouseEvent to the correct location.
+     *
+     * @param mev Event.
+     * @param elID Element.
+     */
     private void routeMouseEvent(final MouseEvent mev, final String elID) {
         final var evType = mev.getEventType();
         var elOpt = currentDoc.getElementByID(elID);
@@ -328,16 +337,24 @@ public final class Engine extends Threaded {
         }
     }
 
-    private void routeKeyEvent(final KeyEvent kev, String elID) {
+    /**
+     * Route a KeyEvent to the correct location.
+     *
+     * @param kev Event.
+     * @param elID Element.
+     */
+    private void routeKeyEvent(final KeyEvent kev, final String elID) {
         final var evType = kev.getEventType();
+        var id = elID;
         if (evType == KeyEvent.KEY_PRESSED || evType == KeyEvent.KEY_RELEASED || evType == KeyEvent.KEY_TYPED) {
             //Key has been pressed
-            if (elID.equals("pageScroll")) { //Press routed to page
-                elID = currentPageID;
+            if (id.equals("pageScroll")) { //Press routed to page scroll rather than page
+                id = currentPageID;
             }
-            var elOpt = currentDoc.getElementByID(elID);
+            var elOpt = currentDoc.getElementByID(id);
             final var keyName = kev.getCode().getName();
             System.out.println(kev);
+            System.out.println(elID);
             final Boolean down = (evType == KeyEvent.KEY_PRESSED);
             elOpt.ifPresent(el -> scriptingEngine.invokeOnElement(el, Scripting.KEY_PRESS_FN, keyName, kev.isControlDown(), kev.isAltDown(), kev.isMetaDown(), down));
         }
@@ -346,9 +363,9 @@ public final class Engine extends Threaded {
     /**
      * Route an event for an hyperlink.
      *
-     * @param ev
+     * @param ev Mouse event on an hyperlink.
      */
-    private void routeHrefEvt(MouseEvent ev) {
+    private void routeHrefEvt(final MouseEvent ev) {
         var evSrc = (javafx.scene.Node) ev.getSource();
         var parEl = evSrc.getParent();
         var parID = parEl.getId();
@@ -369,7 +386,7 @@ public final class Engine extends Threaded {
                         var segStr = seg.getString();
                         var hlStr = ((Hyperlink) evSrc).getText();
                         if (segStr.equals(hlStr)) {
-                            System.out.println("We got it: " + seg);
+                            handleHrefEvt(seg, ev);
                         }
                     }
                 }
@@ -377,6 +394,38 @@ public final class Engine extends Threaded {
                 putMessage("Warning: Bad href parent type" + el.getRealType(), false);
             }
         });
+    }
+
+    /**
+     * Handle an event on an hyperlink.
+     *
+     * @param hrefSeg
+     * @param mev
+     */
+    private void handleHrefEvt(final StyledTextSeg hrefSeg, final MouseEvent mev) {
+        System.out.println("We got it: " + hrefSeg);
+        if (hrefSeg.getRefType() == StyledTextSeg.REF_TYPE.EXTERNAL) {
+            if (mev.getEventType() == MouseEvent.MOUSE_CLICKED) {
+                var os = System.getProperty("os.name").toLowerCase();
+                try {
+                    if (os.contains("win")) { //Windows apparently works like this:
+                        Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + hrefSeg.getRefTarget());
+                    } else if (os.contains("mac")) {
+                        //MacOS has the open command
+                        Runtime.getRuntime().exec("open " + hrefSeg.getRefTarget());
+                    } else if (os.contains("lin")) { //Most Linuxen have xdg-open
+                        Runtime.getRuntime().exec("xdg-open " + hrefSeg.getRefTarget());
+                    } else if (os.contains("nix")) { //Might be a BSD - firefox is the best bet.
+                        Runtime.getRuntime().exec("firefox " + hrefSeg.getRefTarget());
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        } else { //Must be an internal ref.
+            var targetEl = currentDoc.getElementByID(hrefSeg.getRefTarget());
+        }
+
     }
 
     /**
@@ -409,57 +458,64 @@ public final class Engine extends Threaded {
     }
 
     /**
-     * Parse a new XML document.
+     * Parse a new document archive.
      *
-     * @param xmlFile Doc to parse
+     * @param xmlFile Doc to load
      */
     private void parseNewDoc(final File xmlFile) { // Load a new doc
-        docIO = new Io(xmlFile);
-        var parsed = docIO.getDoc();
-        if (parsed.isPresent()) {
-            initDoc(parsed.get());
-        } else {
-            putMessage("Doc parse error", true);
-            // Oops, couldn't parse initial doc.
+        if (docIO != null) {
+            docIO.close(); //Close the previous
         }
+        initDoc(new Io(xmlFile.getAbsolutePath()));
     }
 
     /**
-     * Parse an (currently internal) XML document from stream.
+     * Parse an internal document archive from stream.
      *
-     * @param docStream Doc to parse
+     * @param archStream Doc to load
      */
-    private void parseNewDoc(final InputStream docStream) {
-        docIO = new Io(docStream, "internal_ui");
-        var parsed = docIO.getDoc();
-        if (parsed.isPresent()) {
-            initDoc(parsed.get());
-        } else {
-            putMessage("Doc parse error", true);
-            // Oops, couldn't parse initial doc.
+    private void parseNewDoc(final InputStream archStream) {
+        if (docIO != null) {
+            docIO.close(); //Close the previous
         }
+        initDoc(new Io(archStream));
     }
 
     /**
      * Initialise/load doc.
      *
-     * @param doc doc to init.
+     * @param docio doc to init.
      */
-    private void initDoc(final Document doc) {
+    private void initDoc(final Io docio) {
+        docIO = docio;
+        eventQueue.clear();
+        callQueue.clear();
+        docQueue.clear();
+        var parsed = docIO.getDoc();
+        if (parsed.isEmpty()) {
+            // Oops, couldn't parse doc
+            putMessage("Doc parse error", true);
+            return;
+        }
+        var doc = parsed.get();
         Platform.runLater(
                 () -> {
                     controller.clearCardButtons();
                     controller.clearCard("");
                     controller.setViewScale(1d);
+                    controller.setCursorType(javafx.scene.Cursor.DEFAULT);
                 });
 
         var child = doc.getRootElement();
         if (child instanceof DocElement) { //Make sure that doc is sane.
             currentDoc = (DocElement) child;
-            scriptingEngine.setGlobal("document", currentDoc); //Expose the doc to the scripting engine.
+            currentDoc.setTopLevelBindings(scriptingEngine.getTopLevelBindings());
+            scriptingEngine.setGlobal("doc", currentDoc); //Expose the doc to the scripting engine.
+            //Check for and show any validation errors.
             var valErrs = currentDoc.getValidationErrors();
-            for (var err : valErrs) {
-                System.out.println(err);
+            if (valErrs.size() > 0) {
+                var errStr = String.join("\n", valErrs);
+                putMessage("Validation Errors Found:\n" + errStr, true);
             }
             //When the doc changes, redraw the element that has changed.
             currentDoc.setChangeCallback(
@@ -794,7 +850,7 @@ public final class Engine extends Threaded {
      * @return Optional<Tools>
      */
     private Optional<Tools> loadTools() {
-        var toolsXMLPath = Engine.class.getResource("tools.xml").getPath();
+        /*var toolsXMLPath = Engine.class.getResource("tools.xml").getPath();
         toolIO = new Io(new File(toolsXMLPath), new ToolsFactory());
         var parsedDoc = toolIO.getDoc();
         var root
@@ -802,7 +858,8 @@ public final class Engine extends Threaded {
                         .filter(d -> d.getRootElement() instanceof Tools)
                         .map(d -> (Tools) d.getRootElement());
         this.putMessage("Tools Loaded", false);
-        return root;
+        return root;*/
+        return Optional.empty();
     }
 
     /**
@@ -845,6 +902,40 @@ public final class Engine extends Threaded {
     }
 
     /**
+     * Attempt to save the current doc.
+     */
+    public void saveCurrentDoc() {
+        if (docIO.canSave() == false){
+            Platform.runLater(()->controller.showSavePicker());
+            return;
+        }
+        try {
+            docIO.save();
+        } catch (IOException ex) {
+            Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+            putMessage("Saving Failed: " + ex, true);
+            return;
+        }
+        putMessage("Saved!", false);
+    }
+
+    /**
+     * Attempt to save current doc to new location.
+     *
+     * @param newPath new location to save to.
+     */
+    public void saveCurrentDocAs(final String newPath) {
+        try {
+            docIO.saveAs(newPath);
+        } catch (IOException ex) {
+            Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+            putMessage("Saving Failed: " + ex, true);
+            return;
+        }
+        putMessage("Saved!", false);
+    }
+
+    /**
      * Loads the start screen.
      */
     public void showStartScreen() {
@@ -852,13 +943,19 @@ public final class Engine extends Threaded {
             runFunction(() -> showStartScreen());
             return;
         }
-        eventQueue.clear();
-        callQueue.clear();
-        docQueue.clear();
         //Load the start screen
         var startXmlStream = MainController.class
-                .getResourceAsStream("start_screen.xml");
+                .getResourceAsStream(startScreenFileName);
         parseNewDoc(startXmlStream);
+    }
+
+    /**
+     * Load an empty document.
+     */
+    public void loadEmptyDoc() {
+        var emptyDocFile = MainController.class
+                .getResourceAsStream(emptyFileName);
+        parseNewDoc(emptyDocFile);
     }
 
     /**

@@ -41,7 +41,6 @@ g3/project/network/NetThing.class
 g3/project/playable/Player$VideoSurface.class
 g3/project/elements/TextElement$1.class
 g3/project/core/Tool$1.class
-g3/project/ui/MainController.class
 g3/project/elements/StrokeElement$1.class
 g3/project/core/Cursor.class
 g3/project/core/Scripting.class
@@ -49,6 +48,7 @@ g3/project/elements/DocElement$1.class
 g3/project/elements/ImageElement.class
 g3/project/core/Tools.class
 g3/project/elements/StrokeElement.class
+g3/project/xmlIO/Parse.class
 g3/project/graphics/ExtPolygon.class
 g3/project/elements/FontElement$1.class
 g3/project/elements/TextElement.class

@@ -166,7 +166,7 @@ public final class MainController {
     private Pane pagePane;
 
     @FXML
-    private ScrollPane pageScroll;
+    private ScrollPane cardSelPane;
 
     @FXML
     private VBox pageVBox;
@@ -266,6 +266,7 @@ public final class MainController {
      */
     @FXML
     private void handleSaveAction(final ActionEvent event) {
+        engine.saveCurrentDoc();
     }
 
     /**
@@ -275,6 +276,7 @@ public final class MainController {
      */
     @FXML
     private void handleSaveAsAction(final ActionEvent event) {
+        showSavePicker();
     }
 
     /**
@@ -297,13 +299,36 @@ public final class MainController {
                 new File(System.getProperty("user.home"))
         );
         fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("XML", "*.xml"),
-                new FileChooser.ExtensionFilter("SPRES", "*.spres")
+                new FileChooser.ExtensionFilter("SuperPres", "*.spres"),
+                new FileChooser.ExtensionFilter("ZIP", "*.zip")
         );
 
         var newFile = fileChooser.showOpenDialog(pagePane.getScene().getWindow());
         if (newFile != null) {
             engine.offerNewDoc(newFile);
+        }
+    }
+
+    /**
+     * Shows a document save window, then saves the doc.
+     */
+    public void showSavePicker() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save As");
+        fileChooser.setInitialDirectory(
+                new File(System.getProperty("user.home"))
+        );
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("SuperPres", "*.spres"),
+                new FileChooser.ExtensionFilter("ZIP", "*.zip")
+        );
+
+        var newFile = fileChooser.showSaveDialog(pagePane.getScene().getWindow());
+        if (newFile != null) {
+            if (!newFile.getName().endsWith(".spress")) {
+                newFile = new File(newFile.getAbsolutePath() + ".spres");
+            }
+            engine.saveCurrentDocAs(newFile.getAbsolutePath());
         }
     }
 
@@ -471,6 +496,7 @@ public final class MainController {
      */
     public void addCardButton(final String friendlyName, final String id, final Integer number) {
         Button cardButton = new Button(friendlyName);
+        cardButton.setFocusTraversable(false);
         //CHECKSTYLE:OFF
         cardButton.setMaxSize(150, 50);
         cardButton.setMinSize(50, 50);
@@ -699,7 +725,7 @@ public final class MainController {
                                             handle = false;
                                             addedNode.setCursor(Cursor.HAND);
                                         } else {
-                                            addedNode.setCursor(Cursor.DEFAULT);
+                                            //addedNode.setCursor(Cursor.DEFAULT);
                                         }
                                     }
 
@@ -736,8 +762,9 @@ public final class MainController {
         Platform.runLater(() -> { //Run when initialised
             pagePane.addEventHandler(MouseEvent.ANY, handleInput);
             pagePane.addEventHandler(KeyEvent.ANY, handleInput);
+            pagePane.setFocusTraversable(true);
             console = new Console((Stage) pagePane.getScene().getWindow(), (s -> engine.evalPyStr(s)));
-            pageScroll.addEventFilter(KeyEvent.ANY, event -> {
+            pagePane.addEventFilter(KeyEvent.ANY, event -> {
                 if (event.getCode() == KeyCode.DOWN || event.getCode() == KeyCode.UP || event.getCode() == KeyCode.LEFT || event.getCode() == KeyCode.RIGHT) {
                     handleEvent(event);
                     event.consume();
@@ -757,9 +784,8 @@ public final class MainController {
         extShapeFactory.setHrefHoverExitHandler((ev) -> {
             handleEvent(ev);
         });
-        pagePane.setOnScroll((e) -> pageScrollEventHandler(e)); //Scaling stuff
+        cardSelPane.setFocusTraversable(false);
 
-        pageScroll.setPannable(true);
         var ds = new DropShadow();
         pagePane.setEffect(ds);
 
