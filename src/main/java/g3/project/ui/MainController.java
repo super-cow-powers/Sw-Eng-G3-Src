@@ -165,7 +165,7 @@ public final class MainController {
     private Pane pagePane;
 
     @FXML
-    private ScrollPane pageScroll;
+    private ScrollPane cardSelPane;
 
     @FXML
     private VBox pageVBox;
@@ -301,7 +301,7 @@ public final class MainController {
                 new FileChooser.ExtensionFilter("SuperPres", "*.spres"),
                 new FileChooser.ExtensionFilter("ZIP", "*.zip")
         );
-        
+
         var newFile = fileChooser.showOpenDialog(pagePane.getScene().getWindow());
         if (newFile != null) {
             engine.offerNewDoc(newFile);
@@ -495,6 +495,7 @@ public final class MainController {
      */
     public void addCardButton(final String friendlyName, final String id, final Integer number) {
         Button cardButton = new Button(friendlyName);
+        cardButton.setFocusTraversable(false);
         //CHECKSTYLE:OFF
         cardButton.setMaxSize(150, 50);
         cardButton.setMinSize(50, 50);
@@ -722,7 +723,7 @@ public final class MainController {
                                             handle = false;
                                             addedNode.setCursor(Cursor.HAND);
                                         } else {
-                                            addedNode.setCursor(Cursor.DEFAULT);
+                                            //addedNode.setCursor(Cursor.DEFAULT);
                                         }
                                     }
 
@@ -759,8 +760,9 @@ public final class MainController {
         Platform.runLater(() -> { //Run when initialised
             pagePane.addEventHandler(MouseEvent.ANY, handleInput);
             pagePane.addEventHandler(KeyEvent.ANY, handleInput);
+            pagePane.setFocusTraversable(true);
             console = new Console((Stage) pagePane.getScene().getWindow(), (s -> engine.evalPyStr(s)));
-            pageScroll.addEventFilter(KeyEvent.ANY, event -> {
+            pagePane.addEventFilter(KeyEvent.ANY, event -> {
                 if (event.getCode() == KeyCode.DOWN || event.getCode() == KeyCode.UP || event.getCode() == KeyCode.LEFT || event.getCode() == KeyCode.RIGHT) {
                     handleEvent(event);
                     event.consume();
@@ -780,9 +782,8 @@ public final class MainController {
         extShapeFactory.setHrefHoverExitHandler((ev) -> {
             handleEvent(ev);
         });
-        pagePane.setOnScroll((e) -> pageScrollEventHandler(e)); //Scaling stuff
+        cardSelPane.setFocusTraversable(false);
 
-        pageScroll.setPannable(true);
         var ds = new DropShadow();
         pagePane.setEffect(ds);
 

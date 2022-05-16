@@ -234,9 +234,7 @@ public final class Engine extends Threaded {
                             t -> myTools = t.getTools(),
                             () -> {
                                 myTools = new ArrayList<Tool>();
-                                Platform.runLater(() -> controller.
-                                showNonBlockingMessage("Failed Loading"
-                                        + " Tools!"));
+                                putMessage("Failed Loading Tools!", false);
                             });
             // Add tool buttons
             var iterTool = myTools.iterator();
@@ -356,6 +354,7 @@ public final class Engine extends Threaded {
             var elOpt = currentDoc.getElementByID(id);
             final var keyName = kev.getCode().getName();
             System.out.println(kev);
+            System.out.println(elID);
             final Boolean down = (evType == KeyEvent.KEY_PRESSED);
             elOpt.ifPresent(el -> scriptingEngine.invokeOnElement(el, Scripting.KEY_PRESS_FN, keyName, kev.isControlDown(), kev.isAltDown(), kev.isMetaDown(), down));
         }
@@ -467,14 +466,7 @@ public final class Engine extends Threaded {
         if (docIO != null) {
             docIO.close(); //Close the previous
         }
-        docIO = new Io(xmlFile.getAbsolutePath());
-        var parsed = docIO.getDoc();
-        if (parsed.isPresent()) {
-            initDoc(parsed.get());
-        } else {
-            putMessage("Doc parse error", true);
-            // Oops, couldn't parse initial doc.
-        }
+        initDoc(new Io(xmlFile.getAbsolutePath()));
     }
 
     /**
@@ -483,39 +475,43 @@ public final class Engine extends Threaded {
      * @param archStream Doc to load
      */
     private void parseNewDoc(final InputStream archStream) {
-        eventQueue.clear();
-        callQueue.clear();
-        docQueue.clear();
         if (docIO != null) {
             docIO.close(); //Close the previous
         }
-        docIO = new Io(archStream);
-        var parsed = docIO.getDoc();
-        if (parsed.isPresent()) {
-            initDoc(parsed.get());
-        } else {
-            putMessage("Doc parse error", true);
-            // Oops, couldn't parse initial doc.
-        }
+        initDoc(new Io(archStream));
     }
 
     /**
      * Initialise/load doc.
      *
-     * @param doc doc to init.
+     * @param docio doc to init.
      */
-    private void initDoc(final Document doc) {
+    private void initDoc(final Io docio) {
+        docIO = docio;
+        eventQueue.clear();
+        callQueue.clear();
+        docQueue.clear();
+        var parsed = docIO.getDoc();
+        if (parsed.isEmpty()) {
+            // Oops, couldn't parse doc
+            putMessage("Doc parse error", true);
+            return;
+        }
+        var doc = parsed.get();
         Platform.runLater(
                 () -> {
                     controller.clearCardButtons();
                     controller.clearCard("");
                     controller.setViewScale(1d);
+                    controller.setCursorType(javafx.scene.Cursor.DEFAULT);
                 });
 
         var child = doc.getRootElement();
         if (child instanceof DocElement) { //Make sure that doc is sane.
             currentDoc = (DocElement) child;
-            scriptingEngine.setGlobal("document", currentDoc); //Expose the doc to the scripting engine.
+            currentDoc.setTopLevelBindings(scriptingEngine.getTopLevelBindings());
+            scriptingEngine.setGlobal("doc", currentDoc); //Expose the doc to the scripting engine.
+            //Check for and show any validation errors.
             var valErrs = currentDoc.getValidationErrors();
             if (valErrs.size() > 0) {
                 var errStr = String.join("\n", valErrs);
