@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software
+ *   be used to endorse or promote products derived from this software 
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -30,12 +30,50 @@ package g3.project.ui;
 
 import g3.project.graphics.SizeObj;
 import g3.project.graphics.VisualProps;
+import java.io.InputStream;
+import java.util.Optional;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 /**
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public interface Visual {
-    public void setProps(final VisualProps visualProps);
-    public void setSize(final SizeObj size);
+public class VisImageView extends ImageView implements Visual {
+    
+    public VisImageView() {
+    }
+    
+    public VisImageView(String url) {
+        super(url);
+    }
+    
+    public VisImageView(Image image) {
+        super(image);
+    }
+    /**
+     * Set Visual Properties.
+     * @param props Properties map.
+     */
+    @Override
+    public void setProps(VisualProps props) {
+        var shad = props.makeShadow();
+        shad.ifPresent(sh -> this.setEffect(sh));
+        var vis = props.getProp(VisualProps.VISIBLE);
+        vis.ifPresent(vi -> this.setVisible((Boolean) vi));
+        var alpha = props.getProp(VisualProps.ALPHA);
+        alpha.ifPresent(a -> this.setOpacity((Double) a));
+    }
+    
+    /**
+     * Set Size.
+     * @param size Size.
+     */
+    @Override
+    public void setSize(SizeObj size) {
+        this.fitWidthProperty().set(size.getX());
+        this.fitHeightProperty().set(size.getY());
+        this.setRotate(size.getRot());
+    }
+    
 }

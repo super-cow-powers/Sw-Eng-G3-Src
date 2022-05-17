@@ -479,7 +479,7 @@ public final class Engine extends Threaded {
             docIO.close(); //Close the previous
         }
         initDoc(new Io(archStream));
-        Platform.runLater(() -> controller.showPlayable("test-player", new SizeObj(200d, 200d, 0d), new LocObj(new Point2D(50d, 50d), 0d), "file:/home/david/Videos/Popcornarchive-aClockworkOrange1971.mp4"));
+        //Platform.runLater(() -> controller.showPlayable("test-player", new SizeObj(200d, 200d, 0d), new LocObj(new Point2D(50d, 50d), 0d), "file:/home/david/Videos/Popcornarchive-aClockworkOrange1971.mp4"));
     }
 
     /**
@@ -610,8 +610,9 @@ public final class Engine extends Threaded {
         Platform.runLater(() -> {
             var loc = new LocObj(new Point2D(xLoc, yLoc), zInd);
             var size = new SizeObj(xSize, ySize, rot);
-
-            controller.updateImage(id, size, loc, source);
+            controller.drawImage(id, source, false);
+            controller.moveElement(id, loc);
+            controller.resizeElement(id, size);
         });
     }
 
@@ -628,7 +629,11 @@ public final class Engine extends Threaded {
         ArrayList<StyledTextSeg> textSegs;
         StrokeProps stroke;
         var shapeType = shape.getType();
-        var strokeOpt = shape.getStroke();
+        final var strokeOpt = shape.getStroke();
+        final var propsMap = shape.getProps();
+        final var maybeLoc = shape.getOrigin();
+        final var maybeSize = shape.getSize();
+        final var id = shape.getID();
 
         var textOpt = shape.getText();
         if (textOpt.isPresent()) {
@@ -646,13 +651,15 @@ public final class Engine extends Threaded {
         Platform.runLater(
                 () -> {
                     controller.updateShape(
+                            id,
                             shapeType,
-                            shape.getProps(),
                             stroke,
                             textSegs,
-                            shape.getSize(),
-                            shape.getOrigin(),
                             shape.getSegPoints());
+                    controller.setElVisualProps(id, propsMap);
+                    maybeSize.ifPresent(s -> controller.resizeElement(id, s));
+                    maybeLoc.ifPresent(l -> controller.moveElement(id, l));
+
                 });
     }
 
@@ -825,7 +832,10 @@ public final class Engine extends Threaded {
             this.drawImage((ImageElement) el);
         } else if (el instanceof ShapeElement) {
             this.drawShape((ShapeElement) el);
+        } else if (el instanceof PlayableElement) {
+
         }
+
     }
 
     /**

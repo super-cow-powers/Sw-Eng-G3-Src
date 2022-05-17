@@ -129,6 +129,11 @@ public final class MainController {
     private Image loadingGif = null;
 
     /**
+     * Not Found image.
+     */
+    private Image notFoundIm = null;
+
+    /**
      * Task Scheduler.
      */
     private final ScheduledExecutorService executorSvc = Executors.newSingleThreadScheduledExecutor();
@@ -362,37 +367,15 @@ public final class MainController {
     }
 
     /**
-     * TEST METHOD. Put plain text onto the screen.
-     *
-     * @param text Text to show.
-     * @param pos Position to show it.
-     */
-    public void drawText(final String text, final Point2D pos) {
-        //CHECKSTYLE:OFF
-        Label l = new Label();
-        l.setText(text);
-        l.setFont(new Font(30));
-        l.relocate(pos.getX(), pos.getY());
-        pagePane.getChildren().add(l);
-        System.out.println("g3.project.ui.MainController.drawText()");
-        //CHECKSTYLE:ON
-    }
-
-    /**
      * Draw/Redraw shape on screen.
      *
      * @param shapeType Type of shape.
-     * @param props Shape visual properties.
      * @param stroke Stroke properties.
      * @param text Text segments.
-     * @param size Shape size.
-     * @param loc Shape location.
      * @param segments Segments for a line or polygon.
      */
-    public void updateShape(final String shapeType, final VisualProps props, final StrokeProps stroke,
-            final ArrayList<StyledTextSeg> text, final Optional<SizeObj> size, final Optional<LocObj> loc, final ArrayList<Double> segments) {
-
-        var id = (String) props.getProp(VisualProps.ID).get();
+    public void updateShape(final String id, final String shapeType, final StrokeProps stroke,
+            final ArrayList<StyledTextSeg> text, final ArrayList<Double> segments) {
 
         var drawnShape = drawnElements.get(id);
 
@@ -406,7 +389,6 @@ public final class MainController {
             if (drawnShape == null) {
                 pagePane.getChildren().add(s);
             }
-            s.setProps(props); //Must do this before relocating!
             s.setStroke(stroke);
 
             s.setId(id);
@@ -425,12 +407,6 @@ public final class MainController {
             } catch (Exception ex) {
                 Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
             }
-            //Move and rotate after everything else is set.
-            size.ifPresent(sz -> s.setSize(sz));
-            loc.ifPresentOrElse(l -> {
-                moveElement(id, l);
-            },
-                    () -> s.setViewOrder(0));
         });
     }
 
@@ -452,10 +428,23 @@ public final class MainController {
      * @param id Element ID.
      * @param props Properties.
      */
-    public void setVisualProps(final String id, final VisualProps props) {
+    public void setElVisualProps(final String id, final VisualProps props) {
         var el = drawnElements.get(id);
         if (el instanceof Visual) {
             ((Visual) el).setProps(props);
+        }
+    }
+
+    /**
+     * Resize a Visual Element.
+     *
+     * @param id Element ID.
+     * @param size Element Size.
+     */
+    public void resizeElement(final String id, final SizeObj size) {
+        var el = drawnElements.get(id);
+        if (el instanceof Visual) {
+            ((Visual) el).setSize(size);
         }
     }
 
@@ -488,10 +477,6 @@ public final class MainController {
      * @param id Page ID
      */
     public void configCard(final Optional<SizeObj> size, final Optional<Color> colour, final String id) {
-        /*
-        @todo Allow multiple pages
-        @todo Resize scroll pane when the page is rotated
-         */
         size.ifPresent(f -> {
             pagePane.setMaxHeight(f.getY());
             pagePane.setMinHeight(f.getY());
@@ -579,12 +564,10 @@ public final class MainController {
      * Show some playable media.
      *
      * @param id media object ID.
-     * @param size Player size.
-     * @param loc Player location.
      * @param path Path to media.
      */
-    public void showPlayable(final String id, final SizeObj size, final LocObj loc, final String path) {
-        var player = playerFact.newPlayer(size.getX(), size.getY(), true, 0d, false, false);
+    public void showPlayable(final String id, final String path) {
+        var player = playerFact.newPlayer(0d, 0d, true, 0d, false, false);
         drawnElements.put(id, player);
         //Get a resource from the archive. This is typically slower, as the player will copy the resource out.
         if (Io.isUriInternal(path)) {
@@ -600,8 +583,6 @@ public final class MainController {
             player.load(path.replace("file:", ""));
         }
         pagePane.getChildren().add(player);
-        player.relocate(loc.getLoc().getX(), loc.getLoc().getY());
-        player.setViewOrder(loc.getZ());
     }
 
     /**
@@ -609,73 +590,65 @@ public final class MainController {
      * path.
      *
      * @param id Image ID.
-     * @param size Image Size.
-     * @param loc Image Location.
      * @param path Image Path/URL/URI.
+     * @param refreshCache Should I refresh the cache?
      */
-    public void updateImage(final String id, final SizeObj size, final LocObj loc, final String path) {
+    public void drawImage(final String id, final String path, final Boolean refreshCache) {
         /* Check if image is cached already. */
-        if (!loadedImages.containsKey(path)) {
+        if (loadedImages.containsKey(path) && !refreshCache) {
+            /* In Cache */
+            var im = loadedImages.get(path);
+            drawImage(id, im);
+
+        } else {
             /* Not cached */
-            updateImage(id, size, loc, loadingGif); //Show loading GIF
-            //Runnable to load then show image
+            drawImage(id, loadingGif); //Show loading GIF
+            //Runnable to background-load then show image
             Runnable imageLoaderRunnable = () -> {
                 Image im;
                 var resOpt = engine.getDocIO().getResource(path);
                 if (resOpt.isPresent()) {
                     im = new Image(new ByteArrayInputStream(resOpt.get()));
                 } else {
-                    im = loadingGif;
+                    //Image was not found
+                    im = notFoundIm;
                 }
                 loadedImages.put(path, im);
                 Platform.runLater(() -> {
                     /* Check if image should stll be visible */
                     if (drawnElements.containsKey(id)) {
-                        updateImage(id, size, loc, path);
+                        drawImage(id, path, false);
                     }
                 });
             };
             //Create and start thread for download
             Thread imLoadThread = new Thread(imageLoaderRunnable);
             imLoadThread.start();
-        } else {
-            /* In Cache */
-            var im = loadedImages.get(path);
-            updateImage(id, size, loc, im);
         }
     }
 
     /**
-     * Show or update image on screen. Private - bypasses cache.
+     * Show or update image on screen.
      *
      * @param id Image ID.
-     * @param size Image Size.
-     * @param loc Image Location.
      * @param im JFX Image.
      */
-    private void updateImage(final String id, final SizeObj size, final LocObj loc, final Image im) {
-        ImageView imv = null;
+    private void drawImage(final String id, final Image im) {
+        VisImageView imv = null;
         if (drawnElements.containsKey(id)) {
             var imEl = drawnElements.get(id);
-            if (imEl instanceof ImageView) {
-                imv = (ImageView) imEl;
+            if (imEl instanceof VisImageView) {
+                imv = (VisImageView) imEl;
             }
         } else {
-            imv = new ImageView();
+            imv = new VisImageView();
             drawnElements.put(id, imv);
             pagePane.getChildren().add(imv);
         }
 
         imv.setImage(im);
-        var origin = loc.getLoc();
-        imv.relocate(origin.getX(), origin.getY());
         imv.setId(id);
-        imv.setViewOrder(loc.getZ());
-        imv.setRotate(size.getRot());
         imv.setPreserveRatio(true);
-        imv.setFitHeight(size.getY());
-        imv.setFitWidth(size.getY());
-
     }
 
     /**
@@ -753,6 +726,10 @@ public final class MainController {
         var loadingGifStr = MainController.class
                 .getResourceAsStream("loading.gif");
         loadingGif = new Image(loadingGifStr);
+
+        var notFoundImStr = MainController.class
+                .getResourceAsStream("not-found.png");
+        notFoundIm = new Image(notFoundImStr);
 
         engine = new Engine(this);
 

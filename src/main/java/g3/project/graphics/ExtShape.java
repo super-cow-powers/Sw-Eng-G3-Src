@@ -133,6 +133,7 @@ public abstract class ExtShape extends Group implements Visual {
      *
      * @param size Size.
      */
+    @Override
     public abstract void setSize(final SizeObj size);
 
     /**

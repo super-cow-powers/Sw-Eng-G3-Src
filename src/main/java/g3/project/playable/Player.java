@@ -28,12 +28,11 @@
  */
 package g3.project.playable;
 
+import g3.project.graphics.SizeObj;
 import g3.project.graphics.VisualProps;
-import g3.project.ui.MainController;
 import g3.project.ui.Visual;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,12 +41,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.DoublePropertyBase;
-import javafx.beans.property.FloatProperty;
-import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleFloatProperty;
-import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
@@ -60,11 +54,9 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelBuffer;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
-import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 import uk.co.caprica.vlcj.media.Media;
 import uk.co.caprica.vlcj.media.MediaEventListener;
@@ -146,13 +138,13 @@ public final class Player extends Group implements Visual {
         videoImageView.fitWidthProperty().bind(targetWidth);
         videoImageView.fitHeightProperty().bind(targetHeight);
 
-        playerVbox.setMaxHeight(height + CTRL_MAX_HEIGHT);
-        playerVbox.setMinWidth(width);
+        playerVbox.maxHeightProperty().bind(targetHeight);
+        playerVbox.minWidthProperty().bind(targetWidth);
         playerVbox.setMinHeight(height);
         VBox.setVgrow(playerVbox, Priority.ALWAYS);
         playerVbox.setStyle("-fx-background-color: black;");
 
-        controlHbox.setMinWidth(width);
+        controlHbox.minWidthProperty().bind(targetWidth);
         controlHbox.setMaxHeight(CTRL_MAX_HEIGHT);
         controlHbox.setStyle("-fx-background-color: lightgray;");
         playerVbox.setAlignment(Pos.CENTER);
@@ -187,7 +179,7 @@ public final class Player extends Group implements Visual {
             }
         });
 
-        volSlider.setMaxWidth(100d);
+        volSlider.setMaxWidth(75d);
         volSlider.setVisible(false);
         volSlider.valueProperty().addListener(new ChangeListener<Number>() {
             @Override
@@ -197,7 +189,7 @@ public final class Player extends Group implements Visual {
                 }
             }
         });
-
+//Hide/show the volume slider on click
         volSlider.setManaged(volSlider.isVisible());
         volLabel.setOnMouseClicked(e -> {
             volSlider.setVisible(!volSlider.isVisible());
@@ -217,7 +209,7 @@ public final class Player extends Group implements Visual {
     public void load(final String mrl) {
         embeddedMediaPlayer.media().play(mrl);
         embeddedMediaPlayer.media().events().addMediaEventListener(new MediaEventCallback());
-        embeddedMediaPlayer.controls().setTime(0l);
+        embeddedMediaPlayer.controls().setTime(0L);
         pause();
         controlSlider.setValue(0d);
         controlSlider.setMin(0);
@@ -263,6 +255,18 @@ public final class Player extends Group implements Visual {
     @Override
     public void setProps(final VisualProps visualProps) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    /**
+     * Resize the player.
+     *
+     * @param size Size to target.
+     */
+    @Override
+    public void setSize(final SizeObj size) {
+        targetWidth.set(size.getX());
+        targetHeight.set(size.getY());
+        this.setRotate(size.getRot());
     }
 
     /**
