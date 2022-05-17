@@ -42,12 +42,12 @@
   <children>
     <AnchorPane maxHeight="-1.0" maxWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS">
       <children>
-            <Label layoutX="157.0" layoutY="133.0" text="Host Address:" />
-            <TextField layoutX="264.0" layoutY="129.0" />
-            <Label layoutX="168.0" layoutY="193.0" text="Host Port:" />
-            <TextField layoutX="264.0" layoutY="189.0" />
-            <Button layoutX="330.0" layoutY="279.0" mnemonicParsing="false" text="Cancel" />
-            <Button layoutX="233.0" layoutY="279.0" mnemonicParsing="false" text="Confirm" />
+            <Label fx:id="addressLabel" layoutX="157.0" layoutY="133.0" text="Host Address:" />
+            <TextField fx:id="addressField" layoutX="264.0" layoutY="129.0" />
+            <Label fx:id="portLabel" layoutX="168.0" layoutY="193.0" text="Host Port:" />
+            <TextField fx:id="portField" layoutX="264.0" layoutY="189.0" />
+            <Button fx:id="confirmConn" layoutX="233.0" layoutY="279.0" mnemonicParsing="false" onAction="#tryConnect" text="Confirm" />
+            <Button fx:id="cancelConn" layoutX="330.0" layoutY="279.0" mnemonicParsing="false" onAction="#cancelConnect" text="Cancel" />
       </children>
     </AnchorPane>
   </children>

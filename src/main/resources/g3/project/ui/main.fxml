@@ -53,6 +53,7 @@
                             </items>
                         </Menu>
                     </items>
+                </Menu>
                 <Menu mnemonicParsing="false" text="View">
                     <MenuItem mnemonicParsing="false" text="Show Console" onAction="#showConsole"/>
                 </Menu>
