@@ -48,6 +48,9 @@ public final class PlayerFactory {
 
     }
 
+    public Player newPlayer(){
+        return newPlayer(0d,0d);
+    }
     /**
      * Get a new player.
      *
@@ -55,8 +58,8 @@ public final class PlayerFactory {
      * @param height Player target height.
      * @return player.
      */
-    public Player newPlayer(final Double width, final Double height, final Boolean dispPlayer, final double offset, final Boolean autoPlay, final Boolean loop) {
-        var player = new Player(width, height, dispPlayer, offset, autoPlay, loop);
+    public Player newPlayer(final Double width, final Double height) {
+        var player = new Player(width, height);
         playerMap.put(player.hashCode(), player);
         return player;
     }

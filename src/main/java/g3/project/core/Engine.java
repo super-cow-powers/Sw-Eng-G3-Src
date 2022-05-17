@@ -273,6 +273,9 @@ public final class Engine extends Threaded {
             }
         }
         netComms.stop();
+        if (docIO != null) {
+            docIO.close(); //Cleanup resources
+        }
         System.out.println("Engine is going down NOW.");
         return;
     }
@@ -565,28 +568,19 @@ public final class Engine extends Threaded {
      *
      * @param img Image to draw.
      */
-    public void drawImage(final ImageElement img) {
+    public void drawImageEl(final ImageElement img) {
         /*
         Enforce thread boundary!
          */
         if (Thread.currentThread() != myThread) {
-            runFunction(() -> drawImage(img));
+            runFunction(() -> drawImageEl(img));
             return;
         }
-        final double defImgXY = 20d;
         var sourceOpt = img.getSourceLoc();
-        var locOpt = img.getOrigin();
-        var sizeOpt = img.getSize();
         var id = img.getID();
 
         var source = (sourceOpt.isPresent()) ? sourceOpt.get() : "";
-        var loc = (locOpt.isPresent())
-                ? locOpt.get()
-                : new LocObj(new Point2D(0, 0), 0d);
-        var locPoint = loc.getLoc();
-        var size = (sizeOpt.isPresent())
-                ? sizeOpt.get() : new SizeObj(defImgXY, defImgXY, 0d);
-        drawImage(id, size.getX(), size.getY(), size.getRot(), locPoint.getX(), locPoint.getY(), loc.getZ(), source);
+        Platform.runLater(() -> controller.drawImage(id, source, false));
     }
 
     /**
@@ -621,18 +615,15 @@ public final class Engine extends Threaded {
      *
      * @param shape Shape to draw.
      */
-    public void drawShape(final ShapeElement shape) {
+    public void drawShapeEl(final ShapeElement shape) {
         if (Thread.currentThread() != myThread) {
-            runFunction(() -> drawShape(shape));
+            runFunction(() -> drawShapeEl(shape));
             return;
         }
         ArrayList<StyledTextSeg> textSegs;
         StrokeProps stroke;
         var shapeType = shape.getType();
         final var strokeOpt = shape.getStroke();
-        final var propsMap = shape.getProps();
-        final var maybeLoc = shape.getOrigin();
-        final var maybeSize = shape.getSize();
         final var id = shape.getID();
 
         var textOpt = shape.getText();
@@ -656,11 +647,28 @@ public final class Engine extends Threaded {
                             stroke,
                             textSegs,
                             shape.getSegPoints());
-                    controller.setElVisualProps(id, propsMap);
-                    maybeSize.ifPresent(s -> controller.resizeElement(id, s));
-                    maybeLoc.ifPresent(l -> controller.moveElement(id, l));
-
                 });
+    }
+
+    /**
+     * Instruct the UI to create a player for the element.
+     *
+     * @param playable Playable element.
+     */
+    public void drawPlayableEl(final PlayableElement playable) {
+        /*
+        Enforce thread boundary!
+         */
+        if (Thread.currentThread() != myThread) {
+            runFunction(() -> drawPlayableEl(playable));
+            return;
+        }
+        var sourceOpt = playable.getSourceLoc();
+        var source = (sourceOpt.isPresent()) ? sourceOpt.get() : "";
+        var id = playable.getID();
+        Platform.runLater(() -> {
+            controller.showPlayable(id, source, playable.getDisplayPlayer(), playable.getLoop(), playable.getAutoplay(), playable.getSeekOffset());
+        });
     }
 
     /**
@@ -829,13 +837,22 @@ public final class Engine extends Threaded {
         if (el instanceof PageElement) {
             this.configCard((PageElement) el);
         } else if (el instanceof ImageElement) {
-            this.drawImage((ImageElement) el);
+            this.drawImageEl((ImageElement) el);
         } else if (el instanceof ShapeElement) {
-            this.drawShape((ShapeElement) el);
+            this.drawShapeEl((ShapeElement) el);
         } else if (el instanceof PlayableElement) {
-
+            this.drawPlayableEl((PlayableElement) el);
         }
+        var propsMap = el.getProps();
+        var id = el.getID();
+        var maybeSize = el.getSize();
+        var maybeLoc = el.getOrigin();
 
+        Platform.runLater(() -> {
+            controller.setElVisualProps(id, propsMap);
+            maybeSize.ifPresent(s -> controller.resizeElement(id, s));
+            maybeLoc.ifPresent(l -> controller.moveElement(id, l));
+        });
     }
 
     /**
@@ -843,7 +860,7 @@ public final class Engine extends Threaded {
      *
      * @param code Code string.
      */
-    public void evalPyStr(String code) {
+    public void evalPyStr(final String code) {
         if (Thread.currentThread() != myThread) {
             runFunction(() -> evalPyStr(code));
             return;

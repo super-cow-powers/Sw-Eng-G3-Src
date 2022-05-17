@@ -87,8 +87,8 @@ public class VisualProps extends HashMap<String, Object> {
      */
     public static final Map<String, Object> PROP_DEFAULTS = Map.ofEntries(entry(SHADE_COL, Color.BLACK),
             entry(L_SHADE_SIZE, 0d), entry(R_SHADE_SIZE, 0d), entry(T_SHADE_SIZE, 0d), entry(B_SHADE_SIZE, 0d), entry(SHADE_SIZE, 0d),
-            entry(ALPHA, 0d), entry(FILL, Color.TRANSPARENT), entry(DISP_SECS, -1d), entry(DELAY_SECS, 0d), entry(VISIBLE, true),
-            entry(ID, ""));  
+            entry(ALPHA, 1d), entry(FILL, Color.TRANSPARENT), entry(DISP_SECS, -1d), entry(DELAY_SECS, 0d), entry(VISIBLE, true),
+            entry(ID, ""));
 
     /**
      * Constructor. Takes map of properties.
@@ -134,9 +134,13 @@ public class VisualProps extends HashMap<String, Object> {
                 break;
             case ALPHA: //Alpha may be separate or in fill.
                 var al = (Double) this.get(ALPHA);
-                if (al == null) {
+                if (al == null) { //Prioritise explicit alpha.
                     var col = this.get(FILL);
-                    val = ((Color) col).getRed();
+                    if (col != null) {
+                        val = ((Color) col).getOpacity();
+                    }
+                } else {
+                    val = al;
                 }
                 break;
             default:
@@ -167,13 +171,13 @@ public class VisualProps extends HashMap<String, Object> {
         if (gen <= 0) { //Shadow set individually
             var xOS = r - l;
             var yOS = b - t;
-            
+
             ds.setHeight(height);
             ds.setWidth(width);
             ds.setOffsetX(xOS);
             ds.setOffsetY(yOS);
         } else {
-            ds.setRadius(gen);   
+            ds.setRadius(gen);
         }
         return Optional.of(ds);
     }

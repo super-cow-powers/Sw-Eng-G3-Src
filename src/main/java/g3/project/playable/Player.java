@@ -59,12 +59,15 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 import uk.co.caprica.vlcj.media.Media;
+import uk.co.caprica.vlcj.media.MediaEventAdapter;
 import uk.co.caprica.vlcj.media.MediaEventListener;
 import uk.co.caprica.vlcj.media.MediaParsedStatus;
 import uk.co.caprica.vlcj.media.MediaRef;
 import uk.co.caprica.vlcj.media.Meta;
 import uk.co.caprica.vlcj.media.Picture;
+import uk.co.caprica.vlcj.media.TrackType;
 import uk.co.caprica.vlcj.player.base.MediaPlayer;
+import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;
 import uk.co.caprica.vlcj.player.base.State;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 import uk.co.caprica.vlcj.player.embedded.videosurface.CallbackVideoSurface;
@@ -111,6 +114,7 @@ public final class Player extends Group implements Visual {
     private Label volLabel = new Label(" 🔊");
     private Label timeLabel = new Label();
     private Button playPauseButton = new Button();
+    private Double offset = 0d;
 
     /**
      * Temporary file path if required.
@@ -122,17 +126,14 @@ public final class Player extends Group implements Visual {
      *
      * @param width Initial target width.
      * @param height Initial target height.
-     * @param dispPlayer Display the Player controls.
-     * @param offset Offset in seconds to play from.
-     * @param loop Loop playback.
-     * @param autoPlay Auto-play.
      */
-    protected Player(final double width, final double height, final Boolean dispPlayer, final double offset, final Boolean autoPlay, final Boolean loop) {
+    protected Player(final double width, final double height) {
         targetWidth.set(width);
         targetHeight.set(height);
         mediaPlayerFactory = new MediaPlayerFactory();
         embeddedMediaPlayer = mediaPlayerFactory.mediaPlayers().newEmbeddedMediaPlayer();
         embeddedMediaPlayer.videoSurface().set(new VideoSurface());
+
         videoImageView = new ImageView();
         videoImageView.setPreserveRatio(true);
         videoImageView.fitWidthProperty().bind(targetWidth);
@@ -170,7 +171,7 @@ public final class Player extends Group implements Visual {
                     embeddedMediaPlayer.controls().setTime((long) ms);
                 }
                 long seconds = Duration.ofMillis((long) ms).getSeconds();
-
+                //CHECKSTYLE:OFF
                 long HH = seconds / 3600;
                 long MM = (seconds % 3600) / 60;
                 long SS = seconds % 60;
@@ -205,11 +206,13 @@ public final class Player extends Group implements Visual {
      * Play media from an MRL.
      *
      * @param mrl Media location.
+     * @param newoffset Seek offset (in seconds).
      */
-    public void load(final String mrl) {
+    public void load(final String mrl, final Double newoffset) {
         embeddedMediaPlayer.media().play(mrl);
         embeddedMediaPlayer.media().events().addMediaEventListener(new MediaEventCallback());
-        embeddedMediaPlayer.controls().setTime(0L);
+        embeddedMediaPlayer.events().addMediaPlayerEventListener(new MediaPlayerEventCallback());
+        this.offset = newoffset;
         pause();
         controlSlider.setValue(0d);
         controlSlider.setMin(0);
@@ -224,11 +227,29 @@ public final class Player extends Group implements Visual {
      * @param mediaBytes media in memory as bytes.
      * @throws java.io.IOException Couldn't open or write to temp file.
      */
-    public void load(final byte[] mediaBytes) throws IOException {
+    public void load(final byte[] mediaBytes, final Double offset) throws IOException {
         tempFilePath = Files.createTempFile("spres-media", null);
         Files.write(tempFilePath, mediaBytes);
         var tempMrl = tempFilePath.toAbsolutePath().toUri().toString();
-        this.load(tempMrl);
+        this.load(tempMrl, offset);
+    }
+
+    /**
+     * Set player offset.
+     *
+     * @param offset Offset.
+     */
+    public void setSeek(final Double offset) {
+        embeddedMediaPlayer.controls().setTime((long) (offset * 1000));
+    }
+
+    /**
+     * Set playback loop.
+     *
+     * @param loop loop playback.
+     */
+    public void setLoop(final Boolean loop) {
+        embeddedMediaPlayer.controls().setRepeat(loop);
     }
 
     /**
@@ -253,8 +274,13 @@ public final class Player extends Group implements Visual {
      * @param visualProps Properties.
      */
     @Override
-    public void setProps(final VisualProps visualProps) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void setProps(final VisualProps props) {
+        var shad = props.makeShadow();
+        shad.ifPresent(sh -> this.setEffect(sh));
+        var vis = props.getProp(VisualProps.VISIBLE);
+        vis.ifPresent(vi -> this.setVisible((Boolean) vi));
+        var alpha = props.getProp(VisualProps.ALPHA);
+        alpha.ifPresent(a -> this.setOpacity((Double) a));
     }
 
     /**
@@ -267,6 +293,22 @@ public final class Player extends Group implements Visual {
         targetWidth.set(size.getX());
         targetHeight.set(size.getY());
         this.setRotate(size.getRot());
+    }
+
+    /**
+     * Show the control box.
+     */
+    public void showControls() {
+        controlHbox.setVisible(true);
+        controlHbox.setManaged(true);
+    }
+
+    /**
+     * Hide the control box.
+     */
+    public void hideControls() {
+        controlHbox.setVisible(false);
+        controlHbox.setManaged(false);
     }
 
     /**
@@ -334,11 +376,6 @@ public final class Player extends Group implements Visual {
         @Override
         public void display(final MediaPlayer mediaPlayer, final ByteBuffer[] nativeBuffers, final BufferFormat bufferFormat) {
             Platform.runLater(() -> {
-                //CHECKSTYLE:OFF
-                if (!controlSlider.isValueChanging()) {
-                    controlSlider.setValue((double) mediaPlayer.status().time());
-                }
-                //CHECKSTYLE:ON
                 videoPixelBuffer.updateBuffer(pb -> null); //Redraw buffer.
             });
         }
@@ -361,29 +398,49 @@ public final class Player extends Group implements Visual {
         }
     }
 
+    private class MediaPlayerEventCallback extends MediaPlayerEventAdapter {
+
+        /**
+         * Time in Media has changed. Update slider.
+         *
+         * @param mediaPlayer Player.
+         * @param newTime Time at.
+         */
+        @Override
+        public void timeChanged(final MediaPlayer mediaPlayer, final long newTime) {
+            Platform.runLater(() -> {
+                //CHECKSTYLE:OFF
+                if (!controlSlider.isValueChanging()) {
+                    controlSlider.setValue((double) newTime);
+                }
+                //CHECKSTYLE:ON
+            });
+        }
+
+        /**
+         * Media has paused.
+         *
+         * @param mediaPlayer player.
+         */
+        @Override
+        public void paused(final MediaPlayer mediaPlayer) {
+        }
+
+        /**
+         * Media is playing.
+         *
+         * @param mediaPlayer player.
+         */
+        @Override
+        public void playing(final MediaPlayer mediaPlayer) {
+        }
+
+    }
+
     /**
      * Called when media changes.
      */
-    private class MediaEventCallback implements MediaEventListener {
-
-        /**
-         * Metadata updated.
-         *
-         * @param media Media.
-         * @param meta Media metadata.
-         */
-        @Override
-        public void mediaMetaChanged(Media media, Meta meta) {
-        }
-
-        /**
-         * .
-         * @param media Media.
-         * @param mr Ref to media.
-         */
-        @Override
-        public void mediaSubItemAdded(Media media, MediaRef mr) {
-        }
+    private class MediaEventCallback extends MediaEventAdapter {
 
         /**
          * Duration of media changed.
@@ -392,29 +449,10 @@ public final class Player extends Group implements Visual {
          * @param l Duration (mS).
          */
         @Override
-        public void mediaDurationChanged(Media media, long l) {
+        public void mediaDurationChanged(final Media media, final long l) {
             controlSlider.setMax((double) l);
 
-        }
-
-        /**
-         * Media has been parsed.
-         *
-         * @param media Media.
-         * @param mps Status of parsing.
-         */
-        @Override
-        public void mediaParsedChanged(Media media, MediaParsedStatus mps) {
-        }
-
-        /**
-         * Media behind has been freed.
-         *
-         * @param media Media.
-         * @param mr Ref to media.
-         */
-        @Override
-        public void mediaFreed(Media media, MediaRef mr) {
+            embeddedMediaPlayer.controls().setTime((long)(offset*1000));
         }
 
         /**
@@ -424,36 +462,11 @@ public final class Player extends Group implements Visual {
          * @param state State update.
          */
         @Override
-        public void mediaStateChanged(Media media, State state) {
+        public void mediaStateChanged(final Media media, final State state) {
             if (state == State.PLAYING || state == State.PAUSED) {
                 //We should now be able to set the volume slider correctly.
                 volSlider.setValue(embeddedMediaPlayer.audio().volume());
             }
-        }
-
-        /**
-         * .
-         * @param media Media.
-         * @param mr Ref to media.
-         */
-        @Override
-        public void mediaSubItemTreeAdded(Media media, MediaRef mr) {
-        }
-
-        /**
-         * Thumbnail for media is now available.
-         *
-         * @param media Media.
-         * @param pctr Thumbnail.
-         */
-        @Override
-        public void mediaThumbnailGenerated(Media media, Picture pctr) {
-            if (!embeddedMediaPlayer.status().isPlaying()) {
-                var img = new Image(new ByteArrayInputStream(pctr.buffer()));
-                videoImageView.setImage(img);
-
-            }
-            System.out.println("Got thumb");
         }
     }
 }

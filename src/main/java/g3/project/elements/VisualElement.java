@@ -222,15 +222,15 @@ public class VisualElement extends Element implements Scriptable {
      * @return Optional colour.
      */
     public final Optional<Color> getFillColour() {
-        var colAttr = Optional.ofNullable(this.getAttribute("fill"));
+        var colAttr = this.getAttribute("fill");
         /**
          * @todo: Find a nicer looking way of making this work Probably
          * containing more streams.
          */
-        if (colAttr.isPresent()) {
+        if (colAttr != null) {
 
             //var colStr = colAttr.get().getValue().replace("#", "");
-            var colStr = colAttr.get().getValue();
+            var colStr = colAttr.getValue();
             Color col = null;
             try {
                 col = Color.web(colStr);

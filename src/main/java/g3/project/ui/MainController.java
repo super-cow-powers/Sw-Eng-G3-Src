@@ -418,8 +418,10 @@ public final class MainController {
      */
     public void moveElement(final String id, final LocObj loc) {
         var el = drawnElements.get(id);
-        el.relocate(loc.getLoc().getX(), loc.getLoc().getY());
-        el.setViewOrder(loc.getZ());
+        if (el instanceof Visual) {
+            el.relocate(loc.getLoc().getX(), loc.getLoc().getY());
+            el.setViewOrder(loc.getZ());
+        }
     }
 
     /**
@@ -565,24 +567,77 @@ public final class MainController {
      *
      * @param id media object ID.
      * @param path Path to media.
+     * @param showPlayer Show player controls.
+     * @param loopPlay Loop the media.
+     * @param autoPlay Auto-play the media.
+     * @param seekOffset Start seek offset.
      */
-    public void showPlayable(final String id, final String path) {
-        var player = playerFact.newPlayer(0d, 0d, true, 0d, false, false);
-        drawnElements.put(id, player);
-        //Get a resource from the archive. This is typically slower, as the player will copy the resource out.
-        if (Io.isUriInternal(path)) {
-            var resMaybe = engine.getDocIO().getResource(path);
-            resMaybe.ifPresent(r -> {
-                try {
-                    player.load(r);
-                } catch (IOException ex) {
-                    Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+    public void showPlayable(final String id, final String path, final Boolean showPlayer, final Boolean loopPlay, final Boolean autoPlay, final Double seekOffset) {
+        var player = (Player) drawnElements.get(id);
+        if (player == null) {
+            final var newplayer = playerFact.newPlayer();
+            drawnElements.put(id, newplayer);
+            //Get a resource from the archive. This is typically slower, as the player will copy the resource out.
+            if (Io.isUriInternal(path)) {
+                var resMaybe = engine.getDocIO().getResource(path);
+                resMaybe.ifPresent(r -> {
+                    try {
+                        newplayer.load(r, seekOffset);
+                    } catch (IOException ex) {
+                        Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                });
+            } else { //Play straight from a MRL.
+                String loadPath = path;
+                if (loadPath.startsWith("file")){
+                    loadPath = loadPath.replace("file:", "");
+                    //Not quite correct resolution of '~' - most shells only accept it at the very start.
+                    loadPath = loadPath.replaceFirst("~", System.getProperty("user.home"));
                 }
-            });
-        } else { //Play straight from a path.
-            player.load(path.replace("file:", ""));
+                newplayer.load(loadPath, seekOffset);
+            }
+            pagePane.getChildren().add(newplayer);
+            player = newplayer;
         }
-        pagePane.getChildren().add(player);
+        playerSetControls(id, showPlayer);
+        player.setLoop(loopPlay);
+        playerSetPlaying(id, autoPlay);
+    }
+
+    /**
+     * Set play/pause on player.
+     *
+     * @param id Player.
+     * @param playing Play/Pause.
+     */
+    public void playerSetPlaying(final String id, final Boolean playing) {
+        var pl = drawnElements.get(id);
+        if (pl instanceof Player) {
+            var player = (Player) pl;
+            if (playing) {
+                player.play();
+            } else {
+                player.pause();
+            }
+        }
+    }
+
+    /**
+     * Show/hide player controls.
+     *
+     * @param id Player.
+     * @param shown Show controls?
+     */
+    public void playerSetControls(final String id, final Boolean shown) {
+        var pl = drawnElements.get(id);
+        if (pl instanceof Player) {
+            var player = (Player) pl;
+            if (shown) {
+                player.showControls();
+            } else {
+                player.hideControls();
+            }
+        }
     }
 
     /**
@@ -645,7 +700,6 @@ public final class MainController {
             drawnElements.put(id, imv);
             pagePane.getChildren().add(imv);
         }
-
         imv.setImage(im);
         imv.setId(id);
         imv.setPreserveRatio(true);

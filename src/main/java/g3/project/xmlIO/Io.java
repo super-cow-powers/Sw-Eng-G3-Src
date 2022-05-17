@@ -70,7 +70,7 @@ public final class Io {
 
     private final static String scriptsDirString = "/scripts";
 
-    private final static String tempFilePrefix = "_tmp_";
+    private final static String tempFilePrefix = "_sprestmp_";
     /**
      * Open Document.
      */
@@ -84,6 +84,8 @@ public final class Io {
     private File origZip;
 
     private FileSystem zipFs;
+    
+    private Path tempPath;
 
     private Boolean allowSave = true;
 
@@ -99,16 +101,16 @@ public final class Io {
         var zipFile = presFileUriOpt.filter(uri -> uri.getPath().matches("^.*\\.(zip|ZIP|spres|SPRES)$"))
                 .flatMap(Uri -> getPresArchive(Uri));
         var fsOpt = zipFile.flatMap(file -> {
-            var newPath = Paths.get(System.getProperty("java.io.tmpdir") + "/" + tempFilePrefix + file.getName());
             docName = file.getName();
             origZip = file;
             try {
-                Files.copy(file.toPath(), newPath, StandardCopyOption.REPLACE_EXISTING);
+                tempPath = Files.createTempFile(tempFilePrefix, "");
+                Files.copy(file.toPath(), tempPath, StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException ex) {
                 Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
                 return null;
             }
-            return makeFs(newPath);
+            return makeFs(tempPath);
         });
 
         myDoc = fsOpt.flatMap(fs -> {
@@ -123,14 +125,13 @@ public final class Io {
      * @param presStream Stream containing archive.
      */
     public Io(final InputStream presStream) {
-        docName = "unknown.spres";
-        var tempPath = Paths.get(System.getProperty("java.io.tmpdir") + "/" + tempFilePrefix + docName);
+        docName = "unknown.spres"; 
         Optional<FileSystem> fsOpt = Optional.empty();
         try {
+            tempPath = Files.createTempFile(tempFilePrefix, "");
             var pres = presStream.readAllBytes();
             allowSave = false;
             Files.write(tempPath, pres);
-            tempPath.toFile();
             fsOpt = makeFs(tempPath);
         } catch (IOException | NullPointerException ex) {
             Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
@@ -378,6 +379,13 @@ public final class Io {
         if (zipFs != null) {
             try {
                 zipFs.close();
+            } catch (IOException ex) {
+                Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        if (tempPath != null){
+            try {
+                Files.delete(tempPath); //Try to clean up our temp files
             } catch (IOException ex) {
                 Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
             }
