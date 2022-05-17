@@ -123,43 +123,6 @@
             </dependencies>
         </profile>
         <profile>
-            <id>arch-system-jfx</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <dependencies>
-                
-                <dependency>
-                    <groupId>org.openjfx</groupId>
-                    <artifactId>javafx-base</artifactId>
-                    <version>11</version>
-                    <scope>system</scope>
-                    <systemPath>/usr/lib/jvm/java-11-openjfx/lib/javafx.base.jar</systemPath>
-                </dependency>
-                <dependency>
-                    <groupId>org.openjfx</groupId>
-                    <artifactId>javafx-controls</artifactId>
-                    <scope>system</scope>
-                    <systemPath>/usr/lib/jvm/java-11-openjfx/lib/javafx.controls.jar</systemPath>
-                    <version>11</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.openjfx</groupId>
-                    <artifactId>javafx-fxml</artifactId>
-                    <scope>system</scope>
-                    <systemPath>/usr/lib/jvm/java-11-openjfx/lib/javafx.fxml.jar</systemPath>
-                    <version>11</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.openjfx</groupId>
-                    <artifactId>javafx-graphics</artifactId>
-                    <scope>system</scope>
-                    <systemPath>/usr/lib/jvm/java-11-openjfx/lib/javafx.graphics.jar</systemPath>
-                    <version>11</version>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
             <id>maven-central-jfx</id>
             <activation>
                 <os>
