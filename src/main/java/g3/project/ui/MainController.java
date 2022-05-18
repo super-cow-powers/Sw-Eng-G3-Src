@@ -417,12 +417,14 @@ public final class MainController {
             ((ExtShape) drawnShape).setStroke(props);
         }
     }
+
     /**
      * Change a shape's colour.
+     *
      * @param id Target ID.
      * @param col colour.
      */
-    public void updateShapeColour(final String id, final Color col){
+    public void updateShapeColour(final String id, final Color col) {
         var drawnShape = drawnElements.get(id);
         if (drawnShape != null) {
             ((ExtShape) drawnShape).setFill(col);
@@ -638,25 +640,23 @@ public final class MainController {
         if (player == null) {
             final var newplayer = playerFact.newPlayer();
             drawnElements.put(id, newplayer);
-            //Get a resource from the archive. This is typically slower, as the player will copy the resource out.
+            String loadPath = path;
+            //Get a resource from the archive. This is typically slower, as the resource system will copy the resource out.
             if (Io.isUriInternal(path)) {
-                var resMaybe = engine.getDocIO().getResource(path);
-                resMaybe.ifPresent(r -> {
-                    try {
-                        newplayer.load(r, seekOffset);
-                    } catch (IOException ex) {
-                        Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                });
-            } else { //Play straight from a MRL.
-                String loadPath = path;
-                if (loadPath.startsWith("file")) {
-                    loadPath = loadPath.replace("file:", "");
-                    //Not quite correct resolution of '~' - most shells only accept it at the very start.
-                    loadPath = loadPath.replaceFirst("~", System.getProperty("user.home"));
+                var resMaybe = engine.getDocIO().getResourceTempPath(path);
+                if (resMaybe.isPresent()) {
+                    loadPath = resMaybe.get();
+                } else {
+                    return;
                 }
-                newplayer.load(loadPath, seekOffset);
             }
+            if (loadPath.startsWith("file:")) {
+                loadPath = loadPath.replace("file:", "");
+                //Not quite correct resolution of '~' - most shells only accept it at the very start.
+                loadPath = loadPath.replaceFirst("~", System.getProperty("user.home"));
+            }
+            newplayer.load(loadPath, seekOffset);
+
             pagePane.getChildren().add(newplayer);
             player = newplayer;
         }

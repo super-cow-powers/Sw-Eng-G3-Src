@@ -214,9 +214,9 @@ public final class Player extends Group implements Visual {
         embeddedMediaPlayer.events().addMediaPlayerEventListener(new MediaPlayerEventCallback());
         this.offset = newoffset;
         pause();
-        controlSlider.setValue(0d);
+        controlSlider.setValue(newoffset);
         controlSlider.setMin(0);
-        controlSlider.setMax(1);
+        controlSlider.setMax(newoffset + 100);
     }
 
     /**

@@ -84,10 +84,14 @@ public final class Io {
     private File origZip;
 
     private FileSystem zipFs;
-    
+
     private Path tempPath;
 
     private Boolean allowSave = true;
+    /**
+     * Temporary files requiring cleanup.
+     */
+    private final HashMap<String, Path> tempFiles = new HashMap<>();
 
     /**
      * Create new IO and parse the project doc.
@@ -106,6 +110,7 @@ public final class Io {
             try {
                 tempPath = Files.createTempFile(tempFilePrefix, "");
                 Files.copy(file.toPath(), tempPath, StandardCopyOption.REPLACE_EXISTING);
+                tempFiles.put(docName, tempPath);
             } catch (IOException ex) {
                 Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
                 return null;
@@ -125,10 +130,11 @@ public final class Io {
      * @param presStream Stream containing archive.
      */
     public Io(final InputStream presStream) {
-        docName = "unknown.spres"; 
+        docName = "unknown.spres";
         Optional<FileSystem> fsOpt = Optional.empty();
         try {
             tempPath = Files.createTempFile(tempFilePrefix, "");
+            tempFiles.put(docName, tempPath);
             var pres = presStream.readAllBytes();
             allowSave = false;
             Files.write(tempPath, pres);
@@ -237,7 +243,7 @@ public final class Io {
         Serializer serializer = new Serializer(fileOutStream, "ISO-8859-1");
         serializer.write(myDoc.get());
         //Copy the temp file to the expected place
-        Files.copy(Paths.get(System.getProperty("java.io.tmpdir") + "/" + tempFilePrefix + docName),
+        Files.copy(Paths.get(System.getProperty("java.io.tmpdir") + File.pathSeparator + tempFilePrefix + docName),
                 newPathPath,
                 StandardCopyOption.REPLACE_EXISTING);
         origZip = newPathPath.toFile();
@@ -269,6 +275,33 @@ public final class Io {
             }
         }
         return Optional.ofNullable(arr);
+    }
+
+    /**
+     * Extract a resource from the zip and return its path.
+     *
+     * @param path Resource path.
+     * @return Optional resource bytes.
+     */
+    public synchronized Optional<String> getResourceTempPath(final String path) {
+        if (isUriInternal(path)) { //Get an internal resource
+            var cached = tempFiles.get(path); //Have we seen it before?
+            if (cached != null) {
+                return Optional.of(cached.toAbsolutePath().toString());
+            }
+            var fPath = zipFs.getPath(path);
+            try {
+                var tempfPath = Files.createTempFile(tempFilePrefix, "");
+                Files.copy(fPath, tempfPath, StandardCopyOption.REPLACE_EXISTING);
+                tempFiles.put(path, tempfPath);
+                return Optional.of(tempfPath.toAbsolutePath().toString());
+            } catch (IOException ex) {
+                Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+                return Optional.empty();
+            }
+        } else { //External resource. Return input.
+            return Optional.of(path);
+        }
     }
 
     /**
@@ -383,12 +416,8 @@ public final class Io {
                 Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        if (tempPath != null){
-            try {
-                Files.delete(tempPath); //Try to clean up our temp files
-            } catch (IOException ex) {
-                Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
+        tempFiles.forEach((id, p) -> {
+            p.toFile().delete();
+        });
     }
 }

@@ -483,9 +483,6 @@ public final class Engine extends Threaded {
      * @param xmlFile Doc to load
      */
     private void parseNewDoc(final File xmlFile) { // Load a new doc
-        if (docIO != null) {
-            docIO.close(); //Close the previous
-        }
         initDoc(new Io(xmlFile.getAbsolutePath()));
     }
 
@@ -495,9 +492,6 @@ public final class Engine extends Threaded {
      * @param archStream Doc to load
      */
     private void parseNewDoc(final InputStream archStream) {
-        if (docIO != null) {
-            docIO.close(); //Close the previous
-        }
         initDoc(new Io(archStream));
         //Platform.runLater(() -> controller.showPlayable("test-player", new SizeObj(200d, 200d, 0d), new LocObj(new Point2D(50d, 50d), 0d), "file:/home/david/Videos/Popcornarchive-aClockworkOrange1971.mp4"));
     }
@@ -508,6 +502,9 @@ public final class Engine extends Threaded {
      * @param docio doc to init.
      */
     private void initDoc(final Io docio) {
+        if (docIO != null) {
+            docIO.close(); //Close the previous
+        }
         docIO = docio;
         eventQueue.clear();
         callQueue.clear();
@@ -824,7 +821,7 @@ public final class Engine extends Threaded {
         var sourceOpt = playable.getSourceLoc();
         var source = (sourceOpt.isPresent()) ? sourceOpt.get() : "";
         var id = playable.getID();
-        drawPlayer(id, source, playable.getDisplayPlayer(), playable.getLoop(), playable.getAutoplay(), playable.getSeekOffset());
+        drawPlayer(id, source, playable.getDisplayPlayer(), playable.getAutoplay(), playable.getLoop(), playable.getSeekOffset());
     }
 
     /**
