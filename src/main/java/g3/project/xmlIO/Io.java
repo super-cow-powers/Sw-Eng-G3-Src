@@ -40,18 +40,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXNotRecognizedException;
-import org.xml.sax.SAXNotSupportedException;
-import org.xml.sax.SAXParseException;
-import org.xml.sax.XMLFilter;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
 import nu.xom.*;
 
 /**
@@ -60,10 +62,15 @@ import nu.xom.*;
  */
 public final class Io {
 
-    private static final String PWS = "PWS.xsd";
-    public static final String PWS_NS = "PWS_Base";
-    private static final String EXT_SCHEMA = "my_exts.xsd";
-    public static final String EXT_NS = "PWS_Exts";
+    private final static String xmlFileName = "doc.xml";
+
+    private final static String mediaDirString = "/media";
+
+    private final static String imagesDirString = "/images";
+
+    private final static String scriptsDirString = "/scripts";
+
+    private final static String tempFilePrefix = "_tmp_";
     /**
      * Open Document.
      */
@@ -72,49 +79,121 @@ public final class Io {
     /**
      * Document Name.
      */
-    private final String docFileName;
+    private String docName;
 
-    /**
-     * Containing dir.
-     */
-    private final String dirPathString;
+    private File origZip;
+
+    private FileSystem zipFs;
 
     private Boolean allowSave = true;
 
     /**
      * Create new IO and parse the project doc.
      *
-     * @param xmlFile doc to parse.
+     * @param presFilePath path to pres. Zip.
      */
-    public Io(final File xmlFile) {
-        dirPathString = xmlFile.getAbsoluteFile().getParent() + "/";
-        myDoc = parseDocXML(xmlFile);
-        docFileName = xmlFile.getName();
+    public Io(final String presFilePath) {
+
+        var presFileUriString = pathToUriString(presFilePath);
+        var presFileUriOpt = maybeURI(presFileUriString);
+        var zipFile = presFileUriOpt.filter(uri -> uri.getPath().matches("^.*\\.(zip|ZIP|spres|SPRES)$"))
+                .flatMap(Uri -> getPresArchive(Uri));
+        var fsOpt = zipFile.flatMap(file -> {
+            var newPath = Paths.get(System.getProperty("java.io.tmpdir") + "/" + tempFilePrefix + file.getName());
+            docName = file.getName();
+            origZip = file;
+            try {
+                Files.copy(file.toPath(), newPath, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException ex) {
+                Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+                return null;
+            }
+            return makeFs(newPath);
+        });
+
+        myDoc = fsOpt.flatMap(fs -> {
+            zipFs = fs;
+            return retrieveDoc(fs);
+        });
     }
 
     /**
-     * Create new IO and parse project doc from InputStream.
+     * Build from a byte array.
      *
-     * @param docIs Stream.
-     * @param dir Containing dir.
+     * @param presStream Stream containing archive.
      */
-    public Io(final InputStream docIs, final String dir) {
-        dirPathString = dir;
-        myDoc = parseDocXML(docIs);
-        docFileName = "Stream";
-        allowSave = false;
+    public Io(final InputStream presStream) {
+        docName = "unknown.spres";
+        var tempPath = Paths.get(System.getProperty("java.io.tmpdir") + "/" + tempFilePrefix + docName);
+        Optional<FileSystem> fsOpt = Optional.empty();
+        try {
+            var pres = presStream.readAllBytes();
+            allowSave = false;
+            Files.write(tempPath, pres);
+            tempPath.toFile();
+            fsOpt = makeFs(tempPath);
+        } catch (IOException | NullPointerException ex) {
+            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        myDoc = fsOpt.flatMap(fs -> {
+            zipFs = fs;
+            return retrieveDoc(fs);
+        });
+        
     }
 
     /**
-     * Create new IO and parse the custom doc.
+     * Get doc from FileSystem.
      *
-     * @param xmlFile File.
-     * @param customFactory Custom factory to build the doc.
+     * @param fs FileSystem
+     * @return Maybe Doc.
      */
-    public Io(final File xmlFile, final NodeFactory customFactory) {
-        dirPathString = xmlFile.getAbsoluteFile().getParent() + "/";
-        myDoc = parseGenericXML(xmlFile, customFactory);
-        docFileName = xmlFile.getName();
+    private Optional<Document> retrieveDoc(final FileSystem fs) {
+        var docPath = fs.getPath(xmlFileName);
+        try {
+            var docIs = Files.newInputStream(docPath);
+            return Parse.parseDocXML(docIs);
+        } catch (IOException ex) {
+            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Make a new Zip FS.
+     *
+     * @param path Path to zip
+     * @return Maybe FS.
+     */
+    private Optional<FileSystem> makeFs(Path path) {
+        HashMap<String, String> env = new HashMap<>();
+        env.put("create", "true");
+        FileSystem fs = null;
+        try {
+            var ur = URI.create("jar:file:" + path.toAbsolutePath().toString());
+            fs = FileSystems.newFileSystem(ur, env);
+        } catch (IOException ex) {
+            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return Optional.ofNullable(fs);
+    }
+
+    /**
+     * Retrieve a presentation archive.
+     *
+     * @param target URI of target zip.
+     * @return Maybe zip file.
+     */
+    private Optional<File> getPresArchive(final URI target) {
+        var uriScheme = target.getScheme();
+        File zipFile = null;
+        if (uriScheme.startsWith("file")) {
+            //local
+            zipFile = new File(target);
+        }
+
+        return Optional.ofNullable(zipFile);
     }
 
     /**
@@ -129,72 +208,112 @@ public final class Io {
     /**
      * Save document to current location.
      *
-     * @param doc document to save.
      * @throws IOException bad file.
      */
-    public void saveDoc(final Document doc) throws IOException {
-        saveDocAs(doc, dirPathString + docFileName);
+    public void save() throws IOException {
+        if (allowSave == true | origZip != null) {
+            saveAs(origZip.getAbsolutePath());
+        } else {
+            throw new IOException("Can't save.");
+        }
     }
 
     /**
      * Save document to new location.
      *
-     * @param doc document to save.
      * @param newPath Path to save to.
      * @throws IOException bad file.
      */
-    public void saveDocAs(final Document doc, final String newPath) throws IOException {
-        if (!allowSave) {
-            throw new IOException("Saving Not Permitted.");
+    public void saveAs(final String newPath) throws IOException {
+        if ( zipFs == null || myDoc.isEmpty()) {
+            throw new IOException("Can't save.");
+        } else if (!newPath.matches("^.*\\.(zip|ZIP|spres|SPRES)$")){
+            throw new IOException("Bad File Name!");
         }
-        String path;
-        try {
-            path = new URI(pathToURI(newPath)).getPath();
-        } catch (URISyntaxException ex) {
-            throw new IOException("Invalid File Path.");
-        }
-        Serializer serializer = new Serializer(new FileOutputStream(path), "ISO-8859-1");
-        serializer.write(doc);
+        var docPath = zipFs.getPath(xmlFileName);
+        var newPathPath = Paths.get(newPath);
+        var fileOutStream = Files.newOutputStream(docPath);
+        Serializer serializer = new Serializer(fileOutStream, "ISO-8859-1");
+        serializer.write(myDoc.get());
+        //Copy the temp file to the expected place
+        Files.copy(Paths.get(System.getProperty("java.io.tmpdir") + "/" + tempFilePrefix + docName),
+                newPathPath,
+                StandardCopyOption.REPLACE_EXISTING);
+        origZip = newPathPath.toFile();
+        allowSave = true;
     }
 
     /**
-     * Get a resource from path.
+     * Get a resource from the zip.
      *
      * @param path Resource path.
      * @return Optional resource bytes.
      */
     public synchronized Optional<byte[]> getResource(final String path) {
-        if (dirPathString == "internal_ui") {
-            return getInternalResource(path, MainController.class);
+        byte[] arr = null;
+        if (path.startsWith("http")) { //Get a web resource
+            try {
+                var uri = new URI(path);
+                var is = uri.toURL().openStream();
+                arr = is.readAllBytes();
+            } catch (URISyntaxException | MalformedURIException | IOException ex) {
+                Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } else { //Get a local resource
+            var fPath = zipFs.getPath(path);
+            try {
+                arr = Files.readAllBytes(fPath);
+            } catch (IOException ex) {
+                Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
-
-        var uriString = pathToURI(path); //Ensure path is correct URI
-        try {
-            var uri = new URI(uriString);
-            var is = uri.toURL().openStream();
-            return Optional.of(is.readAllBytes());
-        } catch (URISyntaxException | MalformedURIException | IOException ex) {
-            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return Optional.empty();
+        return Optional.ofNullable(arr);
     }
 
     /**
-     * Get an internal resource.
+     * Add a resource to the zip.
      *
-     * @param path resource to get.
-     * @param resourceClass Class it is in.
-     * @return
+     * @param exrPath Existing Resource path.
+     * @param newPath Path within zip.
+     * @return Optional resource bytes.
      */
-    public static Optional<byte[]> getInternalResource(final String path, final Class resourceClass) {
-        byte[] bytes = null;
+    public synchronized Optional<byte[]> addResource(final String exrPath, final String newPath) {
+        var internalPath = zipFs.getPath(newPath);
+        var resPath = Paths.get(exrPath);
         try {
-            bytes = resourceClass.getResourceAsStream(path)
-                    .readAllBytes();
-        } catch (IOException | NullPointerException ex) {
+            Files.copy(resPath, internalPath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException ex) {
+            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            return Optional.empty();
+        }
+        return getResource(newPath);
+    }
+
+    /**
+     * Get an internal class-path resource as bytes.
+     *
+     * @param file File to return.
+     * @param resClass Class to look in.
+     * @return Maybe file bytes.
+     */
+    public static Optional<byte[]> getInternalResource(final String file, final Class resClass) {
+        byte[] arr = null;
+        var is = resClass.getResourceAsStream(file);
+        try {
+            arr = is.readAllBytes();
+        } catch (IOException ex) {
             Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return Optional.ofNullable(bytes);
+        return Optional.ofNullable(arr);
+    }
+
+    /**
+     * Am I allowed to save the open doc?
+     *
+     * @return Boolean.
+     */
+    public boolean canSave() {
+        return this.allowSave;
     }
 
     /**
@@ -203,14 +322,15 @@ public final class Io {
      * @param path Path to convert.
      * @return Converted path.
      */
-    private String pathToURI(final String path) {
+    public String pathToUriString(final String path) {
         String loc = null;
         if (path.contains(":/") || path.startsWith("/")) {
             //Must be an absolute Path
             loc = path;
         } else if (path.startsWith(".")) {
             //Must be a relative Path
-            loc = dirPathString.concat(path);
+            var parent = origZip.getAbsoluteFile().getParentFile().getPath();
+            loc = parent.concat(path);
         }
         if (!path.startsWith("http")) {
             //Not a URL? Must be a local file
@@ -220,106 +340,32 @@ public final class Io {
     }
 
     /**
-     * Get an XOM compatible parser, which is either validating or
-     * non-validating.
+     * Returns a maybe URI from an input string containing an URI.
      *
-     * @param validate Validate or not.
-     * @return Parser.
+     * @param UrString URI String.
+     * @return Maybe URI.
      */
-    private XMLReader getParser(final Boolean validate) {
-        XMLReader xerces = null;
+    public Optional<URI> maybeURI(final String UrString) {
+        URI uri = null;
         try {
-            xerces = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
-            xerces.setFeature("http://apache.org/xml/features/validation/schema", validate);
-        } catch (SAXException ex) {
-            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            uri = new URI(UrString);
+        } catch (URISyntaxException ex) {
         }
-        return xerces;
+
+        return Optional.ofNullable(uri);
     }
 
     /**
-     * Return the fully parsed representation of the XML doc.
-     *
-     * @param xmlFile file for XML.
-     * @return Optional doc.
+     * Closes associated File Systems.
+     * Must be run when object is finished with.
      */
-    private Optional<Document> parseDocXML(final File xmlFile) {
-        try {
-            var doc = parseDocXML(new FileInputStream(xmlFile));
-            return doc;
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        return Optional.empty();
-    }
-
-    /**
-     * Return the fully parsed representation of the XML doc.
-     *
-     * @param xmlStream streamed XML.
-     * @return Optional doc.
-     */
-    private Optional<Document> parseDocXML(final InputStream xmlStream) {
-        Builder parser;
-        var xer = (XMLReader) getParser(true);
-        try {
-            var pwsURL = Io.class.getResource(PWS);
-            var extURL = Io.class.getResource(EXT_SCHEMA);
-            var schemaString = "http://"+PWS_NS + " " + pwsURL.toString() + " " + "http://"+EXT_NS + " " + extURL.toString();
-            //Set Schemas
-            xer.setProperty("http://apache.org/xml/properties/schema/external-schemaLocation", schemaString);
-        } catch (SAXNotRecognizedException | SAXNotSupportedException ex) {
-            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
-            parser = new Builder(xer, true, new ElementFactory());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Optional.empty();
-        }
-        Document doc = null;
-        try {
-            doc = parser.build(xmlStream);
-            if (doc != null) {
-                var root = doc.getRootElement();
-                if (root instanceof DocElement) {
-                    ((DocElement) doc.getRootElement()).setBaseDir(dirPathString);
-                }
+    public void close() {
+        if (zipFs != null) {
+            try {
+                zipFs.close();
+            } catch (IOException ex) {
+                Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } catch (ValidityException vex) { //Some sort of Schema failure.
-            doc = vex.getDocument();
-            var root = doc.getRootElement();
-            if (root instanceof DocElement) {
-                DocElement docEl = (DocElement) root;
-                var errList = new ArrayList<String>();
-                for (int i = 0; i < vex.getErrorCount(); i++) {
-                    errList.add(vex.getValidityError(i));
-                }
-                docEl.setValidationErrors(errList);
-            }
-        } catch (ParsingException | IOException ex) { //We're returning an optional
-            ex.printStackTrace();   //So I'm not throwing this out of the method
         }
-        return Optional.ofNullable(doc);
     }
-
-    /**
-     * Return the fully parsed representation of the XML doc.
-     *
-     * @param xmlFile File.
-     * @param factory Custom factory.
-     * @return Optional of doc.
-     */
-    private Optional<Document> parseGenericXML(final File xmlFile, final NodeFactory factory) {
-        Builder parser = (factory == null) ? new Builder(false) : new Builder(factory);
-        Document doc = null;
-        try {
-            doc = parser.build(xmlFile);
-        } catch (ParsingException | IOException ex) { //We're returning an optional
-            ex.printStackTrace();   //So I'm not throwing this out of the method
-        }
-        return Optional.ofNullable(doc);
-    }
-
 }
