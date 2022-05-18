@@ -35,7 +35,6 @@ import javafx.fxml.*;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
-import com.jthemedetecor.OsThemeDetector;
 import g3.project.core.Engine;
 import g3.project.graphics.ExtLine;
 import g3.project.graphics.ExtPolygon;
@@ -85,14 +84,6 @@ import jfxtras.styles.jmetro.*;
  */
 public final class MainController {
 
-    /**
-     * Detects dark/light theme.
-     */
-    private final OsThemeDetector detector = OsThemeDetector.getDetector();
-    /**
-     * Is dark-mode enabled?
-     */
-    private boolean darkMode = false;
 
     /**
      * Can the scene be edited?
@@ -353,17 +344,6 @@ public final class MainController {
         playerFact.freeAll(); //Free all native resources.
         executorSvc.shutdown();
         Platform.exit();
-    }
-
-    /**
-     * Handle user action to toggle dark mode.
-     *
-     * @param event User action-event.
-     */
-    @FXML
-    private void handleToggleDarkModeAction(final ActionEvent event) {
-        darkMode = !darkMode;
-        toggleDarkMode();
     }
 
     /**
@@ -811,19 +791,6 @@ public final class MainController {
         ft.play();
     }
 
-    /**
-     * Toggle dark mode.
-     */
-    private void toggleDarkMode() {
-        Style style;
-        if (darkMode) {
-            style = Style.DARK;
-        } else {
-            style = Style.LIGHT;
-        }
-        //containerPane.getStylesheets().clear();
-        //containerPane.getStylesheets().add(style.getStyleStylesheetURL());
-    }
 
     public void toggleEditable(Boolean editable) {
         this.amEditable = editable;
@@ -903,13 +870,6 @@ public final class MainController {
                     }
                 });
 
-        darkMode = detector.isDark();
-        detector.registerListener(isDark -> {
-            Platform.runLater(() -> {
-                darkMode = isDark;
-                toggleDarkMode();
-            });
-        });
         //containerPane.getStyleClass().add(JMetroStyleClass.BACKGROUND);
         splitPane.getDividers().get(0)
                 .positionProperty()
@@ -947,7 +907,5 @@ public final class MainController {
 
         var ds = new DropShadow();
         pagePane.setEffect(ds);
-
-        toggleDarkMode();
     }
 }
