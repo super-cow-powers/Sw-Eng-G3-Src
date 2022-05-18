@@ -32,7 +32,6 @@ import g3.project.core.Engine;
 import g3.project.core.Threaded;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -144,41 +143,37 @@ public final class CommSys extends Threaded {
         while (running.get()) {
             //Main thread dispatch loop
             try {
-                if (!connectionQueue.isEmpty()) { //New connection request?
-                    connectToRemote(connectionQueue.take());
+                if (!connectionQueue.isEmpty()) { //New connection event?
+                    handleConnection(connectionQueue.take());
                 } else if (!txEventQueue.isEmpty()) { //Event to send?
                     transmitEvent(txEventQueue.take());
                 } else if (!callQueue.isEmpty()) { //Call to make?
                     callQueue.take().run();
                 } else {
-                    suspended.set(true); // Nothing from enngine
+                    if (isConnected.get()) {
+                        System.out.println(" CommSys: Waiting for data...");
+                        clientCheck(); // Client check for new event recieved
+                    } else if (isPresenting.get()) {
+                        System.out.println(" CommSys: Check for connection...");
+                        serverCheck(); // Server check for new connection
+                    } else{
+                        System.out.println(" CommSys: Suspending...");
+                        suspended.set(true); // Nothing from enngine
+                    }
                 }
 
-                //@todo Implement checking loop properly
                 while (suspended.get()) { // Suspend
-                    if (isConnected.get()) { // if connected
-                        try{
-                            clientCheck(); // Client check for 50ms
-                        } catch (SocketTimeoutException e) {
-                            // pause for 50ms
-                            synchronized (this) {
-                                wait(CS_TIMEOUT);
-                            }
-                        }
-                    } else if (isPresenting.get()) { // if presenting
-                        try{
-                            serverCheck(); // Server check for 50ms
-                        } catch (SocketTimeoutException e) {
-                            // pause for 50ms
-                            synchronized (this) {
-                                wait(CS_TIMEOUT);
-                            }
-                        }
-                    } else{
-                        synchronized (this) {
-                            wait();
-                        }
+                    synchronized (this) {
+                        wait();
                     }
+                }
+            } catch (SocketTimeoutException e) {
+                // pause for 50ms
+                try {
+                    System.out.println(" CommSys: Sleeping...");
+                    Thread.sleep(CS_TIMEOUT);
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
                 }
             } catch (InterruptedException ex) {
                 ex.printStackTrace();
@@ -192,18 +187,54 @@ public final class CommSys extends Threaded {
     }
 
     /**
-     * Connect to the server.
+     * Handle a connection request.
      *
-     * @param serverDetails Remote server details.
+     * @param connectionRef Connection request.
      */
-    private void connectToRemote(final ConnectionInfo serverDetails) {
-        // Try connect to the server
-        try {
-            client.connectToServer(serverDetails);
-        } catch (IOException ex) {
+    private void handleConnection(final ConnectionInfo connectionRef) {
+        if (connectionRef.getType().equals("client")) {
+            startViewing(connectionRef);
+        } else if (connectionRef.getType().equals("Host")) {
+            startHosting(connectionRef);
+        }
+    }
+
+    /**
+     * Begin broadcasting to the server.
+     * 
+     * @param serverDetails
+     */
+    private void startHosting(ConnectionInfo connectionRef){
+        try{
+            server = new Server(connectionRef);
+            isConnected.set(false);
+            isPresenting.set(true);
+            isPaused.set(false);
+            System.out.println("Comm-System: Started server.");
+        } catch (IOException ex){
             ex.printStackTrace();
             Platform.runLater(() -> engine.
-                    putMessage("Fail to connect to server - see stack trace", true));
+                    putMessage("Fail to host - see stack trace", true));
+        }
+    }
+
+    /**
+     * Try viewing a remote session
+     * 
+     * @param serverDetails
+     */
+     private void startViewing(ConnectionInfo connectionRef){
+        try{
+            client = new Client();
+            client.connectToServer(connectionRef);
+            isConnected.set(true);
+            isPresenting.set(false);
+            isPaused.set(false);
+            System.out.println("Comm-System: Started client.");
+        } catch (IOException ex){
+            ex.printStackTrace();
+            Platform.runLater(() -> engine.
+                    putMessage("Fail to connect - see stack trace", true));
         }
     }
     

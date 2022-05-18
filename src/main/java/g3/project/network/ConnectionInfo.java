@@ -39,25 +39,25 @@ public final class ConnectionInfo {
      */
     private final String hostLoc;
     /**
-     * Host ID.
-     */
-    private final String hostId;
-    /**
      * Host Port.
      */
     private final Integer port;
+    /**
+     * Conection Type.
+     */
+    private final String type;
 
     /**
      * Constructor.
      *
-     * @param hostLocString Host location/address.
-     * @param hostIdString Host ID.
-     * @param hostPort Port to connect to.
+     * @param hostLocString Host location/address. (e.g. "localhost")
+     * @param hostPort Port to connect to. (e.g. "8080")
+     * @param connectionType Type of connection. (e.g. "client")
      */
-    public ConnectionInfo(final String hostLocString, final String hostIdString, final Integer hostPort) {
+    public ConnectionInfo(final String hostLocString, final Integer hostPort, final String connectionType) {
         this.hostLoc = hostLocString;
-        this.hostId = hostIdString;
         this.port = hostPort;
+        this.type = connectionType;
     }
 
     /**
@@ -70,15 +70,6 @@ public final class ConnectionInfo {
     }
 
     /**
-     * Get host ID.
-     *
-     * @return Host ID.
-     */
-    public String getHostId() {
-        return hostId;
-    }
-
-    /**
      * Get host Port.
      *
      * @return Host Port.
@@ -87,4 +78,12 @@ public final class ConnectionInfo {
         return port;
     }
 
+    /**
+     * Get connection type.
+     *
+     * @return Connection Type.
+     */
+    public String getType() {
+        return type;
+    }
 }

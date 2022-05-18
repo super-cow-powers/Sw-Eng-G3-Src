@@ -44,8 +44,6 @@ public final class Server {
 
     private ServerSocket serverSocket;
 
-    private String hostID = "";
-
     private static final int MAX_CLIENTS = 10;
 
     /**
@@ -59,6 +57,15 @@ public final class Server {
      */
     public Server() throws IOException {
         serverSocket = new ServerSocket(0);
+        serverSocket.setSoTimeout(SERVER_TIMEOUT);
+    }
+
+    /**
+     * Constructor - server socket on specific setup.
+     * @throws IOException
+     */
+    public Server(ConnectionInfo connectionRef) throws IOException {
+        serverSocket = new ServerSocket(connectionRef.getPort());
         serverSocket.setSoTimeout(SERVER_TIMEOUT);
     }
 

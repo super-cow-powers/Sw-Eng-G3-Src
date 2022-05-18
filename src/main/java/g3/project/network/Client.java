@@ -62,7 +62,7 @@ public final class Client{
      * @param server Details of server to connect to.
      * @throws IOException
      */
-    public Client(org.apache.commons.io.input.ObservableInputStream.Observer observer) throws IOException {
+    public Client() throws IOException {
         this.socket = new Socket();
         socket.setSoTimeout(CLIENT_TIMEOUT);
         
