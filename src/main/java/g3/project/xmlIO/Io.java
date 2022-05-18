@@ -178,7 +178,8 @@ public final class Io {
         env.put("create", "true");
         FileSystem fs = null;
         try {
-            var ur = URI.create("jar:file:" + path.toAbsolutePath().toString());
+            var urStr = path.toAbsolutePath().toFile().toURI().toString();
+            var ur = URI.create("jar:" + urStr);
             fs = FileSystems.newFileSystem(ur, env);
         } catch (IOException ex) {
             Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
