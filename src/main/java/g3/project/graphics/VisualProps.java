@@ -161,13 +161,10 @@ public class VisualProps extends HashMap<String, Object> {
         var t = (Double) this.getProp(T_SHADE_SIZE).get();
         var b = (Double) this.getProp(B_SHADE_SIZE).get();
         var gen = (Double) this.getProp(SHADE_SIZE).get();
-
+        var ds = new DropShadow();
         var width = l + r;
         var height = t + b;
-        if (((width + height) == 0) && (gen <= 0)) { //No shadow set.
-            return Optional.empty();
-        }
-        var ds = new DropShadow();
+
         if (gen <= 0) { //Shadow set individually
             var xOS = r - l;
             var yOS = b - t;

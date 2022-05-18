@@ -39,11 +39,12 @@ import g3.project.graphics.LocObj;
 import g3.project.ui.MainController;
 import g3.project.graphics.SizeObj;
 import g3.project.graphics.StrokeProps;
+import g3.project.graphics.VisualProps;
 import g3.project.xmlIO.Io;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,11 +52,8 @@ import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -64,8 +62,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.paint.Color;
 import javax.script.ScriptException;
-import nu.xom.Document;
 import nu.xom.Element;
 
 /**
@@ -140,6 +138,11 @@ public final class Engine extends Threaded {
      */
     private final Writer scrWriter;
 
+    /**
+     * Reader for scripting engine input.
+     */
+    private final Reader scrReader;
+    
     private final String startScreenFileName = "start_screen.spres";
     private final String emptyFileName = "empty.spres";
 
@@ -157,21 +160,33 @@ public final class Engine extends Threaded {
                 var newChars = Arrays.copyOfRange(chars, i1, i1);
                 putMessage(newChars.toString() + "\n", true);
             }
-
+            
             @Override
             public void write(final String str) {
                 putMessage(str, true);
             }
-
+            
             @Override
             public void flush() throws IOException {
                 putMessage("\n", Boolean.TRUE);
             }
-
+            
             @Override
             public void close() throws IOException {
-
+                
             }
+        };
+        scrReader = new Reader() {
+            @Override
+            public int read(char[] chars, int i, int i1) throws IOException {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+            
+            @Override
+            public void close() throws IOException {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+            
         };
     }
 
@@ -213,11 +228,11 @@ public final class Engine extends Threaded {
     public Io getDocIO() {
         return docIO;
     }
-
+    
     @Override
     @SuppressWarnings("empty-statement")
     public void run() {
-
+        
         while (!(running.get())) {
         }
         try {
@@ -231,18 +246,20 @@ public final class Engine extends Threaded {
             // Load in the tools
             loadTools()
                     .ifPresentOrElse(
-                            t -> myTools = t.getTools(),
+                            t -> {
+                                myTools = t.getTools();
+                                // Add tool buttons
+                                var iterTool = myTools.iterator();
+                                while (iterTool.hasNext()) {
+                                    var currentTool = iterTool.next();
+                                    Platform.runLater(() -> controller.
+                                    addTool(currentTool.getName(), currentTool.getID()));
+                                }
+                            },
                             () -> {
-                                myTools = new ArrayList<Tool>();
+                                myTools = new ArrayList<>();
                                 putMessage("Failed Loading Tools!", false);
                             });
-            // Add tool buttons
-            var iterTool = myTools.iterator();
-            while (iterTool.hasNext()) {
-                var currentTool = iterTool.next();
-                Platform.runLater(() -> controller.
-                        addTool(currentTool.getName(), currentTool.getID()));
-            }
         } catch (Exception ex) {
             //Something went wrong. Couldn't start.
             ex.printStackTrace();
@@ -261,7 +278,7 @@ public final class Engine extends Threaded {
                 } else { //Nothing to do. Suspend
                     suspended.set(true);
                 }
-
+                
                 while (suspended.get()) { // Suspend
                     synchronized (this) {
                         wait();
@@ -302,7 +319,7 @@ public final class Engine extends Threaded {
     private void routeElementEvent(final Event ev) {
         final var evSrc = (javafx.scene.Node) ev.getSource();
         var elID = evSrc.getId();
-
+        
         if (elID != null) { //Element has an ID
             var elOpt = currentDoc.getElementByID(elID);
             if (ev instanceof MouseEvent) {
@@ -402,8 +419,8 @@ public final class Engine extends Threaded {
     /**
      * Handle an event on an hyperlink.
      *
-     * @param hrefSeg
-     * @param mev
+     * @param hrefSeg Href.
+     * @param mev Event.
      */
     private void handleHrefEvt(final StyledTextSeg hrefSeg, final MouseEvent mev) {
         System.out.println("We got it: " + hrefSeg);
@@ -428,7 +445,7 @@ public final class Engine extends Threaded {
         } else { //Must be an internal ref.
             var targetEl = currentDoc.getElementByID(hrefSeg.getRefTarget());
         }
-
+        
     }
 
     /**
@@ -509,7 +526,7 @@ public final class Engine extends Threaded {
                     controller.setViewScale(1d);
                     controller.setCursorType(javafx.scene.Cursor.DEFAULT);
                 });
-
+        
         var child = doc.getRootElement();
         if (child instanceof DocElement) { //Make sure that doc is sane.
             currentDoc = (DocElement) child;
@@ -555,7 +572,7 @@ public final class Engine extends Threaded {
             } catch (ScriptException | IOException ex) {
                 Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
             }
-
+            
         } else {
             putMessage("Malformed Doc - not Doc Element!", true);
             // Looks like doc is malformed
@@ -578,7 +595,7 @@ public final class Engine extends Threaded {
         }
         var sourceOpt = img.getSourceLoc();
         var id = img.getID();
-
+        
         var source = (sourceOpt.isPresent()) ? sourceOpt.get() : "";
         Platform.runLater(() -> controller.drawImage(id, source, false));
     }
@@ -595,10 +612,11 @@ public final class Engine extends Threaded {
      * @param source
      */
     //CHECKSTYLE:OFF
-    public void drawImage(final String id, final Double xSize, final Double ySize, final Double rot, final Double xLoc, final Double yLoc, final Double zInd, final String source) {
+    public void putImage(final String id, final Double xSize, final Double ySize, final Double rot, final Double xLoc,
+            final Double yLoc, final Double zInd, final String source) {
         //CHECKSTYLE:ON
         if (Thread.currentThread() != myThread) {
-            runFunction(() -> drawImage(id, xSize, ySize, rot, xLoc, yLoc, zInd, source));
+            runFunction(() -> putImage(id, xSize, ySize, rot, xLoc, yLoc, zInd, source));
             return;
         }
         Platform.runLater(() -> {
@@ -615,7 +633,7 @@ public final class Engine extends Threaded {
      *
      * @param shape Shape to draw.
      */
-    public void drawShapeEl(final ShapeElement shape) {
+    private void drawShapeEl(final ShapeElement shape) {
         if (Thread.currentThread() != myThread) {
             runFunction(() -> drawShapeEl(shape));
             return;
@@ -625,20 +643,20 @@ public final class Engine extends Threaded {
         var shapeType = shape.getType();
         final var strokeOpt = shape.getStroke();
         final var id = shape.getID();
-
+        
         var textOpt = shape.getText();
         if (textOpt.isPresent()) {
             textSegs = textOpt.get();
         } else {
             textSegs = new ArrayList<>();
         }
-
+        
         if (strokeOpt.isPresent()) {
             stroke = strokeOpt.get();
         } else {
             stroke = new StrokeProps();
         }
-
+        
         Platform.runLater(
                 () -> {
                     controller.updateShape(
@@ -651,11 +669,151 @@ public final class Engine extends Threaded {
     }
 
     /**
+     * Put a shape to the display.
+     *
+     * @param id Shape ID.
+     * @param type Shape type.
+     */
+    public void putShape(final String id, final String type) {
+        Platform.runLater(
+                () -> {
+                    controller.updateShape(
+                            id,
+                            type,
+                            new StrokeProps(),
+                            new ArrayList<>(),
+                            new ArrayList<>());
+                    
+                });
+    }
+
+    /**
+     * Set a Shape's style.
+     *
+     * @param id Target shape ID.
+     * @param colour Fill colour.
+     */
+    public void setShapeColour(final String id, final String colour) {
+        final var props = new VisualProps();
+        props.put(VisualProps.FILL, Color.valueOf(colour));
+        Platform.runLater(() -> controller.updateShapeColour(id, Color.valueOf(colour)));
+    }
+
+    /**
+     * Set text on a shape. Sets properties for all text in the shape.
+     *
+     * @param shapeID Target ID.
+     * @param text Text to set.
+     * @param hAlign Horizontal alignment.
+     * @param vAlign Vertical alignment.
+     * @param font Font name.
+     * @param colour Font colour.
+     * @param size Font size.
+     * @param underscore Under-line text.
+     * @param italic Italicise text.
+     * @param bold Bold text.
+     */
+    public void setShapeText(final String shapeID, final String text, final String hAlign, final String vAlign, final String font, final String colour,
+            final Double size, final Boolean underscore, final Boolean italic, final Boolean bold) {
+        var props = new FontProps();
+        props.put(FontProps.ALIGNMENT, hAlign);
+        props.put(FontProps.VALIGNMENT, vAlign);
+        props.put(FontProps.COLOUR, Color.valueOf(colour));
+        props.put(FontProps.FONT, font);
+        props.put(FontProps.SIZE, size);
+        props.put(FontProps.US, underscore);
+        props.put(FontProps.IT, italic);
+        props.put(FontProps.BOLD, bold);
+        
+        var segArr = new ArrayList<StyledTextSeg>();
+        var seg = new StyledTextSeg(props, text);
+        segArr.add(seg);
+        
+        Platform.runLater(() -> {
+            controller.updateShapeText(shapeID, segArr);
+        });
+    }
+
+    /**
+     * Set a shape's stroke.
+     *
+     * @param shapeID Target Shape ID.
+     * @param colour Colour to set.
+     * @param style Stroke Style.
+     * @param width Stroke Width.
+     */
+    public void setShapeStroke(final String shapeID, final String colour, final String style, final Double width) {
+        final StrokeProps props = new StrokeProps();
+        props.put(StrokeProps.COLOUR, Color.valueOf(colour));
+        props.put(StrokeProps.LINE_STYLE, style);
+        props.put(StrokeProps.WIDTH, width);
+        Platform.runLater(() -> {
+            controller.updateShapeStroke(shapeID, props);
+        });
+    }
+
+    /**
+     * Resize an element on screen.
+     *
+     * @param id Element ID.
+     * @param x New X size.
+     * @param y New Y size.
+     * @param rot New rotation (degrees).
+     */
+    public void resizeElement(final String id, final Double x, final Double y, final Double rot) {
+        Platform.runLater(() -> {
+            controller.resizeElement(id, new SizeObj(x, y, rot));
+        });
+    }
+
+    /**
+     * Move an element.
+     *
+     * @param id Element ID.
+     * @param x New X location.
+     * @param y New Y location.
+     * @param zIndex New Z Index
+     */
+    public void moveElement(final String id, final Double x, final Double y, final Double zIndex) {
+        Platform.runLater(() -> {
+            controller.moveElement(id, new LocObj(new Point2D(x, y), zIndex));
+        });
+    }
+
+    /**
+     * Set basic shadow on an element.
+     *
+     * @param id Target ID.
+     * @param radius Shadow radius.
+     */
+    public void setElementShadow(final String id, final Double radius) {
+        Platform.runLater(() -> {
+            controller.setElShadow(id, radius);
+        });
+    }
+
+    /**
+     * Show a player.
+     *
+     * @param id Player ID.
+     * @param mediaLoc Media location.
+     * @param showControls Display controls?
+     * @param autoPlay Auto-play media?
+     * @param loop Loop media?
+     * @param offset Media offset (in seconds).
+     */
+    public void drawPlayer(final String id, final String mediaLoc, final Boolean showControls, final Boolean autoPlay, final Boolean loop, final Double offset) {
+        Platform.runLater(() -> {
+            controller.showPlayable(id, mediaLoc, showControls, loop, autoPlay, offset);
+        });
+    }
+
+    /**
      * Instruct the UI to create a player for the element.
      *
      * @param playable Playable element.
      */
-    public void drawPlayableEl(final PlayableElement playable) {
+    private void drawPlayableEl(final PlayableElement playable) {
         /*
         Enforce thread boundary!
          */
@@ -666,9 +824,7 @@ public final class Engine extends Threaded {
         var sourceOpt = playable.getSourceLoc();
         var source = (sourceOpt.isPresent()) ? sourceOpt.get() : "";
         var id = playable.getID();
-        Platform.runLater(() -> {
-            controller.showPlayable(id, source, playable.getDisplayPlayer(), playable.getLoop(), playable.getAutoplay(), playable.getSeekOffset());
-        });
+        drawPlayer(id, source, playable.getDisplayPlayer(), playable.getLoop(), playable.getAutoplay(), playable.getSeekOffset());
     }
 
     /**
@@ -847,7 +1003,7 @@ public final class Engine extends Threaded {
         var id = el.getID();
         var maybeSize = el.getSize();
         var maybeLoc = el.getOrigin();
-
+        
         Platform.runLater(() -> {
             controller.setElVisualProps(id, propsMap);
             maybeSize.ifPresent(s -> controller.resizeElement(id, s));

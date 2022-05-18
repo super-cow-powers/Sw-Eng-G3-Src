@@ -49,13 +49,13 @@ public final class StrokeProps extends HashMap<String, Object> {
      */
     //CHECKSTYLE:OFF
     public static final String WIDTH = "width";
-    protected static final Class WIDTH_TYPE = Double.class;
+    public static final Class WIDTH_TYPE = Double.class;
     public static final String LINE_STYLE = "dash-style";
-    protected static final Class LINE_STYLE_TYPE = String.class;
+    public static final Class LINE_STYLE_TYPE = String.class;
     public static final String COLOUR = "colour";
-    protected static final Class COLOUR_TYPE = Color.class;
+    public static final Class COLOUR_TYPE = Color.class;
     public static final String LINE_CAP = "line-cap";
-    protected static final Class LINE_CAP_TYPE = String.class;
+    public static final Class LINE_CAP_TYPE = String.class;
 
     private static final String DOT_DASH_ARRAY = "12 2 4 2";
     private static final String DASH_ARRAY = "12 12";

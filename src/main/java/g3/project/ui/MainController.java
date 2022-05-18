@@ -369,6 +369,7 @@ public final class MainController {
     /**
      * Draw/Redraw shape on screen.
      *
+     * @param id Shape ID.
      * @param shapeType Type of shape.
      * @param stroke Stroke properties.
      * @param text Text segments.
@@ -377,7 +378,7 @@ public final class MainController {
     public void updateShape(final String id, final String shapeType, final StrokeProps stroke,
             final ArrayList<StyledTextSeg> text, final ArrayList<Double> segments) {
 
-        var drawnShape = drawnElements.get(id);
+        final var drawnShape = drawnElements.get(id);
 
 //Get the shape. Either a new or existing one.
         Optional<ExtShape> maybeShape = (drawnShape == null)
@@ -389,15 +390,9 @@ public final class MainController {
             if (drawnShape == null) {
                 pagePane.getChildren().add(s);
             }
-            s.setStroke(stroke);
-
             s.setId(id);
-
-            if (text.size() > 0) {
-                var textAlign = ((String) text.get(0).getStyle().getProp(FontProps.ALIGNMENT).get()).toUpperCase();
-                var textVAlign = ((String) text.get(0).getStyle().getProp(FontProps.VALIGNMENT).get()).toUpperCase();
-                s.setText(text, TextAlignment.valueOf(textAlign), Pos.valueOf(textVAlign));
-            }
+            updateShapeStroke(id, stroke);
+            updateShapeText(id, text);
             try {
                 if (s instanceof ExtPolygon) {
                     ((ExtPolygon) s).setPoints(segments);
@@ -408,6 +403,60 @@ public final class MainController {
                 Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
+    }
+
+    /**
+     * Change Shape stroke.
+     *
+     * @param id Shape ID.
+     * @param props Stroke Props.
+     */
+    public void updateShapeStroke(final String id, final StrokeProps props) {
+        var drawnShape = drawnElements.get(id);
+        if (drawnShape != null) {
+            ((ExtShape) drawnShape).setStroke(props);
+        }
+    }
+    /**
+     * Change a shape's colour.
+     * @param id Target ID.
+     * @param col colour.
+     */
+    public void updateShapeColour(final String id, final Color col){
+        var drawnShape = drawnElements.get(id);
+        if (drawnShape != null) {
+            ((ExtShape) drawnShape).setFill(col);
+        }
+    }
+
+    /**
+     * Update the text on a shape.
+     *
+     * @param id Shape ID.
+     * @param text Text.
+     */
+    public void updateShapeText(final String id, final ArrayList<StyledTextSeg> text) {
+        var s = drawnElements.get(id);
+        if (s != null) {
+            if (text.size() > 0) {
+                var textAlign = ((String) text.get(0).getStyle().getProp(FontProps.ALIGNMENT).get()).toUpperCase();
+                var textVAlign = ((String) text.get(0).getStyle().getProp(FontProps.VALIGNMENT).get()).toUpperCase();
+                ((ExtShape) s).setText(text, TextAlignment.valueOf(textAlign), Pos.valueOf(textVAlign));
+            }
+        }
+    }
+
+    /**
+     * Show/Hide an element.
+     *
+     * @param id Target ID.
+     * @param visible Visibility.
+     */
+    public void setElementVisible(final String id, final Boolean visible) {
+        var el = drawnElements.get(id);
+        if (el != null) {
+            el.setVisible(visible);
+        }
     }
 
     /**
@@ -435,6 +484,18 @@ public final class MainController {
         if (el instanceof Visual) {
             ((Visual) el).setProps(props);
         }
+    }
+
+    /**
+     * Set a basic shadow on an element.
+     *
+     * @param id Target ID.
+     * @param radius Shadow radius.
+     */
+    public void setElShadow(final String id, final Double radius) {
+        var el = drawnElements.get(id);
+        var ds = new DropShadow(radius, Color.BLACK);
+        el.setEffect(ds);
     }
 
     /**
@@ -589,7 +650,7 @@ public final class MainController {
                 });
             } else { //Play straight from a MRL.
                 String loadPath = path;
-                if (loadPath.startsWith("file")){
+                if (loadPath.startsWith("file")) {
                     loadPath = loadPath.replace("file:", "");
                     //Not quite correct resolution of '~' - most shells only accept it at the very start.
                     loadPath = loadPath.replaceFirst("~", System.getProperty("user.home"));
