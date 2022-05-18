@@ -68,7 +68,7 @@ public final class Scripting {
     /**
      * Top-level bindings to put base functions into.
      */
-    public static RecursiveBindings TOP_LEVEL_BINDINGS = new RecursiveBindings();
+    private final RecursiveBindings topLevelBindings = new RecursiveBindings();
 
     private final String defaultLang;
 
@@ -102,7 +102,7 @@ public final class Scripting {
                 throw new IOException("Couldn't get functions file");
             }
             var fnStr = new String(fns.get(), StandardCharsets.UTF_8);
-            this.evalString(fnStr, defaultLanguage, TOP_LEVEL_BINDINGS);
+            this.evalString(fnStr, defaultLanguage, topLevelBindings);
         } catch (IOException | NullPointerException | ScriptException ex) {
             //Default function loading failed.
             Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
@@ -118,7 +118,7 @@ public final class Scripting {
      * @param name Object name.
      * @param glob Object.
      */
-    public void setGlobal(String name, Object glob) {
+    public void setGlobal(final String name, final Object glob) {
         scriptingEngineManager.getBindings().put(name, glob);
     }
 
@@ -128,9 +128,18 @@ public final class Scripting {
      * @param name Variable name.
      * @return Maybe variable.
      */
-    public Optional<Object> getGlobal(String name) {
+    public Optional<Object> getGlobal(final String name) {
         var globalVar = scriptingEngineManager.getBindings().get(name);
         return Optional.ofNullable(globalVar);
+    }
+
+    /**
+     * Get Scripting global/top-level bindings.
+     *
+     * @return RecursiveBindings
+     */
+    public RecursiveBindings getTopLevelBindings() {
+        return topLevelBindings;
     }
 
     /**
@@ -190,28 +199,32 @@ public final class Scripting {
      * @throws ScriptException Bad code.
      */
     public void evalString(final String code, final String lang) throws ScriptException {
-        evalString(code, lang, TOP_LEVEL_BINDINGS);
+        evalString(code, lang, topLevelBindings);
     }
-/**
- * Evaluate a string in the given bindings, with the specified output.
- * @param code Code to evaluate.
- * @param lang Language code is.
- * @param bindings Bindings to use.
- * @param outWriter Output Writer.
- * @throws ScriptException Bad code.
- */
+
+    /**
+     * Evaluate a string in the given bindings, with the specified output.
+     *
+     * @param code Code to evaluate.
+     * @param lang Language code is.
+     * @param bindings Bindings to use.
+     * @param outWriter Output Writer.
+     * @throws ScriptException Bad code.
+     */
     private void evalString(final String code, final String lang, final RecursiveBindings bindings, final Writer outWriter) throws ScriptException {
         var scrEngine = getScriptEngine(lang);
         scrEngine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
         scrEngine.getContext().setWriter(outWriter);
         scrEngine.eval(code);
     }
-/**
- * Invoke function on element.
- * @param element Element to start with.
- * @param function Function to try and call.
- * @param args Arguments to function.
- */
+
+    /**
+     * Invoke function on element.
+     *
+     * @param element Element to start with.
+     * @param function Function to try and call.
+     * @param args Arguments to function.
+     */
     public void invokeOnElement(final Scriptable element, final String function, final Object... args) {
         var scEng = getDefaultScriptEngine();
         scEng.setBindings(element.getScriptingBindings(), ScriptContext.ENGINE_SCOPE);

@@ -107,7 +107,8 @@ public class TextElement extends Element implements Includable {
 
     @Override
     public final Optional<String> getSourceLoc() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return Optional.ofNullable(this.getAttribute(INCLUDE_ATTR))
+                .map(f -> f.getValue());
     }
 
 }

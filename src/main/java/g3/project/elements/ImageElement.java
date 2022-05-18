@@ -98,9 +98,6 @@ public class ImageElement extends VisualElement implements Includable {
      */
     @Override
     public final Optional<String> getSourceLoc() {
-        /**
-         * @todo check this is correct for a variety of inputs.
-         */
         //Get include_source attribute
         return Optional.ofNullable(this.getAttribute(INCLUDE_ATTR))
                 .map(f -> f.getValue());

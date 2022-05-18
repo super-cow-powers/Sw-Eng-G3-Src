@@ -35,7 +35,6 @@ import javafx.fxml.*;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
-import com.jthemedetecor.OsThemeDetector;
 import g3.project.core.Engine;
 import g3.project.graphics.ExtLine;
 import g3.project.graphics.ExtPolygon;
@@ -45,8 +44,12 @@ import g3.project.graphics.FontProps;
 import g3.project.graphics.StrokeProps;
 import g3.project.graphics.StyledTextSeg;
 import g3.project.graphics.VisualProps;
+import g3.project.playable.Player;
+import g3.project.playable.PlayerFactory;
+import g3.project.xmlIO.Io;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -81,14 +84,6 @@ import jfxtras.styles.jmetro.*;
  */
 public final class MainController {
 
-    /**
-     * Detects dark/light theme.
-     */
-    private final OsThemeDetector detector = OsThemeDetector.getDetector();
-    /**
-     * Is dark-mode enabled?
-     */
-    private boolean darkMode = false;
 
     /**
      * Can the scene be edited?
@@ -105,6 +100,11 @@ public final class MainController {
     private Scale viewportScale = new Scale(1, 1);
 
     /**
+     * Media player factory.
+     */
+    private PlayerFactory playerFact = new PlayerFactory();
+
+    /**
      * Scene graph nodes hashed by their ID.
      */
     private ConcurrentHashMap<String, javafx.scene.Node> drawnElements = new ConcurrentHashMap<>();
@@ -118,6 +118,11 @@ public final class MainController {
      * Loading image.
      */
     private Image loadingGif = null;
+
+    /**
+     * Not Found image.
+     */
+    private Image notFoundIm = null;
 
     /**
      * Task Scheduler.
@@ -165,7 +170,7 @@ public final class MainController {
     private Pane pagePane;
 
     @FXML
-    private ScrollPane pageScroll;
+    private ScrollPane cardSelPane;
 
     @FXML
     private VBox pageVBox;
@@ -301,7 +306,7 @@ public final class MainController {
                 new FileChooser.ExtensionFilter("SuperPres", "*.spres"),
                 new FileChooser.ExtensionFilter("ZIP", "*.zip")
         );
-        
+
         var newFile = fileChooser.showOpenDialog(pagePane.getScene().getWindow());
         if (newFile != null) {
             engine.offerNewDoc(newFile);
@@ -396,55 +401,24 @@ public final class MainController {
      */
     public void gracefulExit() {
         engine.stop();
+        playerFact.freeAll(); //Free all native resources.
         executorSvc.shutdown();
         Platform.exit();
     }
 
     /**
-     * Handle user action to toggle dark mode.
-     *
-     * @param event User action-event.
-     */
-    @FXML
-    private void handleToggleDarkModeAction(final ActionEvent event) {
-        darkMode = !darkMode;
-        toggleDarkMode();
-    }
-
-    /**
-     * TEST METHOD. Put plain text onto the screen.
-     *
-     * @param text Text to show.
-     * @param pos Position to show it.
-     */
-    public void drawText(final String text, final Point2D pos) {
-        //CHECKSTYLE:OFF
-        Label l = new Label();
-        l.setText(text);
-        l.setFont(new Font(30));
-        l.relocate(pos.getX(), pos.getY());
-        pagePane.getChildren().add(l);
-        System.out.println("g3.project.ui.MainController.drawText()");
-        //CHECKSTYLE:ON
-    }
-
-    /**
      * Draw/Redraw shape on screen.
      *
+     * @param id Shape ID.
      * @param shapeType Type of shape.
-     * @param props Shape visual properties.
      * @param stroke Stroke properties.
      * @param text Text segments.
-     * @param size Shape size.
-     * @param loc Shape location.
      * @param segments Segments for a line or polygon.
      */
-    public void updateShape(final String shapeType, final VisualProps props, final StrokeProps stroke,
-            final ArrayList<StyledTextSeg> text, final Optional<SizeObj> size, final Optional<LocObj> loc, final ArrayList<Double> segments) {
+    public void updateShape(final String id, final String shapeType, final StrokeProps stroke,
+            final ArrayList<StyledTextSeg> text, final ArrayList<Double> segments) {
 
-        var id = (String) props.getProp(VisualProps.ID).get();
-
-        var drawnShape = drawnElements.get(id);
+        final var drawnShape = drawnElements.get(id);
 
 //Get the shape. Either a new or existing one.
         Optional<ExtShape> maybeShape = (drawnShape == null)
@@ -456,16 +430,9 @@ public final class MainController {
             if (drawnShape == null) {
                 pagePane.getChildren().add(s);
             }
-            s.setProps(props); //Must do this before relocating!
-            s.setStroke(stroke);
-
             s.setId(id);
-
-            if (text.size() > 0) {
-                var textAlign = ((String) text.get(0).getStyle().getProp(FontProps.ALIGNMENT).get()).toUpperCase();
-                var textVAlign = ((String) text.get(0).getStyle().getProp(FontProps.VALIGNMENT).get()).toUpperCase();
-                s.setText(text, TextAlignment.valueOf(textAlign), Pos.valueOf(textVAlign));
-            }
+            updateShapeStroke(id, stroke);
+            updateShapeText(id, text);
             try {
                 if (s instanceof ExtPolygon) {
                     ((ExtPolygon) s).setPoints(segments);
@@ -475,15 +442,115 @@ public final class MainController {
             } catch (Exception ex) {
                 Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
             }
-            //Move and rotate after everything else is set.
-            size.ifPresent(sz -> s.setSize(sz));
-            loc.ifPresentOrElse(l -> {
-                s.setViewOrder(l.getZ());
-                var origin = l.getLoc();
-                s.relocate(origin.getX(), origin.getY());
-            },
-                    () -> s.setViewOrder(0));
         });
+    }
+
+    /**
+     * Change Shape stroke.
+     *
+     * @param id Shape ID.
+     * @param props Stroke Props.
+     */
+    public void updateShapeStroke(final String id, final StrokeProps props) {
+        var drawnShape = drawnElements.get(id);
+        if (drawnShape != null) {
+            ((ExtShape) drawnShape).setStroke(props);
+        }
+    }
+
+    /**
+     * Change a shape's colour.
+     *
+     * @param id Target ID.
+     * @param col colour.
+     */
+    public void updateShapeColour(final String id, final Color col) {
+        var drawnShape = drawnElements.get(id);
+        if (drawnShape != null) {
+            ((ExtShape) drawnShape).setFill(col);
+        }
+    }
+
+    /**
+     * Update the text on a shape.
+     *
+     * @param id Shape ID.
+     * @param text Text.
+     */
+    public void updateShapeText(final String id, final ArrayList<StyledTextSeg> text) {
+        var s = drawnElements.get(id);
+        if (s != null) {
+            if (text.size() > 0) {
+                var textAlign = ((String) text.get(0).getStyle().getProp(FontProps.ALIGNMENT).get()).toUpperCase();
+                var textVAlign = ((String) text.get(0).getStyle().getProp(FontProps.VALIGNMENT).get()).toUpperCase();
+                ((ExtShape) s).setText(text, TextAlignment.valueOf(textAlign), Pos.valueOf(textVAlign));
+            }
+        }
+    }
+
+    /**
+     * Show/Hide an element.
+     *
+     * @param id Target ID.
+     * @param visible Visibility.
+     */
+    public void setElementVisible(final String id, final Boolean visible) {
+        var el = drawnElements.get(id);
+        if (el != null) {
+            el.setVisible(visible);
+        }
+    }
+
+    /**
+     * Moves the given element to the specified location.
+     *
+     * @param id Element ID.
+     * @param loc Location to go to.
+     */
+    public void moveElement(final String id, final LocObj loc) {
+        var el = drawnElements.get(id);
+        if (el instanceof Visual) {
+            el.relocate(loc.getLoc().getX(), loc.getLoc().getY());
+            el.setViewOrder(loc.getZ());
+        }
+    }
+
+    /**
+     * Set props on Visual Element.
+     *
+     * @param id Element ID.
+     * @param props Properties.
+     */
+    public void setElVisualProps(final String id, final VisualProps props) {
+        var el = drawnElements.get(id);
+        if (el instanceof Visual) {
+            ((Visual) el).setProps(props);
+        }
+    }
+
+    /**
+     * Set a basic shadow on an element.
+     *
+     * @param id Target ID.
+     * @param radius Shadow radius.
+     */
+    public void setElShadow(final String id, final Double radius) {
+        var el = drawnElements.get(id);
+        var ds = new DropShadow(radius, Color.BLACK);
+        el.setEffect(ds);
+    }
+
+    /**
+     * Resize a Visual Element.
+     *
+     * @param id Element ID.
+     * @param size Element Size.
+     */
+    public void resizeElement(final String id, final SizeObj size) {
+        var el = drawnElements.get(id);
+        if (el instanceof Visual) {
+            ((Visual) el).setSize(size);
+        }
     }
 
     /**
@@ -515,10 +582,6 @@ public final class MainController {
      * @param id Page ID
      */
     public void configCard(final Optional<SizeObj> size, final Optional<Color> colour, final String id) {
-        /*
-        @todo Allow multiple pages
-        @todo Resize scroll pane when the page is rotated
-         */
         size.ifPresent(f -> {
             pagePane.setMaxHeight(f.getY());
             pagePane.setMinHeight(f.getY());
@@ -543,7 +606,13 @@ public final class MainController {
     public void clearCard(final String id) {
         pagePane.getChildren().clear();
         pagePane.setStyle("-fx-background-color: #FFFFFF");
-        drawnElements.clear();
+        //Some elements require cleanup - ffs.
+        drawnElements.forEach((elid, node) -> {
+            if (node instanceof Player) {
+                ((Player) node).free();
+            }
+            drawnElements.remove(elid);
+        });
     }
 
     /**
@@ -555,6 +624,7 @@ public final class MainController {
      */
     public void addCardButton(final String friendlyName, final String id, final Integer number) {
         Button cardButton = new Button(friendlyName);
+        cardButton.setFocusTraversable(false);
         //CHECKSTYLE:OFF
         cardButton.setMaxSize(150, 50);
         cardButton.setMinSize(50, 50);
@@ -596,76 +666,144 @@ public final class MainController {
     }
 
     /**
-     * Show or update image on screen.
+     * Show some playable media.
+     *
+     * @param id media object ID.
+     * @param path Path to media.
+     * @param showPlayer Show player controls.
+     * @param loopPlay Loop the media.
+     * @param autoPlay Auto-play the media.
+     * @param seekOffset Start seek offset.
+     */
+    public void showPlayable(final String id, final String path, final Boolean showPlayer, final Boolean loopPlay, final Boolean autoPlay, final Double seekOffset) {
+        var player = (Player) drawnElements.get(id);
+        if (player == null) {
+            final var newplayer = playerFact.newPlayer();
+            drawnElements.put(id, newplayer);
+            String loadPath = path;
+            //Get a resource from the archive. This is typically slower, as the resource system will copy the resource out.
+            if (Io.isUriInternal(path)) {
+                var resMaybe = engine.getDocIO().getResourceTempPath(path);
+                if (resMaybe.isPresent()) {
+                    loadPath = resMaybe.get();
+                } else {
+                    return;
+                }
+            }
+            if (loadPath.startsWith("file:")) {
+                loadPath = loadPath.replace("file:", "");
+                //Not quite correct resolution of '~' - most shells only accept it at the very start.
+                loadPath = loadPath.replaceFirst("~", System.getProperty("user.home"));
+            }
+            newplayer.load(loadPath, seekOffset);
+
+            pagePane.getChildren().add(newplayer);
+            player = newplayer;
+        }
+        playerSetControls(id, showPlayer);
+        player.setLoop(loopPlay);
+        playerSetPlaying(id, autoPlay);
+    }
+
+    /**
+     * Set play/pause on player.
+     *
+     * @param id Player.
+     * @param playing Play/Pause.
+     */
+    public void playerSetPlaying(final String id, final Boolean playing) {
+        var pl = drawnElements.get(id);
+        if (pl instanceof Player) {
+            var player = (Player) pl;
+            if (playing) {
+                player.play();
+            } else {
+                player.pause();
+            }
+        }
+    }
+
+    /**
+     * Show/hide player controls.
+     *
+     * @param id Player.
+     * @param shown Show controls?
+     */
+    public void playerSetControls(final String id, final Boolean shown) {
+        var pl = drawnElements.get(id);
+        if (pl instanceof Player) {
+            var player = (Player) pl;
+            if (shown) {
+                player.showControls();
+            } else {
+                player.hideControls();
+            }
+        }
+    }
+
+    /**
+     * Show or update image on screen. The image will be cached based on its'
+     * path.
      *
      * @param id Image ID.
-     * @param size Image Size.
-     * @param loc Image Location.
      * @param path Image Path/URL/URI.
+     * @param refreshCache Should I refresh the cache?
      */
-    public void updateImage(final String id, final SizeObj size, final LocObj loc, final String path) {
+    public void drawImage(final String id, final String path, final Boolean refreshCache) {
         /* Check if image is cached already. */
-        if (!loadedImages.containsKey(path)) {
+        if (loadedImages.containsKey(path) && !refreshCache) {
+            /* In Cache */
+            var im = loadedImages.get(path);
+            drawImage(id, im);
+
+        } else {
             /* Not cached */
-            updateImage(id, size, loc, loadingGif); //Show loading GIF
-            //Runnable to load then show image
+            drawImage(id, loadingGif); //Show loading GIF
+            //Runnable to background-load then show image
             Runnable imageLoaderRunnable = () -> {
                 Image im;
                 var resOpt = engine.getDocIO().getResource(path);
                 if (resOpt.isPresent()) {
                     im = new Image(new ByteArrayInputStream(resOpt.get()));
                 } else {
-                    im = loadingGif;
+                    //Image was not found
+                    im = notFoundIm;
                 }
                 loadedImages.put(path, im);
                 Platform.runLater(() -> {
                     /* Check if image should stll be visible */
                     if (drawnElements.containsKey(id)) {
-                        updateImage(id, size, loc, path);
+                        drawImage(id, path, false);
                     }
                 });
             };
             //Create and start thread for download
             Thread imLoadThread = new Thread(imageLoaderRunnable);
             imLoadThread.start();
-        } else {
-            /* In Cache */
-            var im = loadedImages.get(path);
-            updateImage(id, size, loc, im);
         }
     }
 
     /**
-     * Show or update image on screen. Private - bypasses cache.
+     * Show or update image on screen.
      *
      * @param id Image ID.
-     * @param size Image Size.
-     * @param loc Image Location.
      * @param im JFX Image.
      */
-    private void updateImage(final String id, final SizeObj size, final LocObj loc, final Image im) {
-        ImageView imv = null;
+    private void drawImage(final String id, final Image im) {
+        VisImageView imv = null;
         if (drawnElements.containsKey(id)) {
             var imEl = drawnElements.get(id);
-            if (imEl instanceof ImageView) {
-                imv = (ImageView) imEl;
+            if (imEl instanceof VisImageView) {
+                imv = (VisImageView) imEl;
             }
         } else {
-            imv = new ImageView();
+            imv = new VisImageView();
             drawnElements.put(id, imv);
             pagePane.getChildren().add(imv);
         }
-
         imv.setImage(im);
-        var origin = loc.getLoc();
-        imv.relocate(origin.getX(), origin.getY());
         imv.setId(id);
-        imv.setViewOrder(loc.getZ());
-        imv.setRotate(size.getRot());
         imv.setPreserveRatio(true);
-        imv.setFitHeight(size.getY());
-        imv.setFitWidth(size.getY());
-
     }
 
     /**
@@ -713,19 +851,6 @@ public final class MainController {
         ft.play();
     }
 
-    /**
-     * Toggle dark mode.
-     */
-    private void toggleDarkMode() {
-        Style style;
-        if (darkMode) {
-            style = Style.DARK;
-        } else {
-            style = Style.LIGHT;
-        }
-        //containerPane.getStylesheets().clear();
-        //containerPane.getStylesheets().add(style.getStyleStylesheetURL());
-    }
 
     public void toggleEditable(Boolean editable) {
         this.amEditable = editable;
@@ -743,6 +868,10 @@ public final class MainController {
         var loadingGifStr = MainController.class
                 .getResourceAsStream("loading.gif");
         loadingGif = new Image(loadingGifStr);
+
+        var notFoundImStr = MainController.class
+                .getResourceAsStream("not-found.png");
+        notFoundIm = new Image(notFoundImStr);
 
         engine = new Engine(this);
 
@@ -782,7 +911,7 @@ public final class MainController {
                                             handle = false;
                                             addedNode.setCursor(Cursor.HAND);
                                         } else {
-                                            addedNode.setCursor(Cursor.DEFAULT);
+                                            //addedNode.setCursor(Cursor.DEFAULT);
                                         }
                                     }
 
@@ -801,13 +930,6 @@ public final class MainController {
                     }
                 });
 
-        darkMode = detector.isDark();
-        detector.registerListener(isDark -> {
-            Platform.runLater(() -> {
-                darkMode = isDark;
-                toggleDarkMode();
-            });
-        });
         //containerPane.getStyleClass().add(JMetroStyleClass.BACKGROUND);
         splitPane.getDividers().get(0)
                 .positionProperty()
@@ -819,8 +941,9 @@ public final class MainController {
         Platform.runLater(() -> { //Run when initialised
             pagePane.addEventHandler(MouseEvent.ANY, handleInput);
             pagePane.addEventHandler(KeyEvent.ANY, handleInput);
+            pagePane.setFocusTraversable(true);
             console = new Console((Stage) pagePane.getScene().getWindow(), (s -> engine.evalPyStr(s)));
-            pageScroll.addEventFilter(KeyEvent.ANY, event -> {
+            pagePane.addEventFilter(KeyEvent.ANY, event -> {
                 if (event.getCode() == KeyCode.DOWN || event.getCode() == KeyCode.UP || event.getCode() == KeyCode.LEFT || event.getCode() == KeyCode.RIGHT) {
                     handleEvent(event);
                     event.consume();
@@ -840,12 +963,9 @@ public final class MainController {
         extShapeFactory.setHrefHoverExitHandler((ev) -> {
             handleEvent(ev);
         });
-        pagePane.setOnScroll((e) -> pageScrollEventHandler(e)); //Scaling stuff
+        cardSelPane.setFocusTraversable(false);
 
-        pageScroll.setPannable(true);
         var ds = new DropShadow();
         pagePane.setEffect(ds);
-
-        toggleDarkMode();
     }
 }

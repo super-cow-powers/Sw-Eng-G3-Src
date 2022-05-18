@@ -33,8 +33,6 @@ import javafx.scene.paint.Color;
 import java.util.Map;
 import static java.util.Map.entry;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import javafx.geometry.Point2D;
 import javafx.scene.effect.DropShadow;
 
 /**
@@ -89,8 +87,8 @@ public class VisualProps extends HashMap<String, Object> {
      */
     public static final Map<String, Object> PROP_DEFAULTS = Map.ofEntries(entry(SHADE_COL, Color.BLACK),
             entry(L_SHADE_SIZE, 0d), entry(R_SHADE_SIZE, 0d), entry(T_SHADE_SIZE, 0d), entry(B_SHADE_SIZE, 0d), entry(SHADE_SIZE, 0d),
-            entry(ALPHA, 0d), entry(FILL, Color.TRANSPARENT), entry(DISP_SECS, -1d), entry(DELAY_SECS, 0d), entry(VISIBLE, true),
-            entry(ID, ""));  
+            entry(ALPHA, 1d), entry(FILL, Color.TRANSPARENT), entry(DISP_SECS, -1d), entry(DELAY_SECS, 0d), entry(VISIBLE, true),
+            entry(ID, ""));
 
     /**
      * Constructor. Takes map of properties.
@@ -136,9 +134,13 @@ public class VisualProps extends HashMap<String, Object> {
                 break;
             case ALPHA: //Alpha may be separate or in fill.
                 var al = (Double) this.get(ALPHA);
-                if (al == null) {
+                if (al == null) { //Prioritise explicit alpha.
                     var col = this.get(FILL);
-                    val = ((Color) col).getRed();
+                    if (col != null) {
+                        val = ((Color) col).getOpacity();
+                    }
+                } else {
+                    val = al;
                 }
                 break;
             default:
@@ -159,23 +161,20 @@ public class VisualProps extends HashMap<String, Object> {
         var t = (Double) this.getProp(T_SHADE_SIZE).get();
         var b = (Double) this.getProp(B_SHADE_SIZE).get();
         var gen = (Double) this.getProp(SHADE_SIZE).get();
-
+        var ds = new DropShadow();
         var width = l + r;
         var height = t + b;
-        if (((width + height) == 0) && (gen <= 0)) { //No shadow set.
-            return Optional.empty();
-        }
-        var ds = new DropShadow();
+
         if (gen <= 0) { //Shadow set individually
             var xOS = r - l;
             var yOS = b - t;
-            
+
             ds.setHeight(height);
             ds.setWidth(width);
             ds.setOffsetX(xOS);
             ds.setOffsetY(yOS);
         } else {
-            ds.setRadius(gen);   
+            ds.setRadius(gen);
         }
         return Optional.of(ds);
     }

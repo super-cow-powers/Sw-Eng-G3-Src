@@ -43,10 +43,7 @@ import nu.xom.*;
  */
 public final class DocElement extends Element implements Scriptable {
 
-    /**
-     * Directory containing this document (String).
-     */
-    private String containingDirStr = null;
+    private RecursiveBindings topLevelBindings = null;
     
     /**
      * Doc validation errors.
@@ -203,7 +200,15 @@ public final class DocElement extends Element implements Scriptable {
      */
     @Override
     public Optional<RecursiveBindings> getParentElementScriptingBindings() {
-        return Optional.of(Scripting.TOP_LEVEL_BINDINGS);
+        return Optional.of(topLevelBindings);
+    }
+    
+    /**
+     * Set the global/top-level bindings for scripting.
+     * @param bin Bindings.
+     */
+    public void setTopLevelBindings(final RecursiveBindings bin){
+        topLevelBindings = bin;
     }
 
     /**

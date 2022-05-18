@@ -84,18 +84,18 @@
                         </SplitPane>
                     </children>
                 </VBox>
-                <VBox>
+                <VBox VBox.vgrow="ALWAYS">
                     <children>
-                        <ScrollPane fx:id="pageScroll" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefHeight="373.0" prefWidth="505.0" vbarPolicy="NEVER" VBox.vgrow="ALWAYS">
-                            <content>
-                                <VBox fx:id="pageVBox" alignment="CENTER" prefHeight="200.0" prefWidth="100.0">
+                        <!--<Pane fx:id="pageContainer" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefHeight="373.0" prefWidth="505.0" vbarPolicy="NEVER" VBox.vgrow="ALWAYS">
+                           <content>-->
+                                <VBox fx:id="pageVBox" alignment="CENTER" prefHeight="200.0" prefWidth="100.0" VBox.vgrow="ALWAYS">
                                     <children>
-                                        <Pane fx:id="pagePane" maxHeight="400.0" maxWidth="500.0" minHeight="600.0" minWidth="960.0" onKeyPressed="#handleEvent" onKeyReleased="#handleEvent" onKeyTyped="#handleEvent" onZoom="#handleEvent" onZoomFinished="#handleEvent" onZoomStarted="#handleEvent" prefHeight="329.0" prefWidth="500.0" style="-fx-background-color: white;" VBox.vgrow="NEVER" />
+                                        <Pane fx:id="pagePane" onKeyPressed="#handleEvent" onKeyReleased="#handleEvent" onKeyTyped="#handleEvent" onZoom="#handleEvent" onZoomFinished="#handleEvent" onZoomStarted="#handleEvent" prefHeight="329.0" prefWidth="500.0" style="-fx-background-color: white;" VBox.vgrow="NEVER" />
                                     </children>
                                 </VBox>
-                            </content>
-                        </ScrollPane>
-                        <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" maxHeight="50.0" minHeight="50.0" pannable="true" prefHeight="50.0" prefWidth="200.0" vbarPolicy="NEVER" VBox.vgrow="NEVER">
+                            <!--</content>
+                        </Pane>-->
+                        <ScrollPane fx:id="cardSelPane" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" maxHeight="50.0" minHeight="50.0" pannable="true" prefHeight="50.0" prefWidth="200.0" vbarPolicy="NEVER" VBox.vgrow="NEVER">
                             <content>
                                 <HBox fx:id="cardSelBox" maxHeight="50.0" minHeight="50.0" prefHeight="50.0" prefWidth="200.0" />
                             </content>
