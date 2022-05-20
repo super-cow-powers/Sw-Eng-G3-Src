@@ -79,6 +79,20 @@ public final class Client{
         this.socket = new Socket();
     }
 
+    /**
+     * Constructor - Initialise the client object for a pre-existing socket.
+     * 
+     * @param socket Pre-existing socket.
+     * @param rxStream Pre-existing receive stream.
+     * @param txStream Pre-existing transmit stream.
+     * @throws IOException
+     */
+    public Client(Socket socket, ObjectInputStream rxStream, ObjectOutputStream txStream) throws IOException {
+        this.socket = socket;
+        this.rxStream = rxStream;
+        this.txStream = txStream;
+    }
+
     // Connect client to server
     public void connectToServer(final ConnectionInfo serverDetails) throws IOException{
         socket.setSoTimeout(CONNECT_TIMEOUT);
