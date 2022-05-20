@@ -65,6 +65,11 @@ public final class Client{
     private ObjectInputStream rxStream;
 
     /**
+     * Client Transmit-data stream.
+     */
+    private ObjectOutputStream txStream;
+
+    /**
      * Constructor - Initialise the client object.
      *
      * @param server Details of server to connect to.
@@ -79,12 +84,15 @@ public final class Client{
         socket.setSoTimeout(CONNECT_TIMEOUT);
         socket.connect(new InetSocketAddress(serverDetails.getHostLoc(), serverDetails.getPort()), CONNECT_TIMEOUT);
         rxStream = new ObjectInputStream(socket.getInputStream());
+        txStream = new ObjectOutputStream(socket.getOutputStream());
         readStream();
+        writeStream("Connected");
     }
 
     //disconnect client from server
     public void disconnectFromServer(){
         try {
+            writeStream("Disconnect");
             socket.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block
@@ -107,5 +115,14 @@ public final class Client{
         }
         rxObj.ifPresent(Obj -> System.out.println("Client: Received: " + Obj.toString()));
         return rxObj;
+    }
+
+    /**
+     * Write object to the output stream.
+     */
+    public void writeStream(final Object txObj) throws IOException {
+        txStream.writeObject(txObj);
+        txStream.flush();
+        System.out.println("Client: Sent: " + txObj.toString());
     }
 }
