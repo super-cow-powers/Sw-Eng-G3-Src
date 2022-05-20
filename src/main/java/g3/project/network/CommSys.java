@@ -160,7 +160,7 @@ public final class CommSys extends Threaded {
                         //System.out.println(" CommSys: Waiting for data...");
                         clientCheck(); // Client check for new event recieved
                     } else if (isPresenting.get()) {
-                        System.out.println(" CommSys: Check for connection...");
+                        //System.out.println(" CommSys: Check for connection...");
                         serverCheck(); // Server check for new connection
                     } else{
                         System.out.println(" CommSys: Suspending...");
@@ -176,7 +176,7 @@ public final class CommSys extends Threaded {
             } catch (SocketTimeoutException e) {
                 // pause for 50ms
                 try {
-                    System.out.println(" CommSys: Sleeping...");
+                    //System.out.println(" CommSys: Sleeping...");
                     Thread.sleep(CS_TIMEOUT);
                 } catch (InterruptedException ex) {
                     ex.printStackTrace();
@@ -293,6 +293,7 @@ public final class CommSys extends Threaded {
             txBufferQueue.offer(event);
             if (!isPaused.get()) {
                 while(!txBufferQueue.isEmpty()) {
+                    System.out.println("CommSys: Sending event " + event);
                     server.sendEvent(txBufferQueue.take());
                 }
             }
@@ -368,13 +369,7 @@ public final class CommSys extends Threaded {
      * Terminate commSys cleanly.
      */
     public void terminate() {
-        try {
-            if (server != null) {
-                server.close();
-            }
-            stopViewing();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+        stopHosting();
+        stopViewing();
     }
 }

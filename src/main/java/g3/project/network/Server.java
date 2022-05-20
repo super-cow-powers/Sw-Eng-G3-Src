@@ -52,6 +52,11 @@ public final class Server {
     private ArrayList<Socket> connectionsList = new ArrayList<>();
 
     /**
+     * List containing connected clients output stream.
+     */
+    private ArrayList<ObjectOutputStream> txStreamList = new ArrayList<>();
+
+    /**
      * Constructor.
      * @throws IOException
      */
@@ -100,8 +105,14 @@ public final class Server {
         if (connectionsList.size() < MAX_CLIENTS) {
             //Accept client connection
             Socket newClientSocket = serverSocket.accept();
-            //Add socket to connections
+            
+            var txStream = new ObjectOutputStream(newClientSocket.getOutputStream()) ;
+            txStream.writeObject("Welcome to the server!");
+            txStream.flush();     
+
+            //Add connections to list
             connectionsList.add(newClientSocket);
+            txStreamList.add(txStream);
             System.out.println("Server: new connection accepted");
         } else {
             System.out.println("Server: server is full");
@@ -113,8 +124,15 @@ public final class Server {
      *
      * @throws IOException IO Error.
      */
-    public void close() throws IOException {
-        serverSocket.close();
+    public void close() {
+        try{
+            for (var client : connectionsList) {
+                client.close();
+            }
+            serverSocket.close();
+        } catch (IOException e) {
+            System.out.println("Server: error closing server");
+        }
     }
 
     /**
@@ -124,8 +142,7 @@ public final class Server {
      * @throws IOException IO Error.
      */
     public void sendEvent(Event event) throws IOException {
-        for (Socket client : connectionsList) {
-            ObjectOutputStream txStream = (ObjectOutputStream) client.getOutputStream();
+        for (var txStream : txStreamList) {
             txStream.writeObject(event);
             txStream.flush();            
         }
