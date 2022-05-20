@@ -126,6 +126,11 @@ public final class Server {
      */
     public void close() {
         try{
+            System.out.println("Server: closing server");
+            sendObject("Server: closing server");
+            for (var txStream : txStreamList)  {
+                txStream.close();
+            }
             for (var client : connectionsList) {
                 client.close();
             }
@@ -138,12 +143,13 @@ public final class Server {
     /**
      * Send an event to all connected clients.
      * 
-     * @param event Event to send.
+     * @param object Object to send.
      * @throws IOException IO Error.
      */
-    public void sendEvent(Event event) throws IOException {
+    public void sendObject(Object object) throws IOException {
         for (var txStream : txStreamList) {
-            txStream.writeObject(event);
+            System.out.println("Server: sending object");
+            txStream.writeObject(object);
             txStream.flush();            
         }
     }

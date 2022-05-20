@@ -292,7 +292,7 @@ public final class CommSys extends Threaded {
             if (!isPaused.get()) {
                 while(!txBufferQueue.isEmpty()) {
                     System.out.println("CommSys: Sending event " + event);
-                    server.sendEvent(txBufferQueue.take());
+                    server.sendObject(txBufferQueue.take());
                 }
             }
         } catch (IOException ex) {
@@ -314,7 +314,7 @@ public final class CommSys extends Threaded {
      */
     private void serverCheck() throws SocketTimeoutException {
         try {
-            System.out.println(" CommSys: Check for connection...");
+            //System.out.println(" CommSys: Check for connection...");
             // Accept the connection
             server.acceptConnection();
         } catch (SocketTimeoutException ex) {
@@ -333,7 +333,7 @@ public final class CommSys extends Threaded {
      */
     private void clientCheck() throws InterruptedException, SocketTimeoutException {
         try {
-            System.out.println(" CommSys: Waiting for data...");
+            //System.out.println(" CommSys: Waiting for data...");
             // Receive the event
             if(client.rxAvailable()){
                 var event = client.readStream();
