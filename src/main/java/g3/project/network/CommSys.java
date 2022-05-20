@@ -157,10 +157,8 @@ public final class CommSys extends Threaded {
                     callQueue.take().run();
                 } else {
                     if (isConnected.get()) {
-                        //System.out.println(" CommSys: Waiting for data...");
                         clientCheck(); // Client check for new event recieved
                     } else if (isPresenting.get()) {
-                        //System.out.println(" CommSys: Check for connection...");
                         serverCheck(); // Server check for new connection
                     } else{
                         System.out.println(" CommSys: Suspending...");
@@ -315,17 +313,16 @@ public final class CommSys extends Threaded {
      * @throws SocketTimeoutException
      */
     private void serverCheck() throws SocketTimeoutException {
-        if(isPresenting.get()){
-            try {
-                // Accept the connection
-                server.acceptConnection();
-            } catch (SocketTimeoutException ex) {
-                throw ex;
-            } catch (IOException ex) {
-                ex.printStackTrace();
-                Platform.runLater(() -> engine.
-                        putMessage("Fail to accept connection - see stack trace", true));
-            }
+        try {
+            System.out.println(" CommSys: Check for connection...");
+            // Accept the connection
+            server.acceptConnection();
+        } catch (SocketTimeoutException ex) {
+            throw ex;
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            Platform.runLater(() -> engine.
+                    putMessage("Fail to accept connection - see stack trace", true));
         }
     }
 
@@ -335,33 +332,32 @@ public final class CommSys extends Threaded {
      * @throws SocketTimeoutException
      */
     private void clientCheck() throws InterruptedException, SocketTimeoutException {
-        if(isConnected.get()){
-            try {
-                // Receive the event
-                if(client.rxAvailable()){
-                    var event = client.readStream();
-                    event.ifPresent(e -> {
-                        rxBufferQueue.offer((Event) e);
-                        System.out.println("CommSys: Received event: " + event);
-                    });
-                }
-                if(!isPaused.get()){
-                    // Update local session
-                    while(!rxBufferQueue.isEmpty()){
-                        Event event = rxBufferQueue.take();
-                        //engine.offerEvent(event);
-                    }
-                }
-            } catch (SocketTimeoutException ste) {
-                throw ste;
-            } catch (SocketException se) {
-                System.out.println("CommSys: connection lost.");
-                stopViewing();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-                Platform.runLater(() -> engine.
-                        putMessage("Fail to receive event from server - see stack trace", true));
+        try {
+            System.out.println(" CommSys: Waiting for data...");
+            // Receive the event
+            if(client.rxAvailable()){
+                var event = client.readStream();
+                event.ifPresent(e -> {
+                    rxBufferQueue.offer((Event) e);
+                    System.out.println("CommSys: Received event: " + event);
+                });
             }
+            if(!isPaused.get()){
+                // Update local session
+                while(!rxBufferQueue.isEmpty()){
+                    Event event = rxBufferQueue.take();
+                    //engine.offerEvent(event);
+                }
+            }
+        } catch (SocketTimeoutException ste) {
+            throw ste;
+        } catch (SocketException se) {
+            System.out.println("CommSys: connection lost.");
+            stopViewing();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            Platform.runLater(() -> engine.
+                    putMessage("Fail to receive event from server - see stack trace", true));
         }
     }
 
