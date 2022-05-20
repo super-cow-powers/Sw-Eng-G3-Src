@@ -320,10 +320,12 @@ public final class CommSys extends Threaded {
                         engine.offerEvent(event);
                     }
                 }
+            } catch (SocketTimeoutException ex) {
+                throw ex;
             } catch (Exception ex) {
                 ex.printStackTrace();
                 Platform.runLater(() -> engine.
-                        putMessage("Fail to receive event - see stack trace", true));
+                        putMessage("Fail to receive event from server - see stack trace", true));
             }
         }
     }

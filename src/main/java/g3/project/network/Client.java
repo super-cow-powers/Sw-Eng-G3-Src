@@ -38,11 +38,21 @@ import org.apache.commons.io.input.ObservableInputStream;
  * @author Boris Choi<kyc526@york.ac.uk>
  */
 public final class Client{
-
     /**
      * Connection timeout in Seconds.
      */
-    private static final int CLIENT_TIMEOUT = 10000;
+    private static final int CONNECT_TIMEOUT = 10000;
+
+    /**
+     * Recieve Check timeout in Seconds.
+     */
+    private static final int CHECK_TIMEOUT = 50;
+
+    /**
+     * Read timeout in Seconds.
+     */
+    private static final int READ_TIMEOUT = 100;
+
     /**
      * My connection.
      */
@@ -53,9 +63,6 @@ public final class Client{
      */
     private ObjectInputStream rxStream;
 
-
-    //private ObservableInputStream ois;
-
     /**
      * Constructor - Initialise the client object.
      *
@@ -64,13 +71,12 @@ public final class Client{
      */
     public Client() throws IOException {
         this.socket = new Socket();
-        socket.setSoTimeout(CLIENT_TIMEOUT);
     }
 
     // Connect client to server
     public void connectToServer(final ConnectionInfo serverDetails) throws IOException{
-        socket.connect(new InetSocketAddress(serverDetails.getHostLoc(), serverDetails.getPort()), CLIENT_TIMEOUT);
-        rxStream = new ObjectInputStream(socket.getInputStream());
+        socket.setSoTimeout(CONNECT_TIMEOUT);
+        socket.connect(new InetSocketAddress(serverDetails.getHostLoc(), serverDetails.getPort()), CONNECT_TIMEOUT);
     }
 
     //disconnect client from server
@@ -82,6 +88,8 @@ public final class Client{
      * See if object is available to read from the input stream.
      */
     public boolean rxAvailable() throws IOException {
+        socket.setSoTimeout(CHECK_TIMEOUT);
+        rxStream = new ObjectInputStream(socket.getInputStream());
         return rxStream.available() > 0;
     }
 
@@ -89,6 +97,7 @@ public final class Client{
      * Read object from the input stream.
      */
     public Object readObject() throws IOException, ClassNotFoundException {
+        socket.setSoTimeout(READ_TIMEOUT);
         return rxStream.readObject();
     }
 
