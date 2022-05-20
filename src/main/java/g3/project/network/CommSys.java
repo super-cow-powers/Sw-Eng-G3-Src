@@ -123,14 +123,18 @@ public final class CommSys extends Threaded {
     }
 
     /**
-     * Send an event to the net.
+     * Send an event to the net if session is presenting.
      *
      * @param event Event to send.
      */
-    public void sendEvent(final Event event) {
-        txEventQueue.offer(event);
-        unsuspend();
+    public void feedEvent(final Event event) {
+        if (isPresenting.get()) {
+            txEventQueue.offer(event);
+            unsuspend();
+        }
     }
+
+
 
     @Override
     @SuppressWarnings("empty-statement")
@@ -180,8 +184,7 @@ public final class CommSys extends Threaded {
             }
         }
 
-        //close server
-        //close client
+        terminate();
         System.out.println("Comm-System is going down NOW.");
         return;
     }
@@ -276,15 +279,16 @@ public final class CommSys extends Threaded {
 
     /**
      * Server check
-     * @throws InterruptedException
      * @throws SocketTimeoutException
      */
-    private void serverCheck() throws InterruptedException, SocketTimeoutException {
+    private void serverCheck() throws SocketTimeoutException {
         if(isPresenting.get()){
             try {
                 // Accept the connection
                 server.acceptConnection();
-            } catch (Exception ex) {
+            } catch (SocketTimeoutException ex) {
+                throw ex;
+            } catch (IOException ex) {
                 ex.printStackTrace();
                 Platform.runLater(() -> engine.
                         putMessage("Fail to accept connection - see stack trace", true));
@@ -319,6 +323,22 @@ public final class CommSys extends Threaded {
                 Platform.runLater(() -> engine.
                         putMessage("Fail to receive event - see stack trace", true));
             }
+        }
+    }
+
+    /**
+     * Terminate commSys cleanly.
+     */
+    public void terminate() {
+        try {
+            if (server != null) {
+                server.close();
+            }
+            if (client != null) {
+                client.close();
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
     }
 }

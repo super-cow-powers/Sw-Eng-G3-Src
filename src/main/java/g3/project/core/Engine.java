@@ -34,6 +34,7 @@ import g3.project.elements.PageElement;
 import g3.project.elements.VisualElement;
 import g3.project.graphics.FontProps;
 import g3.project.network.CommSys;
+import g3.project.network.ConnectionInfo;
 import g3.project.graphics.StyledTextSeg;
 import g3.project.graphics.LocObj;
 import g3.project.ui.MainController;
@@ -250,6 +251,11 @@ public final class Engine extends Threaded {
             netComms.stop();
             return;
         }
+
+        //fake start present
+        var commTest = new ConnectionInfo("localhost",8080,"Host");
+        netComms.offerConnectionEvent(commTest);
+
         // Quit if running flag set to false
         while (running.get()) {
             try {
@@ -293,6 +299,8 @@ public final class Engine extends Threaded {
         } else if (evSrc instanceof javafx.scene.Node) {
             routeElementEvent(event);
         }
+        //Upload event to server if hosting.
+        //netComms.feedEvent(event);
     }
 
     /**

@@ -89,13 +89,14 @@ public final class Server {
 
     /**
      * Accept client connection.
+     * @throws IOException
      *
      * @todo I'm not sure if this is the correct way to handle multiple
      * connections to a simple socket-based server. Needs looking-up.
      * 
      * @throws Exception Exception.
      */
-    public void acceptConnection() throws Exception {
+    public void acceptConnection() throws IOException {
         if (connectionsList.size() < MAX_CLIENTS) {
             //Accept client connection
             Socket newClientSocket = serverSocket.accept();
@@ -111,7 +112,7 @@ public final class Server {
      *
      * @throws IOException IO Error.
      */
-    public void closeServer() throws IOException {
+    public void close() throws IOException {
         serverSocket.close();
     }
 

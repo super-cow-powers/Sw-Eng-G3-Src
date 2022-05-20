@@ -98,4 +98,11 @@ public final class Client{
     public Object readObject() throws IOException, ClassNotFoundException {
         return rxStream.readObject();
     }
+
+    /**
+     * Close the client.
+     */
+    public void close() throws IOException {
+        socket.close();
+    }
 }
