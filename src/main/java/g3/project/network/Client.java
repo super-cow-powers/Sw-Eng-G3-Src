@@ -94,14 +94,6 @@ public final class Client{
     }
 
     /**
-     * See if object is available to read from the input stream.
-     */
-    public boolean rxAvailable() throws IOException {
-        socket.setSoTimeout(CHECK_TIMEOUT);
-        return rxStream.available() > 0;
-    }
-
-    /**
      * Read object from the input stream.
      */
     public Optional<Object> readStream() throws IOException {
@@ -115,12 +107,5 @@ public final class Client{
         }
         rxObj.ifPresent(Obj -> System.out.println("Client: Received: " + Obj.toString()));
         return rxObj;
-    }
-
-    /**
-     * Close the client.
-     */
-    public void close() throws IOException {
-        socket.close();
     }
 }

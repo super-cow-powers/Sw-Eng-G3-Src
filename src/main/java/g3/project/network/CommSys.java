@@ -63,7 +63,7 @@ public final class CommSys extends Threaded {
     /**
      * Is Connected?
      */
-    private AtomicBoolean isConnected = new AtomicBoolean(false);
+    private AtomicBoolean isViewing = new AtomicBoolean(false);
 
     /**
      * Is Presenting?
@@ -156,7 +156,7 @@ public final class CommSys extends Threaded {
                 } else if (!callQueue.isEmpty()) { //Call to make?
                     callQueue.take().run();
                 } else {
-                    if (isConnected.get()) {
+                    if (isViewing.get()) {
                         clientCheck(); // Client check for new event recieved
                     } else if (isPresenting.get()) {
                         serverCheck(); // Server check for new connection
@@ -212,7 +212,7 @@ public final class CommSys extends Threaded {
     private void startHosting(ConnectionInfo connectionRef){
         try{
             server = new Server(connectionRef);
-            isConnected.set(false);
+            isViewing.set(false);
             isPresenting.set(true);
             isPaused.set(false);
             System.out.println("Comm-System: Started server.");
@@ -232,7 +232,7 @@ public final class CommSys extends Threaded {
         try{
             client = new Client();
             client.connectToServer(connectionRef);
-            isConnected.set(true);
+            isViewing.set(true);
             isPresenting.set(false);
             isPaused.set(false);
             System.out.println("Comm-System: Started client.");
@@ -250,7 +250,7 @@ public final class CommSys extends Threaded {
         if (server != null) {
             server.close();
             server = null;
-            isConnected.set(false);
+            isViewing.set(false);
             isPresenting.set(false);
             isPaused.set(true);
             System.out.println("Comm-System: Stopped server.");
@@ -264,7 +264,7 @@ public final class CommSys extends Threaded {
         if (client != null) {
             client.disconnectFromServer();
             client = null;
-            isConnected.set(false);
+            isViewing.set(false);
             isPresenting.set(false);
             isPaused.set(true);
             System.out.println("Comm-System: Stopped client.");
@@ -334,14 +334,14 @@ public final class CommSys extends Threaded {
     private void clientCheck() throws InterruptedException, SocketTimeoutException {
         try {
             //System.out.println(" CommSys: Waiting for data...");
-            // Receive the event
-            if(client.rxAvailable()){
-                var event = client.readStream();
-                event.ifPresent(e -> {
-                    rxBufferQueue.offer((Event) e);
-                    System.out.println("CommSys: Received event: " + event);
-                });
-            }
+            var objectIn = client.readStream();
+            objectIn.ifPresent(obj -> {
+                if (!obj.equals("Server: closing server")) {
+                    rxBufferQueue.offer((Event) obj);
+                } else {
+                    stopViewing();
+                }
+            });
             if(!isPaused.get()){
                 // Update local session
                 while(!rxBufferQueue.isEmpty()){
@@ -351,9 +351,6 @@ public final class CommSys extends Threaded {
             }
         } catch (SocketTimeoutException ste) {
             throw ste;
-        } catch (SocketException se) {
-            System.out.println("CommSys: connection lost.");
-            stopViewing();
         } catch (IOException ex) {
             ex.printStackTrace();
             Platform.runLater(() -> engine.
