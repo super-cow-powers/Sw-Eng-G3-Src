@@ -32,7 +32,9 @@ import g3.project.core.Engine;
 import g3.project.core.Threaded;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -155,7 +157,7 @@ public final class CommSys extends Threaded {
                     callQueue.take().run();
                 } else {
                     if (isConnected.get()) {
-                        System.out.println(" CommSys: Waiting for data...");
+                        //System.out.println(" CommSys: Waiting for data...");
                         clientCheck(); // Client check for new event recieved
                     } else if (isPresenting.get()) {
                         System.out.println(" CommSys: Check for connection...");
@@ -242,7 +244,35 @@ public final class CommSys extends Threaded {
                     putMessage("Fail to connect - see stack trace", true));
         }
     }
+
+    /**
+     * Stop hosting a session.
+     */
+    public void stopHosting() {
+        if (server != null) {
+            server.close();
+            server = null;
+            isConnected.set(false);
+            isPresenting.set(false);
+            isPaused.set(true);
+            System.out.println("Comm-System: Stopped server.");
+        }
+    }
     
+    /**
+     * Stop viewing a session
+     */
+    private void stopViewing(){
+        if (client != null) {
+            client.disconnectFromServer();
+            client = null;
+            isConnected.set(false);
+            isPresenting.set(false);
+            isPaused.set(true);
+            System.out.println("Comm-System: Stopped client.");
+        }
+    }
+
     /**
      * Alter the connection status of the server.
      */
@@ -308,21 +338,25 @@ public final class CommSys extends Threaded {
             try {
                 // Receive the event
                 if(client.rxAvailable()){
-                    Event event = (Event) client.readObject();
-                    rxBufferQueue.offer(event);
+                    var event = client.readStream();
+                    event.ifPresent(e -> {
+                        rxBufferQueue.offer((Event) e);
+                        System.out.println("CommSys: Received event: " + event);
+                    });
                 }
                 if(!isPaused.get()){
-                    // @todo set local session to origin
-
                     // Update local session
                     while(!rxBufferQueue.isEmpty()){
                         Event event = rxBufferQueue.take();
-                        engine.offerEvent(event);
+                        //engine.offerEvent(event);
                     }
                 }
-            } catch (SocketTimeoutException ex) {
-                throw ex;
-            } catch (Exception ex) {
+            } catch (SocketTimeoutException ste) {
+                throw ste;
+            } catch (SocketException se) {
+                System.out.println("CommSys: connection lost.");
+                stopViewing();
+            } catch (IOException ex) {
                 ex.printStackTrace();
                 Platform.runLater(() -> engine.
                         putMessage("Fail to receive event from server - see stack trace", true));
@@ -338,9 +372,7 @@ public final class CommSys extends Threaded {
             if (server != null) {
                 server.close();
             }
-            if (client != null) {
-                client.close();
-            }
+            stopViewing();
         } catch (IOException ex) {
             ex.printStackTrace();
         }

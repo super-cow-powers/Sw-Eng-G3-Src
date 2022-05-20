@@ -29,6 +29,7 @@
 package g3.project.network;
 
 import java.net.*;
+import java.util.Optional;
 import java.io.*;
 
 import org.apache.commons.io.input.ObservableInputStream;
@@ -77,11 +78,19 @@ public final class Client{
     public void connectToServer(final ConnectionInfo serverDetails) throws IOException{
         socket.setSoTimeout(CONNECT_TIMEOUT);
         socket.connect(new InetSocketAddress(serverDetails.getHostLoc(), serverDetails.getPort()), CONNECT_TIMEOUT);
+        rxStream = new ObjectInputStream(socket.getInputStream());
+        readStream();
     }
 
     //disconnect client from server
-    public void disconnectFromServer() throws IOException{
-        socket.close();
+    public void disconnectFromServer(){
+        try {
+            socket.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            System.out.println("Error closing socket");
+        }
     }
 
     /**
@@ -89,16 +98,23 @@ public final class Client{
      */
     public boolean rxAvailable() throws IOException {
         socket.setSoTimeout(CHECK_TIMEOUT);
-        rxStream = new ObjectInputStream(socket.getInputStream());
         return rxStream.available() > 0;
     }
 
     /**
      * Read object from the input stream.
      */
-    public Object readObject() throws IOException, ClassNotFoundException {
+    public Optional<Object> readStream() throws IOException {
         socket.setSoTimeout(READ_TIMEOUT);
-        return rxStream.readObject();
+        Optional<Object> rxObj = Optional.empty();
+        try {
+            rxObj = Optional.of(rxStream.readObject());
+        } catch (ClassNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        rxObj.ifPresent(Obj -> System.out.println("Client: Received: " + Obj.toString()));
+        return rxObj;
     }
 
     /**
