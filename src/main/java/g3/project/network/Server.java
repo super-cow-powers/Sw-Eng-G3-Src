@@ -102,8 +102,9 @@ public final class Server {
             Socket newClientSocket = serverSocket.accept();
             //Add socket to connections
             connectionsList.add(newClientSocket);
+            System.out.println("Server: new connection accepted");
         } else {
-            System.out.println("Server is full");
+            System.out.println("Server: server is full");
         }
     }
 

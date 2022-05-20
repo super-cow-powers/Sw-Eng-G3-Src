@@ -195,10 +195,12 @@ public final class CommSys extends Threaded {
      * @param connectionRef Connection request.
      */
     private void handleConnection(final ConnectionInfo connectionRef) {
-        if (connectionRef.getType().equals("client")) {
+        if (connectionRef.getType().equals("Client")) {
             startViewing(connectionRef);
         } else if (connectionRef.getType().equals("Host")) {
             startHosting(connectionRef);
+        } else{
+            System.out.println("CommSys: Unknown connection type.");
         }
     }
 

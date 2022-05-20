@@ -65,19 +65,12 @@ public final class Client{
     public Client() throws IOException {
         this.socket = new Socket();
         socket.setSoTimeout(CLIENT_TIMEOUT);
-        
-        rxStream = new ObjectInputStream(socket.getInputStream());
-        /* 
-        //Observable Input Stream - need to compare for preformance
-        ois = new ObservableInputStream(socket.getInputStream());
-        xStream = new ObjectInputStream(ois);
-        ois.add(observer);
-         */
     }
 
     // Connect client to server
     public void connectToServer(final ConnectionInfo serverDetails) throws IOException{
         socket.connect(new InetSocketAddress(serverDetails.getHostLoc(), serverDetails.getPort()), CLIENT_TIMEOUT);
+        rxStream = new ObjectInputStream(socket.getInputStream());
     }
 
     //disconnect client from server
