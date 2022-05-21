@@ -99,14 +99,27 @@ public final class Client{
         socket.connect(new InetSocketAddress(serverDetails.getHostLoc(), serverDetails.getPort()), CONNECT_TIMEOUT);
         rxStream = new ObjectInputStream(socket.getInputStream());
         txStream = new ObjectOutputStream(socket.getOutputStream());
-        readStream();
         writeStream("Connected");
+        readStream();
     }
 
     //disconnect client from server
     public void disconnectFromServer(){
         try {
             writeStream("Disconnect");
+            closeSocket();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            System.out.println("Error closing client");
+        }
+    }
+
+    /**
+     * Close socket.
+     */
+    public void closeSocket(){
+        try {
             socket.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block
