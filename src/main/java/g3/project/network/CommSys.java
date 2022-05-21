@@ -156,28 +156,13 @@ public final class CommSys extends Threaded {
                 } else if (!callQueue.isEmpty()) { //Call to make?
                     callQueue.take().run();
                 } else {
-                    if (isViewing.get()) {
-                        clientCheck(); // Client check for new event recieved
-                    } else if (isPresenting.get()) {
-                        serverCheck(); // Server check for new connection
-                    } else{
-                        System.out.println(" CommSys: Suspending...");
-                        suspended.set(true); // Nothing from enngine
-                    }
+                    update();
                 }
 
                 while (suspended.get()) { // Suspend
                     synchronized (this) {
                         wait();
                     }
-                }
-            } catch (SocketTimeoutException e) {
-                // pause for 50ms
-                try {
-                    //System.out.println(" CommSys: Sleeping...");
-                    Thread.sleep(CS_TIMEOUT);
-                } catch (InterruptedException ex) {
-                    ex.printStackTrace();
                 }
             } catch (InterruptedException ex) {
                 ex.printStackTrace();
@@ -248,7 +233,7 @@ public final class CommSys extends Threaded {
      */
     public void stopHosting() {
         if (server != null) {
-            server.close();
+            server.closeServer();
             server = null;
             isViewing.set(false);
             isPresenting.set(false);
@@ -292,7 +277,7 @@ public final class CommSys extends Threaded {
             if (!isPaused.get()) {
                 while(!txBufferQueue.isEmpty()) {
                     System.out.println("CommSys: Sending event " + event);
-                    server.sendObject(txBufferQueue.take());
+                    server.broadcastObject(txBufferQueue.take());
                 }
             }
         } catch (IOException ex) {
@@ -310,15 +295,14 @@ public final class CommSys extends Threaded {
 
     /**
      * Server check
-     * @throws SocketTimeoutException
+     * @throws IOException
      */
-    private void serverCheck() throws SocketTimeoutException {
+    private void serverCheck() throws IOException{
         try {
             //System.out.println(" CommSys: Check for connection...");
-            // Accept the connection
             server.acceptConnection();
-        } catch (SocketTimeoutException ex) {
-            throw ex;
+        } catch (SocketTimeoutException ste) {
+            server.checkConnection();
         } catch (IOException ex) {
             ex.printStackTrace();
             Platform.runLater(() -> engine.
@@ -329,9 +313,8 @@ public final class CommSys extends Threaded {
     /**
      * Client check
      * @throws InterruptedException
-     * @throws SocketTimeoutException
      */
-    private void clientCheck() throws InterruptedException, SocketTimeoutException {
+    private void clientCheck() throws InterruptedException, SocketTimeoutException{
         try {
             //System.out.println(" CommSys: Waiting for data...");
             var objectIn = client.readStream();
@@ -356,6 +339,29 @@ public final class CommSys extends Threaded {
             Platform.runLater(() -> engine.
                     putMessage("Fail to receive event from server - see stack trace", true));
         }
+    }
+
+    /**
+     * Comm-System Update
+     */
+    public void update() throws InterruptedException {
+        try{
+            if (isViewing.get()) {
+                clientCheck(); // Client check for new event recieved
+            } else if (isPresenting.get()) {
+                serverCheck(); // Server check for new connection
+            } else{
+                System.out.println(" CommSys: Suspending...");
+                suspended.set(true); // Nothing from enngine
+            }
+        }catch (SocketTimeoutException ste){
+            Thread.sleep(CS_TIMEOUT);
+        }catch (IOException ex){
+            ex.printStackTrace();
+            Platform.runLater(() -> engine.
+                    putMessage("Fail to check client connection - see stack trace", true));
+        }
+        
     }
 
     /**

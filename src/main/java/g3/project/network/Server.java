@@ -30,6 +30,8 @@ package g3.project.network;
 
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Optional;
+
 import javafx.event.Event;
 
 import java.io.*;
@@ -40,7 +42,9 @@ import java.io.*;
  */
 public final class Server {
 
-    private static final int SERVER_TIMEOUT = 50;
+    private static final int ACCEPT_TIMEOUT = 50;
+
+    private static final int CHECK_TIMEOUT = 100;
 
     private ServerSocket serverSocket;
 
@@ -49,12 +53,7 @@ public final class Server {
     /**
      * List containing connected clients.
      */
-    private ArrayList<Socket> connectionsList = new ArrayList<>();
-
-    /**
-     * List containing connected clients output stream.
-     */
-    private ArrayList<ObjectOutputStream> txStreamList = new ArrayList<>();
+    private ArrayList<Client> connectionsList = new ArrayList<>();
 
     /**
      * Constructor.
@@ -62,7 +61,6 @@ public final class Server {
      */
     public Server() throws IOException {
         serverSocket = new ServerSocket(0);
-        serverSocket.setSoTimeout(SERVER_TIMEOUT);
     }
 
     /**
@@ -71,7 +69,6 @@ public final class Server {
      */
     public Server(ConnectionInfo connectionRef) throws IOException {
         serverSocket = new ServerSocket(connectionRef.getPort());
-        serverSocket.setSoTimeout(SERVER_TIMEOUT);
     }
 
     /**
@@ -94,6 +91,7 @@ public final class Server {
 
     /**
      * Accept client connection.
+     * @throws SocketTimeoutException
      * @throws IOException
      *
      * @todo I'm not sure if this is the correct way to handle multiple
@@ -102,17 +100,19 @@ public final class Server {
      * @throws Exception Exception.
      */
     public void acceptConnection() throws IOException {
+        serverSocket.setSoTimeout(ACCEPT_TIMEOUT);
         if (connectionsList.size() < MAX_CLIENTS) {
             //Accept client connection
-            Socket newClientSocket = serverSocket.accept();
-            
+            var newClientSocket = serverSocket.accept();
             var txStream = new ObjectOutputStream(newClientSocket.getOutputStream()) ;
-            txStream.writeObject("Welcome to the server!");
-            txStream.flush();     
+            var rxStream = new ObjectInputStream(newClientSocket.getInputStream());
 
-            //Add connections to list
-            connectionsList.add(newClientSocket);
-            txStreamList.add(txStream);
+            var newClient = new Client(newClientSocket, rxStream, txStream);
+            connectionsList.add(newClient);
+
+            newClient.readStream();
+            newClient.writeStream("Welcome to the server!");
+            
             System.out.println("Server: new connection accepted");
         } else {
             System.out.println("Server: server is full");
@@ -124,15 +124,12 @@ public final class Server {
      *
      * @throws IOException IO Error.
      */
-    public void close() {
+    public void closeServer() {
         try{
             System.out.println("Server: closing server");
-            sendObject("Server: closing server");
-            for (var txStream : txStreamList)  {
-                txStream.close();
-            }
+            broadcastObject("Server: closing server");
             for (var client : connectionsList) {
-                client.close();
+                client.closeSocket();
             }
             serverSocket.close();
         } catch (IOException e) {
@@ -141,16 +138,35 @@ public final class Server {
     }
 
     /**
-     * Send an event to all connected clients.
+     * Send an object to all connected clients.
      * 
      * @param object Object to send.
      * @throws IOException IO Error.
      */
-    public void sendObject(Object object) throws IOException {
-        for (var txStream : txStreamList) {
+    public void broadcastObject(Object object) throws IOException {
+        for (var client : connectionsList) {
             System.out.println("Server: sending object");
-            txStream.writeObject(object);
-            txStream.flush();            
+            client.writeStream(object);          
+        }
+    }
+    
+    /**
+     * Check if clients are still connected.
+     */
+    public void checkConnection() throws IOException {
+        serverSocket.setSoTimeout(CHECK_TIMEOUT);
+        for (var client : connectionsList) {
+            var msg = client.readStream();
+            msg.ifPresent(m->{
+                System.out.println("Server: received message: " + m);
+                if(m.equals("Disconnect")) {
+                    System.out.println("Server: client disconnected");
+                    client.closeSocket();
+                    connectionsList.remove(client);
+                }else{
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+            });
         }
     }
 }
