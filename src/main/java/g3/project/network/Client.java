@@ -80,7 +80,7 @@ public final class Client{
      * @param txStream Pre-existing transmit stream.
      * @throws IOException
      */
-    public Client(Socket socket, ObjectInputStream rxStream, ObjectOutputStream txStream) throws IOException {
+    public Client(Socket socket, ObjectInputStream rxStream, ObjectOutputStream txStream){
         this.socket = socket;
         this.rxStream = rxStream;
         this.txStream = txStream;

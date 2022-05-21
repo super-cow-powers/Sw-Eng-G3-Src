@@ -32,9 +32,7 @@ import g3.project.core.Engine;
 import g3.project.core.Threaded;
 
 import java.io.IOException;
-import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -202,7 +200,7 @@ public final class CommSys extends Threaded {
         } catch (IOException ex){
             ex.printStackTrace();
             Platform.runLater(() -> engine.
-                    putMessage("Fail to host - see stack trace", true));
+                    putMessage("Fail to start hosting", true));
         }
     }
 
@@ -218,11 +216,10 @@ public final class CommSys extends Threaded {
             isViewing.set(true);
             isPresenting.set(false);
             isPaused.set(false);
-            System.out.println("Comm-System: Started client.");
         } catch (IOException ex){
             ex.printStackTrace();
             Platform.runLater(() -> engine.
-                    putMessage("Fail to connect - see stack trace", true));
+                    putMessage("Fail to start viewing", true));
         }
     }
 
@@ -230,12 +227,18 @@ public final class CommSys extends Threaded {
      * Stop hosting a session.
      */
     public void stopHosting() {
-        if (server != null) {
-            server.closeServer();
-            server = null;
-            isViewing.set(false);
-            isPresenting.set(false);
-            isPaused.set(true);
+        try{
+            if (server != null) {
+                server.closeServer();
+                server = null;
+                isViewing.set(false);
+                isPresenting.set(false);
+                isPaused.set(true);
+            }
+        } catch (IOException ex){
+            ex.printStackTrace();
+            Platform.runLater(() -> engine.
+                    putMessage("Fail to stop hosting", true));
         }
     }
     
@@ -276,7 +279,7 @@ public final class CommSys extends Threaded {
         } catch (IOException ex) {
             ex.printStackTrace();
             Platform.runLater(() -> engine.
-                    putMessage("Fail to upload event to server - see stack trace", true));
+                    putMessage("Fail to upload event to server", true));
         }
         
     }
@@ -295,7 +298,7 @@ public final class CommSys extends Threaded {
         } catch (IOException ex) {
             ex.printStackTrace();
             Platform.runLater(() -> engine.
-                    putMessage("Fail to accept connection - see stack trace", true));
+                    putMessage("Fail to accept connection", true));
         }
     }
 
@@ -321,7 +324,7 @@ public final class CommSys extends Threaded {
                 // Update local session
                 while(!rxBufferQueue.isEmpty()){
                     Event event = rxBufferQueue.take();
-                    //engine.offerEvent(event);
+                    engine.offerEvent(event);
                 }
             }
         } catch (SocketTimeoutException ste) {
@@ -329,7 +332,7 @@ public final class CommSys extends Threaded {
         } catch (IOException ex) {
             ex.printStackTrace();
             Platform.runLater(() -> engine.
-                    putMessage("Fail to receive event from server - see stack trace", true));
+                    putMessage("Fail to receive event from server", true));
         }
     }
 
@@ -352,7 +355,7 @@ public final class CommSys extends Threaded {
         }catch (IOException ex){
             ex.printStackTrace();
             Platform.runLater(() -> engine.
-                    putMessage("Fail to check client connection - see stack trace", true));
+                    putMessage("Fail to check client connection", true));
         }
         
     }

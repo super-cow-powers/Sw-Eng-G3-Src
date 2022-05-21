@@ -46,7 +46,7 @@ public final class Server {
 
     private ServerSocket serverSocket;
 
-    private static final int MAX_CLIENTS = 10;
+    private static final int MAX_CLIENTS = 3;
 
     /**
      * List containing connected clients.
@@ -106,28 +106,20 @@ public final class Server {
 
             newClient.readStream();
             newClient.writeStream("Welcome to the server!");
-            
-            System.out.println("Server: new connection accepted");
-        } else {
-            System.out.println("Server: server is full");
         }
     }
 
     /**
      * Close the server.
+     * @throws IOException
      */
-    public void closeServer() {
-        try{
-            System.out.println("Server: closing server");
-            broadcastObject("Server: closing server");
-            for (var client : connectionsList) {
-                client.closeSocket();
-            }
-            connectionsList.clear();
-            serverSocket.close();
-        } catch (IOException e) {
-            System.out.println("Server: error closing server");
+    public void closeServer() throws IOException {
+        broadcastObject("Server: closing server");
+        for (var client : connectionsList) {
+            client.closeSocket();
         }
+        connectionsList.clear();
+        serverSocket.close();
     }
 
     /**
@@ -138,7 +130,6 @@ public final class Server {
      */
     public void broadcastObject(Object object) throws IOException {
         for (var client : connectionsList) {
-            System.out.println("Server: sending object");
             client.writeStream(object);          
         }
     }
@@ -155,7 +146,6 @@ public final class Server {
             var client = iterator.next();
             var msg = client.readStream();
             msg.ifPresent(m->{
-                System.out.println("Server: received message: " + m);
                 if(m.equals("Disconnect")) {
                     System.out.println("Server: client disconnected");
                     client.closeSocket();
