@@ -32,8 +32,6 @@ import java.net.*;
 import java.util.Optional;
 import java.io.*;
 
-import org.apache.commons.io.input.ObservableInputStream;
-
 /**
  *
  * @author Boris Choi<kyc526@york.ac.uk>
@@ -43,11 +41,6 @@ public final class Client{
      * Connection timeout in Seconds.
      */
     private static final int CONNECT_TIMEOUT = 10000;
-
-    /**
-     * Recieve Check timeout in Seconds.
-     */
-    private static final int CHECK_TIMEOUT = 50;
 
     /**
      * Read timeout in Seconds.
@@ -93,7 +86,12 @@ public final class Client{
         this.txStream = txStream;
     }
 
-    // Connect client to server
+    /**
+     * Connect to the server.
+     *
+     * @param server Details of server to connect to.
+     * @throws IOException
+     */
     public void connectToServer(final ConnectionInfo serverDetails) throws IOException{
         socket.setSoTimeout(CONNECT_TIMEOUT);
         socket.connect(new InetSocketAddress(serverDetails.getHostLoc(), serverDetails.getPort()), CONNECT_TIMEOUT);
@@ -103,15 +101,15 @@ public final class Client{
         readStream();
     }
 
-    //disconnect client from server
+    /**
+     * Disconnect from the server.
+     */
     public void disconnectFromServer(){
         try {
             writeStream("Disconnect");
             closeSocket();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
-            System.out.println("Error closing client");
         }
     }
 
@@ -122,14 +120,15 @@ public final class Client{
         try {
             socket.close();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
-            System.out.println("Error closing socket");
         }
     }
 
     /**
-     * Read object from the input stream.
+     * Read object from the input stream if any.
+     * 
+     * @return Optional object.
+     * @throws IOException
      */
     public Optional<Object> readStream() throws IOException {
         socket.setSoTimeout(READ_TIMEOUT);
@@ -137,19 +136,18 @@ public final class Client{
         try {
             rxObj = Optional.of(rxStream.readObject());
         } catch (ClassNotFoundException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        rxObj.ifPresent(Obj -> System.out.println("Client: Received: " + Obj.toString()));
         return rxObj;
     }
 
     /**
      * Write object to the output stream.
+     * 
+     * @param obj Object to write.
      */
     public void writeStream(final Object txObj) throws IOException {
         txStream.writeObject(txObj);
         txStream.flush();
-        System.out.println("Client: Sent: " + txObj.toString());
     }
 }
