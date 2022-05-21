@@ -47,7 +47,7 @@ import javafx.event.Event;
  * @author Boris Choi
  */
 public final class CommSys extends Threaded {
-    private static final int CS_TIMEOUT = 50;
+    private static final int CS_PAUSE = 50;
 
     /**
      * Client Session
@@ -145,7 +145,6 @@ public final class CommSys extends Threaded {
         while (!(running.get())) {
         }
 
-        //...
         while (running.get()) {
             //Main thread dispatch loop
             try {
@@ -185,12 +184,12 @@ public final class CommSys extends Threaded {
         } else if (connectionRef.getType().equals("Host")) {
             startHosting(connectionRef);
         } else{
-            System.out.println("CommSys: Unknown connection type.");
+            throw new IllegalArgumentException("Invalid connection type.");
         }
     }
 
     /**
-     * Begin broadcasting to the server.
+     * Begin hosting a session.
      * 
      * @param serverDetails
      */
@@ -200,7 +199,6 @@ public final class CommSys extends Threaded {
             isViewing.set(false);
             isPresenting.set(true);
             isPaused.set(false);
-            System.out.println("Comm-System: Started server.");
         } catch (IOException ex){
             ex.printStackTrace();
             Platform.runLater(() -> engine.
@@ -238,7 +236,6 @@ public final class CommSys extends Threaded {
             isViewing.set(false);
             isPresenting.set(false);
             isPaused.set(true);
-            System.out.println("Comm-System: Stopped server.");
         }
     }
     
@@ -252,15 +249,13 @@ public final class CommSys extends Threaded {
             isViewing.set(false);
             isPresenting.set(false);
             isPaused.set(true);
-            System.out.println("Comm-System: Stopped client.");
         }
     }
 
     /**
-     * Alter the connection status of the server.
+     * Toggle the connection status
      */
     private void sessionUpdate() {
-        // Toggle the connection status
         isPaused.set(!isPaused.get());
     }
 
@@ -271,12 +266,10 @@ public final class CommSys extends Threaded {
      * @throws InterruptedException
      */
     private void transmitEvent(final Event event) throws InterruptedException {
-        // Try to upload the event to the server
         try {
             txBufferQueue.offer(event);
             if (!isPaused.get()) {
                 while(!txBufferQueue.isEmpty()) {
-                    System.out.println("CommSys: Sending event " + event);
                     server.broadcastObject(txBufferQueue.take());
                 }
             }
@@ -288,18 +281,14 @@ public final class CommSys extends Threaded {
         
     }
 
-    /*
-     @todo - implement the following loops
-     make both server and client threaded?
-    */
-
     /**
-     * Server check
+     * Server try to first accept a connection.
+     * Then it will try to check if all the clients are still connected.
+     * 
      * @throws IOException
      */
     private void serverCheck() throws IOException{
         try {
-            //System.out.println(" CommSys: Check for connection...");
             server.acceptConnection();
         } catch (SocketTimeoutException ste) {
             server.checkConnection();
@@ -311,12 +300,15 @@ public final class CommSys extends Threaded {
     }
 
     /**
-     * Client check
+     * Client try to read from the server.
+     * If server has shut down, close the client.
+     * Otherwise read from input stream and put into the buffer queue.
+     * Only if the client is not paused should the event be sent to the engine.
+     * 
      * @throws InterruptedException
      */
     private void clientCheck() throws InterruptedException, SocketTimeoutException{
         try {
-            //System.out.println(" CommSys: Waiting for data...");
             var objectIn = client.readStream();
             objectIn.ifPresent(obj -> {
                 if (!obj.equals("Server: closing server")) {
@@ -343,19 +335,20 @@ public final class CommSys extends Threaded {
 
     /**
      * Comm-System Update
+     * 
+     * @throws InterruptedException
      */
     public void update() throws InterruptedException {
         try{
             if (isViewing.get()) {
-                clientCheck(); // Client check for new event recieved
+                clientCheck();
             } else if (isPresenting.get()) {
-                serverCheck(); // Server check for new connection
+                serverCheck();
             } else{
-                System.out.println(" CommSys: Suspending...");
                 suspended.set(true); // Nothing from enngine
             }
         }catch (SocketTimeoutException ste){
-            Thread.sleep(CS_TIMEOUT);
+            Thread.sleep(CS_PAUSE);
         }catch (IOException ex){
             ex.printStackTrace();
             Platform.runLater(() -> engine.

@@ -30,9 +30,7 @@ package g3.project.network;
 
 import java.net.*;
 import java.util.ArrayList;
-import java.util.Optional;
-
-import javafx.event.Event;
+import java.util.Iterator;
 
 import java.io.*;
 
@@ -65,6 +63,8 @@ public final class Server {
 
     /**
      * Constructor - server socket on specific setup.
+     * 
+     * @param connectionRef server details
      * @throws IOException
      */
     public Server(ConnectionInfo connectionRef) throws IOException {
@@ -91,18 +91,12 @@ public final class Server {
 
     /**
      * Accept client connection.
-     * @throws SocketTimeoutException
-     * @throws IOException
-     *
-     * @todo I'm not sure if this is the correct way to handle multiple
-     * connections to a simple socket-based server. Needs looking-up.
      * 
-     * @throws Exception Exception.
+     * @throws IOException IO Error.
      */
     public void acceptConnection() throws IOException {
         serverSocket.setSoTimeout(ACCEPT_TIMEOUT);
         if (connectionsList.size() < MAX_CLIENTS) {
-            //Accept client connection
             var newClientSocket = serverSocket.accept();
             var txStream = new ObjectOutputStream(newClientSocket.getOutputStream()) ;
             var rxStream = new ObjectInputStream(newClientSocket.getInputStream());
@@ -121,8 +115,6 @@ public final class Server {
 
     /**
      * Close the server.
-     *
-     * @throws IOException IO Error.
      */
     public void closeServer() {
         try{
@@ -131,6 +123,7 @@ public final class Server {
             for (var client : connectionsList) {
                 client.closeSocket();
             }
+            connectionsList.clear();
             serverSocket.close();
         } catch (IOException e) {
             System.out.println("Server: error closing server");
@@ -152,10 +145,14 @@ public final class Server {
     
     /**
      * Check if clients are still connected.
+     * 
+     * @throws IOException IO Error.
      */
     public void checkConnection() throws IOException {
         serverSocket.setSoTimeout(CHECK_TIMEOUT);
-        for (var client : connectionsList) {
+        Iterator<Client> iterator = connectionsList.iterator();
+        while (iterator.hasNext()) {
+            var client = iterator.next();
             var msg = client.readStream();
             msg.ifPresent(m->{
                 System.out.println("Server: received message: " + m);
