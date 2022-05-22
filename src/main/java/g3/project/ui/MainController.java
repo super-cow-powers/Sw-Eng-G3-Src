@@ -825,6 +825,11 @@ public final class MainController {
         //containerPane.getStylesheets().add(style.getStyleStylesheetURL());
     }
 
+    @FXML
+    public void handleTogEdit() {
+        toggleEditable(!amEditable);
+    }
+
     public void toggleEditable(Boolean editable) {
         this.amEditable = editable;
         if (!editable) {
@@ -888,9 +893,8 @@ public final class MainController {
                                         }
                                     }
 
-                                    if (handle) {
-                                        handleEvent(e);
-                                    }
+                                    handleEvent(e);
+
                                     e.consume();
                                 });
 

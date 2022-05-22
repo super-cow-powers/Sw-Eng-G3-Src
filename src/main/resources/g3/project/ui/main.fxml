@@ -26,9 +26,7 @@
                 </Menu>
                 <Menu mnemonicParsing="false" text="Edit">
                     <items>
-                        <MenuItem mnemonicParsing="false" text="Undo" />
-                        <MenuItem mnemonicParsing="false" text="Redo" />
-                        <MenuItem mnemonicParsing="false" text="Duplicate" />
+                        <MenuItem onAction="#handleTogEdit" mnemonicParsing="false" text="Toggle Edit" />
                         <MenuItem mnemonicParsing="false" text="Delete" />
                     </items>
                 </Menu>
