@@ -215,6 +215,20 @@ public class VisualElement extends Element implements Scriptable {
 
         return Optional.of(new SizeObj(x, y, rot));
     }
+    
+    /**
+     * Set the element size.
+     * @param size Size to set.
+     */
+    public final void setSize(final SizeObj size){
+        Attribute xAttr = new Attribute("x_size_px", size.getX().toString());
+        Attribute yAttr = new Attribute("y_size_px", size.getY().toString());
+        Attribute rotAttr = new Attribute("rot_angle", size.getRot().toString());
+        this.addAttribute(xAttr);
+        this.addAttribute(yAttr);
+        this.addAttribute(rotAttr);
+        hasUpdated();
+    }
 
     /**
      * Get the element's fill colour.

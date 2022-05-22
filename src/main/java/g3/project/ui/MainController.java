@@ -57,6 +57,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.animation.FadeTransition;
@@ -84,11 +85,10 @@ import jfxtras.styles.jmetro.*;
  */
 public final class MainController {
 
-
     /**
      * Can the scene be edited?
      */
-    private boolean amEditable = false;
+    private final AtomicBoolean amEditable = new AtomicBoolean(false);
 
     /**
      * App's Engine.
@@ -291,6 +291,25 @@ public final class MainController {
     @FXML
     private void handleOpenNewDoc(final ActionEvent event) {
         showDocPicker();
+    }
+
+    /**
+     * Handle an edit event (drag).
+     *
+     * @param mev Event.
+     */
+    private void handleDragEditEvent(final MouseEvent mev) {
+        EventTarget target = mev.getTarget();
+        if (amEditable.get()) {
+            if (target instanceof Node) {
+                ((Node) target).relocate(mev.getSceneX() + dragDelta.getX(), mev.getSceneY() + dragDelta.getY());
+                engine.elementRelocated(((Node) target).getId(),
+                        new LocObj(new Point2D(mev.getSceneX() + dragDelta.getX(), mev.getSceneY() + dragDelta.getY()), ((Node) target).getViewOrder()));
+                System.out.println("Drag: " + mev);
+                handleEvent(mev);
+                mev.consume();
+            }
+        }
     }
 
     /**
@@ -791,14 +810,13 @@ public final class MainController {
         ft.play();
     }
 
-
     @FXML
     public void handleTogEdit() {
-        toggleEditable(!amEditable);
+        toggleEditable(!amEditable.get());
     }
 
     public void toggleEditable(Boolean editable) {
-        this.amEditable = editable;
+        this.amEditable.set(editable);
         if (!editable) {
             setCursorType(Cursor.DEFAULT);
         }
@@ -832,36 +850,28 @@ public final class MainController {
                             //update item
                         } else {
                             for (Node addedNode : c.getAddedSubList()) {
+                                addedNode.addEventHandler(MouseEvent.MOUSE_DRAGGED, ev -> handleDragEditEvent(ev));
                                 addedNode.addEventHandler(MouseEvent.ANY, (e) -> {
-                                    var handle = true;
-
-                                    if (e.getEventType() == MouseEvent.MOUSE_DRAGGED) {
-                                        if (amEditable) {
-                                            addedNode.relocate(e.getSceneX() + dragDelta.getX(), e.getSceneY() + dragDelta.getY());
-                                        }
-                                    } else if (e.getEventType() == MouseEvent.MOUSE_PRESSED) {
-                                        if (amEditable) {
-                                            handle = false;
+                                    if (e.getEventType() == MouseEvent.MOUSE_PRESSED) {
+                                        if (amEditable.get()) {
                                             addedNode.setCursor(Cursor.MOVE);
                                             dragDelta = new Point2D(addedNode.getLayoutX() - e.getSceneX(), addedNode.getLayoutY() - e.getSceneY());
                                         }
                                     } else if (e.getEventType() == MouseEvent.MOUSE_RELEASED) {
-                                        if (amEditable) {
-                                            handle = false;
+                                        if (amEditable.get()) {
                                             addedNode.setCursor(Cursor.HAND);
                                             dragDelta = new Point2D(addedNode.getLayoutX() - e.getSceneX(), addedNode.getLayoutY() - e.getSceneY());
                                         }
                                     } else if (e.getEventType() == MouseEvent.MOUSE_ENTERED) {
-                                        if (amEditable) {
-                                            handle = false;
+                                        if (amEditable.get()) {
                                             addedNode.setCursor(Cursor.HAND);
-                                        } else {
-                                            //addedNode.setCursor(Cursor.DEFAULT);
+                                        }
+                                    } else if (e.getEventType() == MouseEvent.MOUSE_EXITED) {
+                                        if (amEditable.get()) {
+                                            addedNode.setCursor(Cursor.DEFAULT);
                                         }
                                     }
-
                                     handleEvent(e);
-
                                     e.consume();
                                 });
 
