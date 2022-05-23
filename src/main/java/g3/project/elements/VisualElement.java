@@ -34,6 +34,7 @@ import g3.project.graphics.LocObj;
 import g3.project.graphics.SizeObj;
 import g3.project.graphics.StrokeProps;
 import g3.project.graphics.VisualProps;
+import java.util.HashMap;
 import java.util.Optional;
 import javafx.geometry.Point2D;
 import javafx.scene.paint.Color;
@@ -215,12 +216,13 @@ public class VisualElement extends Element implements Scriptable {
 
         return Optional.of(new SizeObj(x, y, rot));
     }
-    
+
     /**
      * Set the element size.
+     *
      * @param size Size to set.
      */
-    public final void setSize(final SizeObj size){
+    public final void setSize(final SizeObj size) {
         Attribute xAttr = new Attribute("x_size_px", size.getX().toString());
         Attribute yAttr = new Attribute("y_size_px", size.getY().toString());
         Attribute rotAttr = new Attribute("rot_angle", size.getRot().toString());
@@ -312,9 +314,9 @@ public class VisualElement extends Element implements Scriptable {
      *
      * @return visual props. map.
      */
-    public final VisualProps getProps() {
+    public final VisualProps getVisualProps() {
         var propsMap = new VisualProps();
-        for (String prop : propsMap.PROPS_MAP.keySet()) {
+        for (String prop : propsMap.getPropsTypes().keySet()) {
             switch (prop) {
                 //Special cases
                 default: //Not a special case
@@ -323,7 +325,7 @@ public class VisualElement extends Element implements Scriptable {
                     if (attrMaybe.isPresent()) {
                         var attr = attrMaybe.get();
                         var attrVal = attr.getValue();
-                        Class attrType = propsMap.PROPS_MAP.get(prop);
+                        Class attrType = propsMap.getPropsTypes().get(prop);
                         Object propVal;
                         //Cast to correct type
                         if (attrType == Double.class) {
@@ -341,6 +343,27 @@ public class VisualElement extends Element implements Scriptable {
             }
         }
         return propsMap;
+    }
+
+    /**
+     * Get all properties of an Element.
+     *
+     * @return Element's properties.
+     */
+    public HashMap<String, HashMap<String, Object>> getAllProps() {
+        HashMap<String, HashMap<String, Object>> propsMap = new HashMap<>();
+        propsMap.put("visual", getVisualProps());
+        return propsMap;
+    }
+
+    /**
+     * Set this object's properties. This default implementation will set Visual
+     * Props. Override, call super(...), then set further props for extensions.
+     *
+     * @param props Properties.
+     */
+    public void setProps(final HashMap<String, Object> props) {
+
     }
 
     /**

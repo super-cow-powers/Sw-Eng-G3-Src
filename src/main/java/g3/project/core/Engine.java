@@ -979,7 +979,7 @@ public final class Engine extends Threaded {
         } else if (el instanceof PlayableElement) {
             this.drawPlayableEl((PlayableElement) el);
         }
-        var propsMap = el.getProps();
+        var propsMap = el.getVisualProps();
         var id = el.getID();
         var maybeSize = el.getSize();
         var maybeLoc = el.getOrigin();
@@ -1040,6 +1040,18 @@ public final class Engine extends Threaded {
         }
         var elOpt = currentDoc.getElementByID(elID);
         elOpt.ifPresent(el -> el.setOrigin(newLoc));
+    }
+
+    /**
+     * Provide the Element's properties to the UI.
+     *
+     * @param elID Element ID.
+     */
+    public void provideProperties(final String elID) {
+        Optional<VisualElement> maybeEl = currentDoc.getElementByID(elID);
+        maybeEl.ifPresent(el -> {
+//            el.
+        });
     }
 
     /**

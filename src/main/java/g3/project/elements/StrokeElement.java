@@ -164,12 +164,12 @@ public class StrokeElement extends Element {
      * @return StrokeProps.
      */
     public final StrokeProps getProps() {
-        HashMap<String, Object> props = new HashMap<>();
-        for (String prop : StrokeProps.PROPS_MAP.keySet()) {
+        StrokeProps props = new StrokeProps();
+        for (String prop : props.getPropsTypes().keySet()) {
             var attr = this.getAttribute(prop);
             if (attr != null) {
                 var attrVal = attr.getValue();
-                Class attrType = StrokeProps.PROPS_MAP.get(prop);
+                Class attrType = props.getPropsTypes().get(prop);
                 Object propVal;
                 if (attrType == Double.class) {
                     propVal = Double.valueOf(attrVal);
@@ -183,8 +183,7 @@ public class StrokeElement extends Element {
                 props.put(prop, propVal);
             }
         }
-        var stroke = new StrokeProps(props);
-        return stroke;
+        return props;
     }
 
     /**
