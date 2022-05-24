@@ -55,6 +55,7 @@ public final class Scripting {
     public static final String MOUSE_ENTER_FN = "onMouseEnter";
     public static final String MOUSE_EXIT_FN = "onMouseExit";
     public static final String DRAG_FUNCTION = "onDrag";
+    public static final String LOAD_FUNCTION = "onLoad";
 
     /**
      * Factory/manager for all script engines.
@@ -226,7 +227,11 @@ public final class Scripting {
      * @param function Function to try and call.
      * @param args Arguments to function.
      */
-    public void invokeOnElement(final Scriptable element, final String function, final Object... args) {
+    public void invokeOnElement(final Scriptable element, final String function, final Object... args) throws ScriptException, IOException {
+        if (element.getEvalRequired()){
+            this.evalElement(element);
+            element.setEvalRequired(false);
+        }
         var scEng = getDefaultScriptEngine();
         scEng.setBindings(element.getScriptingBindings(), ScriptContext.ENGINE_SCOPE);
         try {

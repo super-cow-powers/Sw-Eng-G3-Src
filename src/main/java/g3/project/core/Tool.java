@@ -30,6 +30,8 @@ package g3.project.core;
 
 import g3.project.elements.ScriptElement;
 import g3.project.elements.Scriptable;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 import nu.xom.Builder;
 import nu.xom.Element;
@@ -116,6 +118,21 @@ public class Tool extends Element implements Scriptable {
 
     @Override
     public String getRealType() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void addScriptFile(Path path, String language) throws IOException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Boolean getEvalRequired() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void setEvalRequired(Boolean req) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

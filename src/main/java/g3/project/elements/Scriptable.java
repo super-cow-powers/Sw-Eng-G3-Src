@@ -29,6 +29,8 @@
 package g3.project.elements;
 
 import g3.project.core.RecursiveBindings;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -59,6 +61,13 @@ public interface Scriptable {
      * @return my (first) script element.
      */
     Optional<ScriptElement> getScriptEl();
+    
+    /**
+     * Attach a script file to this object.
+     * @param path Path to file.
+     * @param language Script language.
+     */
+    void addScriptFile(Path path, String language) throws IOException;
 
     /**
      * Return the type of the element.
@@ -66,5 +75,15 @@ public interface Scriptable {
      * @return Type-name
      */
     String getRealType();
+    /**
+     * Get if the element requires evaluating again.
+     * @return 
+     */
+    Boolean getEvalRequired();
+    /**
+     * Set if the element requires evaluating again.
+     * @param req Re-Evaluate is required?
+     */
+    void setEvalRequired(Boolean req);
 
 }

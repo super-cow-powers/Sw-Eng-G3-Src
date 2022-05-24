@@ -36,6 +36,14 @@ import g3.project.graphics.VisualProps;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public interface Visual {
-    public void setProps(final VisualProps visualProps);
+    /**
+     * Set item visual properties.
+     * @param visualProps Properties.
+     */
+    public void setVisualProps(final VisualProps visualProps);
+    /**
+     * Set the item's size.
+     * @param size Size to set.
+     */
     public void setSize(final SizeObj size);
 }

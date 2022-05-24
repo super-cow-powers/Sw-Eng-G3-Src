@@ -51,7 +51,9 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
@@ -107,6 +109,13 @@ public final class Engine extends Threaded {
      * Navigation history stack.
      */
     private final Stack<String> navHistory = new Stack<>();
+    /**
+     * Current line from console.
+     */
+    private volatile String consoleLine = new String();
+
+    private final AtomicBoolean consoleOnUserInput = new AtomicBoolean(false);
+    private CountDownLatch consoleLineReady;
 
     /**
      * Event queue from input sources.
@@ -133,11 +142,6 @@ public final class Engine extends Threaded {
      * Writer for the scripting engine output.
      */
     private final Writer scrWriter;
-
-    /**
-     * Reader for scripting engine input.
-     */
-    private final Reader scrReader;
 
     private final String startScreenFileName = "start_screen.spres";
     private final String emptyFileName = "empty.spres";
@@ -171,18 +175,6 @@ public final class Engine extends Threaded {
             public void close() throws IOException {
 
             }
-        };
-        scrReader = new Reader() {
-            @Override
-            public int read(char[] chars, int i, int i1) throws IOException {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-
-            @Override
-            public void close() throws IOException {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-
         };
     }
 
@@ -275,7 +267,7 @@ public final class Engine extends Threaded {
                     suspended.set(true);
                 }
 
-                while (suspended.get()) { // Suspend
+                while (suspended.get() && running.get()) { // Suspend
                     synchronized (this) {
                         wait();
                     }
@@ -341,18 +333,26 @@ public final class Engine extends Threaded {
     private void routeMouseEvent(final MouseEvent mev, final String elID) {
         final var evType = mev.getEventType();
         var elOpt = currentDoc.getElementByID(elID);
-        if (evType == MouseEvent.MOUSE_PRESSED || evType == MouseEvent.MOUSE_RELEASED || evType == MouseEvent.MOUSE_CLICKED) {
-            var down = (mev.getEventType() == MouseEvent.MOUSE_PRESSED); //Is the mouse pressed right now?
-            elOpt.ifPresent(el -> scriptingEngine.invokeOnElement(el, Scripting.CLICK_FN, mev.getButton(), mev.getX(), mev.getY(), down));
-        } else if (evType == MouseEvent.MOUSE_MOVED) {
-            elOpt.ifPresent(el -> scriptingEngine.invokeOnElement(el, Scripting.MOUSE_MOVED_FN, mev.getX(), mev.getY()));
-        } else if (evType == MouseEvent.MOUSE_ENTERED) {
-            elOpt.ifPresent(el -> scriptingEngine.invokeOnElement(el, Scripting.MOUSE_ENTER_FN, mev.getX(), mev.getY()));
-        } else if (evType == MouseEvent.MOUSE_EXITED) {
-            elOpt.ifPresent(el -> scriptingEngine.invokeOnElement(el, Scripting.MOUSE_EXIT_FN, mev.getX(), mev.getY()));
-        } else if (evType == MouseEvent.MOUSE_DRAGGED) {
-            elOpt.ifPresent(el -> scriptingEngine.invokeOnElement(el, Scripting.DRAG_FUNCTION, mev.getX(), mev.getY()));
-        }
+        elOpt.ifPresent(el -> {
+            try {
+                if (evType == MouseEvent.MOUSE_PRESSED || evType == MouseEvent.MOUSE_RELEASED || evType == MouseEvent.MOUSE_CLICKED) {
+                    var down = (mev.getEventType() == MouseEvent.MOUSE_PRESSED); //Is the mouse pressed right now?
+                    scriptingEngine.invokeOnElement(el, Scripting.CLICK_FN, mev.getButton(), mev.getX(), mev.getY(), down);
+                } else if (evType == MouseEvent.MOUSE_MOVED) {
+                    scriptingEngine.invokeOnElement(el, Scripting.MOUSE_MOVED_FN, mev.getX(), mev.getY());
+                } else if (evType == MouseEvent.MOUSE_ENTERED) {
+                    scriptingEngine.invokeOnElement(el, Scripting.MOUSE_ENTER_FN, mev.getX(), mev.getY());
+                } else if (evType == MouseEvent.MOUSE_EXITED) {
+                    scriptingEngine.invokeOnElement(el, Scripting.MOUSE_EXIT_FN, mev.getX(), mev.getY());
+                } else if (evType == MouseEvent.MOUSE_DRAGGED) {
+                    scriptingEngine.invokeOnElement(el, Scripting.DRAG_FUNCTION, mev.getX(), mev.getY());
+                }
+            } catch (ScriptException ex) {
+            } catch (IOException ex) {
+                System.err.println(ex);
+            }
+        });
+
     }
 
     /**
@@ -374,7 +374,14 @@ public final class Engine extends Threaded {
             System.out.println(kev);
             System.out.println(elID);
             final Boolean down = (evType == KeyEvent.KEY_PRESSED);
-            elOpt.ifPresent(el -> scriptingEngine.invokeOnElement(el, Scripting.KEY_PRESS_FN, keyName, kev.isControlDown(), kev.isAltDown(), kev.isMetaDown(), down));
+            elOpt.ifPresent(el -> {
+                try {
+                    scriptingEngine.invokeOnElement(el, Scripting.KEY_PRESS_FN, keyName, kev.isControlDown(), kev.isAltDown(), kev.isMetaDown(), down);
+                } catch (ScriptException ex) {
+                } catch (IOException ex) {
+                    System.err.println(ex);
+                }
+            });
         }
     }
 
@@ -550,15 +557,15 @@ public final class Engine extends Threaded {
                         });
             }
 
-            // Initialise first page
-            this.gotoPage(0, true);
             try {
-                //Init Document global scripts
-                scriptingEngine.evalElement(currentDoc);
+                //Init Document global scripts by running onLoad function.
+                scriptingEngine.invokeOnElement(currentDoc, Scripting.LOAD_FUNCTION);
             } catch (ScriptException | IOException ex) {
                 Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
             }
 
+            // Initialise first page
+            this.gotoPage(0, true);
         } else {
             putMessage("Malformed Doc - not Doc Element!", true);
             // Looks like doc is malformed
@@ -943,10 +950,10 @@ public final class Engine extends Threaded {
         }
         // Do whatever you're going to do with this node…
         redrawEl(el);
-        //If element is scriptable, evaluate it.
+        //If element is scriptable, evaluate it's load-function.
         if (el instanceof Scriptable) {
             try {
-                scriptingEngine.evalElement(el);
+                scriptingEngine.invokeOnElement(el, Scripting.LOAD_FUNCTION);
             } catch (ScriptException | IOException ex) {
                 Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1071,6 +1078,38 @@ public final class Engine extends Threaded {
         } else {
             Platform.runLater(() -> controller.showNonBlockingMessage(message));
         }
+    }
+
+    /**
+     * Receive line from the console.
+     *
+     * @param line Entered line.
+     */
+    public void consoleLineCallback(final String line) {
+        //Don't execute on this thread
+        if (Thread.currentThread() == myThread) {
+            return;
+        }
+
+        if (!consoleOnUserInput.get()) {
+            runFunction(() -> evalPyStr(line));
+        } else {
+            consoleLine = line;
+            consoleLineReady.countDown();
+        }
+    }
+
+    public String readConsoleLine() {
+        consoleLineReady = new CountDownLatch(1);
+        consoleOnUserInput.set(true);
+        Platform.runLater(() -> controller.showConsole());
+        try {
+            consoleLineReady.await();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        consoleOnUserInput.set(false);
+        return new String(consoleLine);
     }
 
     /**

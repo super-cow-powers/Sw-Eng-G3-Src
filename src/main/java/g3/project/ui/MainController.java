@@ -41,6 +41,7 @@ import g3.project.graphics.ExtPolygon;
 import g3.project.graphics.ExtShape;
 import g3.project.graphics.ExtShapeFactory;
 import g3.project.graphics.FontProps;
+import g3.project.graphics.Props;
 import g3.project.graphics.StrokeProps;
 import g3.project.graphics.StyledTextSeg;
 import g3.project.graphics.VisualProps;
@@ -51,6 +52,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -153,31 +155,34 @@ public final class MainController {
     //FXML bound objects
     @FXML
     private MenuBar menuBar;
-
+    
     @FXML
     private SplitPane splitPane;
-
+    
+    @FXML
+    private VBox propPane;
+    
     @FXML
     private FlowPane toolPane;
-
+    
     @FXML
     private HBox cardSelBox;
-
+    
     @FXML
     private Label messageLabel;
-
+    
     @FXML
     private Pane pagePane;
-
+    
     @FXML
     private ScrollPane cardSelPane;
-
+    
     @FXML
     private VBox pageVBox;
-
+    
     @FXML
     private MenuItem saveMenuItem;
-
+    
     @FXML
     private MenuItem saveAsMenuItem;
 //CHECKSTYLE:ON
@@ -325,7 +330,7 @@ public final class MainController {
                 new FileChooser.ExtensionFilter("SuperPres", "*.spres"),
                 new FileChooser.ExtensionFilter("ZIP", "*.zip")
         );
-
+        
         var newFile = fileChooser.showOpenDialog(pagePane.getScene().getWindow());
         if (newFile != null) {
             engine.offerNewDoc(newFile);
@@ -345,7 +350,7 @@ public final class MainController {
                 new FileChooser.ExtensionFilter("SuperPres", "*.spres"),
                 new FileChooser.ExtensionFilter("ZIP", "*.zip")
         );
-
+        
         var newFile = fileChooser.showSaveDialog(pagePane.getScene().getWindow());
         if (newFile != null) {
             if (!newFile.getName().endsWith(".spress")) {
@@ -376,13 +381,13 @@ public final class MainController {
      */
     public void updateShape(final String id, final String shapeType, final StrokeProps stroke,
             final ArrayList<StyledTextSeg> text, final ArrayList<Double> segments) {
-
+        
         final var drawnShape = drawnElements.get(id);
 
 //Get the shape. Either a new or existing one.
         Optional<ExtShape> maybeShape = (drawnShape == null)
                 ? extShapeFactory.makeShape(ExtShapeFactory.ShapeType.valueOf(shapeType.toLowerCase())) : Optional.of((ExtShape) drawnShape);
-
+        
         maybeShape.ifPresent(s -> {
             //Set-up the shape.
             drawnElements.put(id, s);
@@ -483,7 +488,7 @@ public final class MainController {
     public void setElVisualProps(final String id, final VisualProps props) {
         var el = drawnElements.get(id);
         if (el instanceof Visual) {
-            ((Visual) el).setProps(props);
+            ((Visual) el).setVisualProps(props);
         }
     }
 
@@ -568,7 +573,7 @@ public final class MainController {
         //Some elements require cleanup - ffs.
         drawnElements.forEach((elid, node) -> {
             if (node instanceof Player) {
-                ((Player) node).free();
+                playerFact.free((Player) node);
             }
             drawnElements.remove(elid);
         });
@@ -655,7 +660,7 @@ public final class MainController {
                 loadPath = loadPath.replaceFirst("~", System.getProperty("user.home"));
             }
             newplayer.load(loadPath, seekOffset);
-
+            
             pagePane.getChildren().add(newplayer);
             player = newplayer;
         }
@@ -714,7 +719,7 @@ public final class MainController {
             /* In Cache */
             var im = loadedImages.get(path);
             drawImage(id, im);
-
+            
         } else {
             /* Not cached */
             drawImage(id, loadingGif); //Show loading GIF
@@ -791,6 +796,10 @@ public final class MainController {
         console.show();
         console.putMessage(message);
     }
+    
+    public void showProperties(final HashMap<String, Props> props) {
+        
+    }
 
     /**
      * Clear non-blocking message area.
@@ -809,12 +818,12 @@ public final class MainController {
         ft.setToValue(0d);
         ft.play();
     }
-
+    
     @FXML
     public void handleTogEdit() {
         toggleEditable(!amEditable.get());
     }
-
+    
     public void toggleEditable(Boolean editable) {
         this.amEditable.set(editable);
         if (!editable) {
@@ -831,13 +840,13 @@ public final class MainController {
         var loadingGifStr = MainController.class
                 .getResourceAsStream("loading.gif");
         loadingGif = new Image(loadingGifStr);
-
+        
         var notFoundImStr = MainController.class
                 .getResourceAsStream("not-found.png");
         notFoundIm = new Image(notFoundImStr);
-
+        
         engine = new Engine(this);
-
+        
         pagePane.setViewOrder(0);
         pagePane.getChildren()
                 .addListener((Change<? extends Node> c) -> {
@@ -874,7 +883,7 @@ public final class MainController {
                                     handleEvent(e);
                                     e.consume();
                                 });
-
+                                
                                 addedNode.addEventHandler(KeyEvent.ANY, (e) -> {
                                     handleEvent(e);
                                     e.consume();
@@ -896,14 +905,14 @@ public final class MainController {
             pagePane.addEventHandler(MouseEvent.ANY, handleInput);
             pagePane.addEventHandler(KeyEvent.ANY, handleInput);
             pagePane.setFocusTraversable(true);
-            console = new Console((Stage) pagePane.getScene().getWindow(), (s -> engine.evalPyStr(s)));
+            console = new Console((Stage) pagePane.getScene().getWindow(), (s -> engine.consoleLineCallback(s)));
             pagePane.addEventFilter(KeyEvent.ANY, event -> {
                 if (event.getCode() == KeyCode.DOWN || event.getCode() == KeyCode.UP || event.getCode() == KeyCode.LEFT || event.getCode() == KeyCode.RIGHT) {
                     handleEvent(event);
                     event.consume();
                 }
             });
-
+            
             engine.start();
         });
 
@@ -918,7 +927,7 @@ public final class MainController {
             handleEvent(ev);
         });
         cardSelPane.setFocusTraversable(false);
-
+        
         var ds = new DropShadow();
         pagePane.setEffect(ds);
     }

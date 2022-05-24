@@ -313,15 +313,15 @@ public final class Io {
     }
 
     /**
-     * Check if given URI will be returned from the ZIP archive.
+     * Check if given Path should be in the ZIP archive.
      *
-     * @param uri URI to check.
+     * @param path Path to check.
      * @return True or False.
      */
-    public static Boolean isUriInternal(final String uri) {
-        if (uri.startsWith("http")) {
+    public static Boolean isUriInternal(final String path) {
+        if (path.startsWith("http")) {
             return false;
-        } else if (uri.startsWith("file:")) {
+        } else if (path.startsWith("file:")) {
             return false;
         } else {
             return true;

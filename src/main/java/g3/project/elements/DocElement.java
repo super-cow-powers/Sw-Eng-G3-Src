@@ -32,10 +32,15 @@ import g3.project.core.Engine;
 import g3.project.core.RecursiveBindings;
 import g3.project.core.Scripting;
 import g3.project.graphics.SizeObj;
+import g3.project.xmlIO.Io;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import nu.xom.*;
 
 /**
@@ -62,6 +67,11 @@ public final class DocElement extends Element implements Scriptable {
      */
     private Consumer<VisualElement> updateCallback = (f) -> {
     };
+    
+    /**
+     * Does the script need evaluating again?
+     */
+    private Boolean evalRequired = true;
 
     /**
      * Script bindings for the element.
@@ -311,5 +321,37 @@ public final class DocElement extends Element implements Scriptable {
     @Override
     public final String getRealType() {
         return this.getClass().getName();
+    }
+
+    /**
+     * Attach a new script to the element.
+     *
+     * @param path Internal path to file.
+     * @param language Script language.
+     */
+    @Override
+    public void addScriptFile(final Path path, final String language) throws IOException {
+        if (!path.getFileSystem().provider().getScheme().contains("jar") && !path.getFileSystem().provider().getScheme().contains("zip")) {
+            throw new IOException("External files not supported. Add the file to the project.");
+        }
+        ScriptElement scEl = new ScriptElement("ext:script", VisualElement.EXT_URI, path.toString(), language);
+        var chEls = this.getChildElements();
+        //Remove other scripts.
+        for (var ch : chEls) {
+            if (ch instanceof ScriptElement) {
+                this.removeChild(ch);
+            }
+        }
+        this.appendChild(scEl);
+    }
+
+    @Override
+    public Boolean getEvalRequired() {
+        return evalRequired;
+    }
+
+    @Override
+    public void setEvalRequired(Boolean req) {
+        evalRequired = req;
     }
 }

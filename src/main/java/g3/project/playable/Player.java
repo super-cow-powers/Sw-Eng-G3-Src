@@ -121,16 +121,19 @@ public final class Player extends Group implements Visual {
      */
     private Path tempFilePath = null;
 
+    private MediaPlayerEventCallback medPlEvtCB = new MediaPlayerEventCallback();
+    private MediaEventCallback medEvtCB = new MediaEventCallback();
+
     /**
      * Constructor.Make a new player.
      *
      * @param width Initial target width.
      * @param height Initial target height.
      */
-    protected Player(final double width, final double height) {
+    protected Player(final double width, final double height, final MediaPlayerFactory fact) {
         targetWidth.set(width);
         targetHeight.set(height);
-        mediaPlayerFactory = new MediaPlayerFactory();
+        mediaPlayerFactory = fact;
         embeddedMediaPlayer = mediaPlayerFactory.mediaPlayers().newEmbeddedMediaPlayer();
         embeddedMediaPlayer.videoSurface().set(new VideoSurface());
 
@@ -210,8 +213,8 @@ public final class Player extends Group implements Visual {
      */
     public void load(final String mrl, final Double newoffset) {
         embeddedMediaPlayer.media().play(mrl);
-        embeddedMediaPlayer.media().events().addMediaEventListener(new MediaEventCallback());
-        embeddedMediaPlayer.events().addMediaPlayerEventListener(new MediaPlayerEventCallback());
+        embeddedMediaPlayer.media().events().addMediaEventListener(medEvtCB);
+        embeddedMediaPlayer.events().addMediaPlayerEventListener(medPlEvtCB);
         this.offset = newoffset;
         pause();
         controlSlider.setValue(newoffset);
@@ -274,7 +277,7 @@ public final class Player extends Group implements Visual {
      * @param visualProps Properties.
      */
     @Override
-    public void setProps(final VisualProps props) {
+    public void setVisualProps(final VisualProps props) {
         var shad = props.makeShadow();
         shad.ifPresent(sh -> this.setEffect(sh));
         var vis = props.getProp(VisualProps.VISIBLE);
@@ -385,8 +388,14 @@ public final class Player extends Group implements Visual {
      * Release native resources.
      */
     public void free() {
-        embeddedMediaPlayer.controls().stop();
+        embeddedMediaPlayer.events().removeMediaEventListener(medEvtCB);
+        embeddedMediaPlayer.events().removeMediaPlayerEventListener(medPlEvtCB);
         embeddedMediaPlayer.release();
+        try {
+            Thread.sleep(1L);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Player.class.getName()).log(Level.SEVERE, null, ex);
+        }
         if (tempFilePath != null) {
             //We made a temp file, so should now remove it.
             try {
@@ -452,7 +461,7 @@ public final class Player extends Group implements Visual {
         public void mediaDurationChanged(final Media media, final long l) {
             controlSlider.setMax((double) l);
 
-            embeddedMediaPlayer.controls().setTime((long)(offset*1000));
+            embeddedMediaPlayer.controls().setTime((long) (offset * 1000));
         }
 
         /**
