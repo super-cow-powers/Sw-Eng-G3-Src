@@ -375,7 +375,7 @@ public final class Io {
      */
     public String pathToUriString(final String path) {
         String loc = null;
-        if (path.contains(":/") || path.startsWith("/")) {
+        if (path.contains(":/") || path.startsWith("/") || path.contains(":\\")) {
             //Must be an absolute Path
             loc = path;
         } else if (path.startsWith(".")) {
@@ -385,7 +385,8 @@ public final class Io {
         }
         if (!path.startsWith("http")) {
             //Not a URL? Must be a local file
-            loc = "file:".concat(loc);
+            var p = Paths.get(path);
+            loc = p.toUri().toString();
         }
         return loc;
     }
@@ -393,14 +394,16 @@ public final class Io {
     /**
      * Returns a maybe URI from an input string containing an URI.
      *
-     * @param UrString URI String.
+     * @param UrString URI/Path String.
      * @return Maybe URI.
      */
     public Optional<URI> maybeURI(final String UrString) {
         URI uri = null;
+        
         try {
             uri = new URI(UrString);
         } catch (URISyntaxException ex) {
+            System.err.println(ex);
         }
 
         return Optional.ofNullable(uri);
