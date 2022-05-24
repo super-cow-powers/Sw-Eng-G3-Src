@@ -54,6 +54,7 @@ public final class Scripting {
     public static final String MOUSE_MOVED_FN = "onMouseMoved";
     public static final String MOUSE_ENTER_FN = "onMouseEnter";
     public static final String MOUSE_EXIT_FN = "onMouseExit";
+    public static final String DRAG_FUNCTION = "onDrag";
 
     /**
      * Factory/manager for all script engines.

@@ -39,7 +39,7 @@ import javafx.scene.effect.DropShadow;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class VisualProps extends HashMap<String, Object> {
+public class VisualProps extends HashMap<String, Object> implements Props {
 
     /*
 <xsd:attribute name="shade_colour" type="base:colourType" use="optional"/>
@@ -78,14 +78,14 @@ public class VisualProps extends HashMap<String, Object> {
     /**
      * Contains known props and their classes.
      */
-    public static final Map<String, Class> PROPS_MAP = Map.ofEntries(entry(SHADE_COL, SHADE_COL_TYPE),
+    protected static final Map<String, Class> PROPS_MAP = Map.ofEntries(entry(SHADE_COL, SHADE_COL_TYPE),
             entry(L_SHADE_SIZE, SHADE_SIZE_TYPE), entry(R_SHADE_SIZE, SHADE_SIZE_TYPE), entry(T_SHADE_SIZE, SHADE_SIZE_TYPE), entry(B_SHADE_SIZE, SHADE_SIZE_TYPE),
             entry(SHADE_SIZE, SHADE_SIZE_TYPE), entry(ALPHA, ALPHA_TYPE), entry(FILL, FILL_TYPE), entry(DISP_SECS, DISP_SECS_TYPE),
             entry(DELAY_SECS, DELAY_SECS_TYPE), entry(VISIBLE, VISIBLE_TYPE), entry(ID, ID_TYPE));
     /**
      * Contains default values for known props.
      */
-    public static final Map<String, Object> PROP_DEFAULTS = Map.ofEntries(entry(SHADE_COL, Color.BLACK),
+    protected static final Map<String, Object> PROP_DEFAULTS = Map.ofEntries(entry(SHADE_COL, Color.BLACK),
             entry(L_SHADE_SIZE, 0d), entry(R_SHADE_SIZE, 0d), entry(T_SHADE_SIZE, 0d), entry(B_SHADE_SIZE, 0d), entry(SHADE_SIZE, 0d),
             entry(ALPHA, 1d), entry(FILL, Color.TRANSPARENT), entry(DISP_SECS, -1d), entry(DELAY_SECS, 0d), entry(VISIBLE, true),
             entry(ID, ""));
@@ -119,6 +119,7 @@ public class VisualProps extends HashMap<String, Object> {
      * @param prop Property to get.
      * @return Maybe property. Empty if invalid.
      */
+    @Override
     public final Optional<Object> getProp(final String prop) {
         var val = super.get(prop);
         if (val == null) { //Not Found. Set default.
@@ -177,6 +178,21 @@ public class VisualProps extends HashMap<String, Object> {
             ds.setRadius(gen);
         }
         return Optional.of(ds);
+    }
+
+    @Override
+    public final Map<String, Object> getDefaultProps() {
+        return PROP_DEFAULTS;
+    }
+
+    @Override
+    public final Map<String, Class> getPropsTypes() {
+        return PROPS_MAP;
+    }
+
+    @Override
+    public final Map<String, String> getPropsNames() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

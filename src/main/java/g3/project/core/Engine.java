@@ -101,10 +101,6 @@ public final class Engine extends Threaded {
      */
     private DocElement currentDoc;
     /**
-     * Pages in current doc.
-     */
-    private final ArrayList<PageElement> currentPages = new ArrayList<>();
-    /**
      * ID of currently open page/card.
      */
     private String currentPageID = "";
@@ -137,7 +133,7 @@ public final class Engine extends Threaded {
      * Reader for scripting engine input.
      */
     private final Reader scrReader;
-    
+
     private final String startScreenFileName = "start_screen.spres";
     private final String emptyFileName = "empty.spres";
 
@@ -155,20 +151,20 @@ public final class Engine extends Threaded {
                 var newChars = Arrays.copyOfRange(chars, i1, i1);
                 putMessage(newChars.toString() + "\n", true);
             }
-            
+
             @Override
             public void write(final String str) {
                 putMessage(str, true);
             }
-            
+
             @Override
             public void flush() throws IOException {
                 putMessage("\n", Boolean.TRUE);
             }
-            
+
             @Override
             public void close() throws IOException {
-                
+
             }
         };
         scrReader = new Reader() {
@@ -176,12 +172,12 @@ public final class Engine extends Threaded {
             public int read(char[] chars, int i, int i1) throws IOException {
                 throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
             }
-            
+
             @Override
             public void close() throws IOException {
                 throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
             }
-            
+
         };
     }
 
@@ -213,11 +209,11 @@ public final class Engine extends Threaded {
     public Io getDocIO() {
         return docIO;
     }
-    
+
     @Override
     @SuppressWarnings("empty-statement")
     public void run() {
-        
+
         while (!(running.get())) {
         }
         try {
@@ -225,7 +221,7 @@ public final class Engine extends Threaded {
             netComms.start();
             //Init Scripting Engine
             scriptingEngine = new Scripting("python", this, scrWriter);
-            scriptingEngine.setGlobal("pages", currentPages);
+            scriptingEngine.setGlobal("document", currentDoc);
             //Show Start Screen
             showStartScreen();
             // Load in the tools
@@ -268,7 +264,7 @@ public final class Engine extends Threaded {
                 } else { //Nothing to do. Suspend
                     suspended.set(true);
                 }
-                
+
                 while (suspended.get()) { // Suspend
                     synchronized (this) {
                         wait();
@@ -311,7 +307,7 @@ public final class Engine extends Threaded {
     private void routeElementEvent(final Event ev) {
         final var evSrc = (javafx.scene.Node) ev.getSource();
         var elID = evSrc.getId();
-        
+
         if (elID != null) { //Element has an ID
             var elOpt = currentDoc.getElementByID(elID);
             if (ev instanceof MouseEvent) {
@@ -346,6 +342,8 @@ public final class Engine extends Threaded {
             elOpt.ifPresent(el -> scriptingEngine.invokeOnElement(el, Scripting.MOUSE_ENTER_FN, mev.getX(), mev.getY()));
         } else if (evType == MouseEvent.MOUSE_EXITED) {
             elOpt.ifPresent(el -> scriptingEngine.invokeOnElement(el, Scripting.MOUSE_EXIT_FN, mev.getX(), mev.getY()));
+        } else if (evType == MouseEvent.MOUSE_DRAGGED) {
+            elOpt.ifPresent(el -> scriptingEngine.invokeOnElement(el, Scripting.DRAG_FUNCTION, mev.getX(), mev.getY()));
         }
     }
 
@@ -437,7 +435,7 @@ public final class Engine extends Threaded {
         } else { //Must be an internal ref.
             var targetEl = currentDoc.getElementByID(hrefSeg.getRefTarget());
         }
-        
+
     }
 
     /**
@@ -515,7 +513,7 @@ public final class Engine extends Threaded {
                     controller.setViewScale(1d);
                     controller.setCursorType(javafx.scene.Cursor.DEFAULT);
                 });
-        
+
         var child = doc.getRootElement();
         if (child instanceof DocElement) { //Make sure that doc is sane.
             currentDoc = (DocElement) child;
@@ -530,38 +528,29 @@ public final class Engine extends Threaded {
             //When the doc changes, redraw the element that has changed.
             currentDoc.setChangeCallback(
                     el -> this.redrawEl(el));
-            //Get all pages/cards
-            currentDoc
-                    .getPages()
-                    .ifPresent(
-                            f -> {
-                                currentPages.clear();
-                                currentPages.addAll(f);
-                            });
             //Add buttons for each page/card
-            var it = currentPages.listIterator();
+            var it = currentDoc.getPages().listIterator();
             while (it.hasNext()) {
                 var ind = it.nextIndex();
                 var page = it.next();
                 Platform.runLater(
                         () -> {
                             var tiopt = page.getTitle();
-                            var id = page.getID();
-                            var title = tiopt.isPresent() ? tiopt.get() : id;
+                            String id = page.getID();
+                            String title = tiopt.isPresent() ? tiopt.get() : id;
                             controller.addCardButton(title, id, ind);
                         });
             }
 
-            // Initialise ID for first page
-            currentPageID = currentPages.get(0).getID();
-            this.gotoPage(currentPageID, true);
+            // Initialise first page
+            this.gotoPage(0, true);
             try {
                 //Init Document global scripts
                 scriptingEngine.evalElement(currentDoc);
             } catch (ScriptException | IOException ex) {
                 Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
             }
-            
+
         } else {
             putMessage("Malformed Doc - not Doc Element!", true);
             // Looks like doc is malformed
@@ -584,7 +573,7 @@ public final class Engine extends Threaded {
         }
         var sourceOpt = img.getSourceLoc();
         var id = img.getID();
-        
+
         var source = (sourceOpt.isPresent()) ? sourceOpt.get() : "";
         Platform.runLater(() -> controller.drawImage(id, source, false));
     }
@@ -632,20 +621,20 @@ public final class Engine extends Threaded {
         var shapeType = shape.getType();
         final var strokeOpt = shape.getStroke();
         final var id = shape.getID();
-        
+
         var textOpt = shape.getText();
         if (textOpt.isPresent()) {
             textSegs = textOpt.get();
         } else {
             textSegs = new ArrayList<>();
         }
-        
+
         if (strokeOpt.isPresent()) {
             stroke = strokeOpt.get();
         } else {
             stroke = new StrokeProps();
         }
-        
+
         Platform.runLater(
                 () -> {
                     controller.updateShape(
@@ -672,7 +661,7 @@ public final class Engine extends Threaded {
                             new StrokeProps(),
                             new ArrayList<>(),
                             new ArrayList<>());
-                    
+
                 });
     }
 
@@ -713,11 +702,11 @@ public final class Engine extends Threaded {
         props.put(FontProps.US, underscore);
         props.put(FontProps.IT, italic);
         props.put(FontProps.BOLD, bold);
-        
+
         var segArr = new ArrayList<StyledTextSeg>();
         var seg = new StyledTextSeg(props, text);
         segArr.add(seg);
-        
+
         Platform.runLater(() -> {
             controller.updateShapeText(shapeID, segArr);
         });
@@ -834,7 +823,7 @@ public final class Engine extends Threaded {
             return;
         }
         var currentCard = getPageIndex(currentPageID);
-        if (currentCard < currentPages.size() - 1) {
+        if (currentCard < currentDoc.getPages().size() - 1) {
             currentCard++;
         }
         this.gotoPage(currentCard, true);
@@ -862,8 +851,8 @@ public final class Engine extends Threaded {
             runFunction(() -> gotoPage(pageNum, storeHistory));
             return;
         }
-        var pages = currentDoc.getPages();
-        pages.ifPresent(f -> gotoPage(f.get(pageNum), storeHistory));
+        Optional<PageElement> page = currentDoc.getPage(pageNum);
+        page.ifPresent(f -> gotoPage(f, storeHistory));
     }
 
     /**
@@ -875,16 +864,10 @@ public final class Engine extends Threaded {
     public void gotoPage(final String pageID, final Boolean storeHistory) {
         if (Thread.currentThread() != myThread) {
             runFunction(() -> gotoPage(pageID, storeHistory));
-            return;
+            Optional<PageElement> page = currentDoc.getPage(pageID);
+            page.ifPresent(f -> gotoPage(f, storeHistory));
         }
-        var it = currentPages.iterator();
-        while (it.hasNext()) {
-            var page = it.next();
-            var itID = page.getID();
-            if (itID.equals(pageID)) {
-                gotoPage(page, storeHistory);
-            }
-        }
+
     }
 
     /**
@@ -927,7 +910,7 @@ public final class Engine extends Threaded {
      * @return Index, or -1 on failure
      */
     private Integer getPageIndex(final String pageID) {
-        var it = currentPages.iterator();
+        var it = currentDoc.getPages().iterator();
         var i = 0;
         while (it.hasNext()) {
             var page = it.next();
@@ -988,11 +971,11 @@ public final class Engine extends Threaded {
         } else if (el instanceof PlayableElement) {
             this.drawPlayableEl((PlayableElement) el);
         }
-        var propsMap = el.getProps();
+        var propsMap = el.getVisualProps();
         var id = el.getID();
         var maybeSize = el.getSize();
         var maybeLoc = el.getOrigin();
-        
+
         Platform.runLater(() -> {
             controller.setElVisualProps(id, propsMap);
             maybeSize.ifPresent(s -> controller.resizeElement(id, s));
@@ -1033,6 +1016,34 @@ public final class Engine extends Threaded {
         this.putMessage("Tools Loaded", false);
         return root;*/
         return Optional.empty();
+    }
+
+    /**
+     * The UI has relocated an element. It upsets me that I can't just easily
+     * use Events, but hey ho.
+     *
+     * @param elID Element ID.
+     * @param newLoc New location.
+     */
+    public void elementRelocated(final String elID, final LocObj newLoc) {
+        if (Thread.currentThread() != myThread) {
+            runFunction(() -> elementRelocated(elID, newLoc));
+            return;
+        }
+        var elOpt = currentDoc.getElementByID(elID);
+        elOpt.ifPresent(el -> el.setOrigin(newLoc));
+    }
+
+    /**
+     * Provide the Element's properties to the UI.
+     *
+     * @param elID Element ID.
+     */
+    public void provideProperties(final String elID) {
+        Optional<VisualElement> maybeEl = currentDoc.getElementByID(elID);
+        maybeEl.ifPresent(el -> {
+//            el.
+        });
     }
 
     /**

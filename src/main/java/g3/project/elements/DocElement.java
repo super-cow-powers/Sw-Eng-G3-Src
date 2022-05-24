@@ -31,6 +31,7 @@ package g3.project.elements;
 import g3.project.core.Engine;
 import g3.project.core.RecursiveBindings;
 import g3.project.core.Scripting;
+import g3.project.graphics.SizeObj;
 import java.util.Optional;
 import java.util.ArrayList;
 import java.util.Random;
@@ -43,13 +44,19 @@ import nu.xom.*;
  */
 public final class DocElement extends Element implements Scriptable {
 
+    /**
+     * My script bindings.
+     */
     private RecursiveBindings topLevelBindings = null;
-    
+    /**
+     * My currently open page.
+     */
+    private PageElement currentPage = null;
     /**
      * Doc validation errors.
      */
     private ArrayList<String> validationErrors = new ArrayList<>();
-    
+
     /**
      * Change callback.
      */
@@ -83,7 +90,6 @@ public final class DocElement extends Element implements Scriptable {
     }
 
 //CHECKSTYLE:ON
-
     /**
      * Set change callback.
      *
@@ -104,33 +110,106 @@ public final class DocElement extends Element implements Scriptable {
 
     /**
      * Set doc validation errors.
+     *
      * @param errors validation errors.
      */
-    public void setValidationErrors(final ArrayList<String> errors){
+    public void setValidationErrors(final ArrayList<String> errors) {
         validationErrors = errors;
     }
-    
-    public ArrayList<String> getValidationErrors(){
+
+    /**
+     * Get any validation errors in the document.
+     *
+     * @return Array of validation errors.
+     */
+    public ArrayList<String> getValidationErrors() {
         return validationErrors;
     }
-    
+
     /**
      *
      * @return ArrayList containing the Doc's pages
      */
-    public Optional<ArrayList<PageElement>> getPages() {
-        ArrayList<PageElement> pages = null;
+    public ArrayList<PageElement> getPages() {
+        ArrayList<PageElement> pages = new ArrayList<>();
         for (int i = 0; i < this.getChildCount(); i++) {
             var node = this.getChild(i);
             if (node.getClass() == PageElement.class) {
-                if (pages == null) {
-                    pages = new ArrayList<PageElement>();
-                }
-
                 pages.add((PageElement) node);
             }
         }
-        return Optional.ofNullable(pages);
+        return pages;
+    }
+
+    /**
+     * Maybe get target page.
+     *
+     * @param pageID Target page ID.
+     * @return Maybe page.
+     */
+    public Optional<PageElement> getPage(final String pageID) {
+        var pages = this.getPages();
+        var it = pages.iterator();
+        while (it.hasNext()) {
+            var page = it.next();
+            var pgID = page.getID();
+            if (pgID.equals(pageID)) {
+                currentPage = page;
+                return Optional.of(page);
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Maybe get a target page.
+     *
+     * @param pageNum Target page number.
+     * @return Maybe page.
+     */
+    public Optional<PageElement> getPage(final Integer pageNum) {
+        var pages = this.getPages();
+        try {
+            PageElement page = pages.get(pageNum);
+            currentPage = page;
+            return Optional.of(page);
+        } catch (IndexOutOfBoundsException ex) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Add a new page.
+     *
+     * @param pageNum Page number.
+     * @param el Page.
+     */
+    public void addPage(final Integer pageNum, final PageElement el) {
+        for (int i = 0; i < this.getChildCount(); i++) {
+            var node = this.getChild(i);
+            if (node instanceof PageElement) {
+                this.insertChild(el, i + pageNum);
+            }
+        }
+    }
+
+    /**
+     * Add a page with the specified requirements.
+     *
+     * @param pageNum Page Number.
+     * @param pageTitle Page Title/Friendly Name.
+     * @param xSize X Size in PX.
+     * @param ySize Y Size in PX.
+     * @return New Page's ID.
+     */
+    public String addPage(final Integer pageNum, final String pageTitle, final Double xSize, final Double ySize) {
+        String id = getNewUniqueID("page");
+        PageElement el = new PageElement("base:page", VisualElement.BASE_URI);
+        el.setID(id);
+        addPage(pageNum, el);
+        el.setTitle(pageTitle);
+        el.setSize(new SizeObj(xSize, ySize, 0d));
+        return id;
     }
 
     /**
@@ -202,12 +281,13 @@ public final class DocElement extends Element implements Scriptable {
     public Optional<RecursiveBindings> getParentElementScriptingBindings() {
         return Optional.of(topLevelBindings);
     }
-    
+
     /**
      * Set the global/top-level bindings for scripting.
+     *
      * @param bin Bindings.
      */
-    public void setTopLevelBindings(final RecursiveBindings bin){
+    public void setTopLevelBindings(final RecursiveBindings bin) {
         topLevelBindings = bin;
     }
 

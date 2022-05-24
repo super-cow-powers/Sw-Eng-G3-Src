@@ -28,6 +28,8 @@
  */
 package g3.project.graphics;
 
+import static g3.project.graphics.VisualProps.PROPS_MAP;
+import static g3.project.graphics.VisualProps.PROP_DEFAULTS;
 import java.util.HashMap;
 import javafx.scene.paint.Color;
 import java.lang.reflect.Type;
@@ -40,7 +42,7 @@ import java.util.stream.Collectors;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public final class StrokeProps extends HashMap<String, Object> {
+public final class StrokeProps extends HashMap<String, Object> implements Props {
 
     /*
 <xsd:attribute name="width" type="xsd:double" />
@@ -68,13 +70,19 @@ public final class StrokeProps extends HashMap<String, Object> {
     /**
      * Contains known props and their classes.
      */
-    public static final Map<String, Class> PROPS_MAP = Map.ofEntries(entry(WIDTH, WIDTH_TYPE),
+    protected static final Map<String, Class> PROPS_MAP = Map.ofEntries(entry(WIDTH, WIDTH_TYPE),
             entry(LINE_STYLE, LINE_STYLE_TYPE), entry(COLOUR, COLOUR_TYPE), entry(LINE_CAP, LINE_CAP_TYPE));
     /**
      * Contains default values for known props.
      */
-    public static final Map<String, Object> PROP_DEFAULTS = Map.ofEntries(entry(WIDTH, 0d),
+    protected static final Map<String, Object> PROP_DEFAULTS = Map.ofEntries(entry(WIDTH, 0d),
             entry(LINE_STYLE, SOLID_STYLE), entry(COLOUR, Color.TRANSPARENT), entry(LINE_CAP, "butt"));
+
+    /**
+     * Property friendly names.
+     */
+    protected static final Map<String, String> PROPS_NAMES = Map.ofEntries(entry(WIDTH, "Width"),
+            entry(LINE_STYLE, "Stroke Style"), entry(COLOUR, "Stroke Colour"), entry(LINE_CAP, "Stroke Cap"));
     /**
      * Contains CSS strings for known props.
      */
@@ -110,6 +118,7 @@ public final class StrokeProps extends HashMap<String, Object> {
      * @param prop Property to get.
      * @return Maybe property. Empty if invalid.
      */
+    @Override
     public Optional<Object> getProp(final String prop) {
         var val = super.get(prop);
         if (val == null) { //Not Found. Set default.
@@ -155,6 +164,21 @@ public final class StrokeProps extends HashMap<String, Object> {
         }).collect(Collectors.joining(" "));
         System.out.println(props);
         return props;
+    }
+
+    @Override
+    public Map<String, Object> getDefaultProps() {
+        return PROP_DEFAULTS;
+    }
+
+    @Override
+    public Map<String, Class> getPropsTypes() {
+        return PROPS_MAP;
+    }
+
+    @Override
+    public Map<String, String> getPropsNames() {
+        return PROPS_NAMES;
     }
 
 }
