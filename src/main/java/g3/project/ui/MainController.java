@@ -79,7 +79,6 @@ import javafx.scene.transform.Scale;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import jfxtras.styles.jmetro.*;
 
 /**
  *
