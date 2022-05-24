@@ -82,20 +82,20 @@ public final class CommSys extends Threaded {
     /**
      * Client to Server transfer queue.
      */
-    private final BlockingQueue<Event> txEventQueue
-            = new LinkedBlockingQueue<Event>();
+    private final BlockingQueue<SessionPacket> txEventQueue
+            = new LinkedBlockingQueue<>();
 
     /**
      * Client to Server buffer queue.
      */
-    private final BlockingQueue<Event> txBufferQueue
-            = new LinkedBlockingQueue<Event>();
+    private final BlockingQueue<SessionPacket> txBufferQueue
+            = new LinkedBlockingQueue<>();
 
     /**
      * Server to Client buffer queue.
      */
-    private final BlockingQueue<Event> rxBufferQueue
-            = new LinkedBlockingQueue<Event>(); 
+    private final BlockingQueue<SessionPacket> rxBufferQueue
+            = new LinkedBlockingQueue<>(); 
 
     /**
      * Ref to the Engine
@@ -127,9 +127,9 @@ public final class CommSys extends Threaded {
      *
      * @param event Event to send.
      */
-    public void feedEvent(final Event event) {
+    public void feedEvent(final String currentPageID,final Event event) {
         if (isPresenting.get()) {
-            txEventQueue.offer(event);
+            txEventQueue.offer(new SessionPacket(currentPageID, event));
             unsuspend();
         }
     }
@@ -268,9 +268,9 @@ public final class CommSys extends Threaded {
      * @param event Event to send.
      * @throws InterruptedException
      */
-    private void transmitEvent(final Event event) throws InterruptedException {
+    private void transmitEvent(final SessionPacket packet) throws InterruptedException {
         try {
-            txBufferQueue.offer(event);
+            txBufferQueue.offer(packet);
             if (!isPaused.get()) {
                 while(!txBufferQueue.isEmpty()) {
                     server.broadcastObject(txBufferQueue.take());
@@ -312,10 +312,10 @@ public final class CommSys extends Threaded {
      */
     private void clientCheck() throws InterruptedException, SocketTimeoutException{
         try {
-            var objectIn = client.readStream();
-            objectIn.ifPresent(obj -> {
-                if (!obj.equals("Server: closing server")) {
-                    rxBufferQueue.offer((Event) obj);
+            var packetIn = client.readStream();
+            packetIn.ifPresent(pkt -> {
+                if (!pkt.equals("Server: closing server")) {
+                    rxBufferQueue.offer((SessionPacket) pkt);
                 } else {
                     stopViewing();
                 }
@@ -323,8 +323,8 @@ public final class CommSys extends Threaded {
             if(!isPaused.get()){
                 // Update local session
                 while(!rxBufferQueue.isEmpty()){
-                    Event event = rxBufferQueue.take();
-                    engine.offerEvent(event);
+                    SessionPacket currentPacket = rxBufferQueue.take();
+                    engine.offerEvent(currentPacket.getEvent());
                 }
             }
         } catch (SocketTimeoutException ste) {
