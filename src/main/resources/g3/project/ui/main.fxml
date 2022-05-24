@@ -26,9 +26,7 @@
                 </Menu>
                 <Menu mnemonicParsing="false" text="Edit">
                     <items>
-                        <MenuItem mnemonicParsing="false" text="Undo" />
-                        <MenuItem mnemonicParsing="false" text="Redo" />
-                        <MenuItem mnemonicParsing="false" text="Duplicate" />
+                        <MenuItem onAction="#handleTogEdit" mnemonicParsing="false" text="Toggle Edit" />
                         <MenuItem mnemonicParsing="false" text="Delete" />
                     </items>
                 </Menu>
@@ -68,7 +66,7 @@
                            <content>-->
                                 <VBox fx:id="pageVBox" alignment="CENTER" prefHeight="200.0" prefWidth="100.0" VBox.vgrow="ALWAYS">
                                     <children>
-                                        <Pane fx:id="pagePane" onKeyPressed="#handleEvent" onKeyReleased="#handleEvent" onKeyTyped="#handleEvent" onZoom="#handleEvent" onZoomFinished="#handleEvent" onZoomStarted="#handleEvent" prefHeight="329.0" prefWidth="500.0" style="-fx-background-color: white;" VBox.vgrow="NEVER" />
+                                        <Pane fx:id="pagePane" prefHeight="329.0" prefWidth="500.0" style="-fx-background-color: white;" VBox.vgrow="NEVER" />
                                     </children>
                                 </VBox>
                             <!--</content>
