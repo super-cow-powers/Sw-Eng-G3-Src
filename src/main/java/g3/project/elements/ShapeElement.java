@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -41,23 +41,40 @@ import nu.xom.*;
  */
 public class ShapeElement extends VisualElement {
 
-    private static ThreadLocal builders = new ThreadLocal() {
+    private final int MIN_POINTS = 4;
 
+    /**
+     * Creates builder thread for the element
+     */
+    private static ThreadLocal builders = new ThreadLocal() {
         protected synchronized Object initialValue() {
             return new Builder(new ElementFactory());
         }
 
     };
 
-    public ShapeElement(String name) {
+    /**
+     * Constructor
+     * @param name
+     */
+    public ShapeElement(final String name) {
         super(name);
     }
 
-    public ShapeElement(String name, String uri) {
+    /**
+     * Constructor
+     * @param name
+     * @param uri
+     */
+    public ShapeElement(final String name, final String uri) {
         super(name, uri);
     }
 
-    public ShapeElement(Element element) {
+    /**
+     * Constructor
+     * @param element
+     */
+    public ShapeElement(final Element element) {
         super(element);
     }
 
@@ -93,7 +110,7 @@ public class ShapeElement extends VisualElement {
             this.appendChild(segEl);
         }
         if (this.getType() == "line") { //I'm a line. Also define old attributes for compatibility.
-            if (points.size() < 4) {
+            if (points.size() < MIN_POINTS) {
                 throw new Exception("Too few points!");
             }
             this.removeAttribute(this.getAttribute("x_end"));
@@ -150,6 +167,10 @@ public class ShapeElement extends VisualElement {
         return points;
     }
 
+    /**
+     * Gets text for shape element - optional as wont necessarily exist
+     * @return arraylist of text in the object
+     */
     public Optional<ArrayList<StyledTextSeg>> getText() {
         ArrayList<StyledTextSeg> text = null;
         for (var ch : this.getChildElements()) {
@@ -160,6 +181,10 @@ public class ShapeElement extends VisualElement {
         return Optional.ofNullable(text);
     }
 
+    /**
+     * Sets text of the shape element
+     * @param text
+     */
     public final void setText(ArrayList<StyledTextSeg> text) {
         for (var ch : this.getChildElements()) {
             if (ch instanceof TextElement) {

@@ -33,10 +33,18 @@ package g3.project.core;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public class Cursor {
-    public Cursor(){   
+
+    /**
+     * Constructor
+     */
+    public Cursor() {
     }
-    
-    public String getStuff(){
+
+    /**
+     * @TODO fill out javadoc
+     * @return
+     */
+    public String getStuff() {
         return "string";
     }
 }

@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -30,7 +30,7 @@ package g3.project.graphics;
 
 import java.util.ArrayList;
 import javafx.scene.shape.Polygon;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 
 /**
  *
@@ -38,8 +38,13 @@ import javafx.scene.shape.Rectangle;
  */
 public final class ExtPolygon extends ExtShape {
 
+    private Shape shape = getShape();
+
+    /**
+     * Constructor
+     */
     public ExtPolygon() {
-        super(new Polygon());        
+        super(new Polygon());
     }
 
     @Override
@@ -48,7 +53,12 @@ public final class ExtPolygon extends ExtShape {
         //Setting x/y size makes little sense for a defined polygon
     }
 
-    public void setPoints(ArrayList<Double> points) throws Exception{
+    /**
+     * Sets points for the shape
+     * @param points
+     * @throws Exception
+     */
+    public void setPoints(ArrayList<Double> points) throws Exception {
         if (points.size() % 2 != 0) {
             throw new Exception("Points array should be even length!");
         }

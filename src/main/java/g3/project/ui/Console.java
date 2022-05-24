@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -28,10 +28,7 @@
  */
 package g3.project.ui;
 
-import java.util.Stack;
 import java.util.function.Consumer;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.ListChangeListener;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.control.Separator;
@@ -40,7 +37,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -50,28 +46,44 @@ import javafx.stage.Stage;
  */
 public final class Console {
 
+    private static final Double MAX_WIDTH = 40.0;
+    private static final Double SCENE_WIDTH = 300.0;
+    private static final Double SCENE_HEIGHT = 200.0;
+    /**
+     * Setting up area for text input
+     */
     private final Stage dialog = new Stage();
+    /**
+     * Text input field
+     */
     private final TextField inputField = new TextField();
+    /**
+     * Text history
+     */
     private final TextArea historyArea = new TextArea();
+    /**
+     * Look back at last line
+     */
     private final Consumer<String> lineCallback;
 
     /**
      * Create a new Console.
      *
      * @param ownerWindow Window that owns this.
+     * @param lineEnterConsumer
      */
     public Console(final Stage ownerWindow, final Consumer<String> lineEnterConsumer) {
         dialog.initModality(Modality.NONE);
         dialog.initOwner(ownerWindow);
         VBox dialogVbox = new VBox();
         Separator separator = new Separator();
-        separator.setMaxWidth(40);
+        separator.setMaxWidth(MAX_WIDTH);
         separator.setOrientation(Orientation.HORIZONTAL);
         dialogVbox.getChildren().addAll(historyArea, separator, inputField);
         dialogVbox.setVgrow(historyArea, Priority.ALWAYS);
         historyArea.setEditable(false);
         historyArea.setFocusTraversable(false);
-        Scene dialogScene = new Scene(dialogVbox, 300, 200);
+        Scene dialogScene = new Scene(dialogVbox, SCENE_WIDTH, SCENE_HEIGHT);
         dialog.setScene(dialogScene);
         this.lineCallback = lineEnterConsumer;
 

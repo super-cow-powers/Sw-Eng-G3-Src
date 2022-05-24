@@ -28,32 +28,19 @@
  */
 package g3.project.xmlIO;
 
-import g3.project.elements.DocElement;
-import g3.project.elements.ElementFactory;
-import g3.project.ui.MainController;
-import java.io.BufferedWriter;
 import java.util.Optional;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.function.Function;
-import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nu.xom.*;
@@ -64,15 +51,30 @@ import nu.xom.*;
  */
 public final class Io {
 
-    private final static String xmlFileName = "doc.xml";
+    /**
+     * Filename for document
+     */
+    private final String xmlFileName = "doc.xml";
 
-    private final static String mediaDirString = "/media";
+    /**
+     * Path for media (video and audio)
+     */
+    private final String mediaDirString = "/media";
 
-    private final static String imagesDirString = "/images";
+    /**
+     * Path for images
+     */
+    private final String imagesDirString = "/images";
 
-    private final static String scriptsDirString = "/scripts";
+    /**
+     * Path for python scripts
+     */
+    private final String scriptsDirString = "/scripts";
 
-    private final static String tempFilePrefix = "_sprestmp_";
+    /**
+     * Temporary pre fix for files
+     */
+    private final String tempFilePrefix = "_sprestmp_";
     /**
      * Open Document.
      */
@@ -83,12 +85,24 @@ public final class Io {
      */
     private String docName;
 
+    /**
+     * Zip File
+     */
     private File origZip;
 
+    /**
+     * Zip file parser
+     */
     private FileSystem zipFs;
 
+    /**
+     * Temporary path for data
+     */
     private Path tempPath;
 
+    /**
+     * Whether saving is allowed or not
+     */
     private Boolean allowSave = true;
     /**
      * Temporary files requiring cleanup.
@@ -174,7 +188,7 @@ public final class Io {
      * @param path Path to zip
      * @return Maybe FS.
      */
-    private Optional<FileSystem> makeFs(Path path) {
+    private Optional<FileSystem> makeFs(file Path path) {
         HashMap<String, String> env = new HashMap<>();
         env.put("create", "true");
         FileSystem fs = null;

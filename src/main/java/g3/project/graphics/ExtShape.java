@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -28,12 +28,9 @@
  */
 package g3.project.graphics;
 
-import g3.project.graphics.StyledTextSeg.REF_TYPE;
 import g3.project.ui.Visual;
 import java.util.ArrayList;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import javafx.event.ActionEvent;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -42,8 +39,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Ellipse;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.shape.StrokeType;
@@ -57,20 +52,20 @@ import javafx.scene.text.TextFlow;
  */
 public abstract class ExtShape extends Group implements Visual {
 
-    protected StackPane stack = new StackPane();
-    protected Shape shape = null;
-    protected TextFlow textFlow = null;
-    protected VBox textVbox = null;
+    private StackPane stack = new StackPane();
+    private Shape shape = null;
+    private TextFlow textFlow = null;
+    private VBox textVbox = null;
 
-    protected Double width = 0d;
-    protected Double height = 0d;
-    protected Double rot = 0d;
-    
+    private Double width = 0d;
+    private Double height = 0d;
+    private Double rot = 0d;
+
     /**
      * text click handler.
      */
     private Consumer<MouseEvent> textClickHandlerConsumer = null;
-    
+
     /**
      * href click handler.
      */
@@ -86,7 +81,11 @@ public abstract class ExtShape extends Group implements Visual {
      */
     private Consumer<MouseEvent> hrefHovExHandlerConsumer = null;
 
-    public ExtShape(final Shape myShape) {
+    /**
+     * Constructor
+     * @param myShape
+     */
+    public ExtShape(Shape myShape) {
         shape = myShape;
         stack.getChildren().add(shape);
         this.getChildren().add(stack);
@@ -143,6 +142,62 @@ public abstract class ExtShape extends Group implements Visual {
      */
     public final void setFill(final Color fill) {
         shape.setFill(fill);
+    }
+
+    /**
+     * Getter for Stack
+     * @return stack
+     */
+    public StackPane getStack() {
+        return(stack);
+    }
+
+    /**
+     * Getter for Shape
+     * @return shape
+     */
+    public Shape getShape() {
+        return(shape);
+    }
+
+    /**
+     * Getter for TextFlow
+     * @return textFlow
+     */
+    public TextFlow getTextFlow() {
+        return(textFlow);
+    }
+
+    /**
+     * Getter for textVbox
+     * @return textVbox
+     */
+    public VBox getTextVBox() {
+        return(textVbox);
+    }
+
+    /**
+     * Getter for width
+     * @return width
+     */
+    public Double getWidth() {
+        return(width);
+    }
+
+    /**
+     * Getter for height
+     * @return height
+     */
+    public Double getHeight() {
+        return(height);
+    }
+
+    /**
+     * Getter for rotation
+     * @return rotation
+     */
+    public Double getRot() {
+        return(rot);
     }
 
     /**

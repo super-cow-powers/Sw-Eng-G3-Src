@@ -52,6 +52,7 @@ import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
@@ -139,8 +140,31 @@ public final class Engine extends Threaded {
      */
     private final Reader scrReader;
 
+    /**
+     * Filename for the start screen
+     */
     private final String startScreenFileName = "start_screen.spres";
+
+    /**
+     * Filename for a new empty project
+     */
     private final String emptyFileName = "empty.spres";
+
+    /**
+     * Get current thread
+     */
+    private Thread myThread = getThread();
+
+    /**
+     * Get running
+     */
+    private AtomicBoolean running = getRunning();
+
+
+    /**
+     * Get suspended
+     */
+    private AtomicBoolean suspended = getSuspended();
 
     /**
      * Constructor.
@@ -174,7 +198,7 @@ public final class Engine extends Threaded {
         };
         scrReader = new Reader() {
             @Override
-            public int read(char[] chars, int i, int i1) throws IOException {
+            public int read(final char[] chars, final int i, final int i1) throws IOException {
                 throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
             }
 
@@ -589,7 +613,7 @@ public final class Engine extends Threaded {
     /**
      * Instruct the UI to draw an image using discrete values.
      *
-     * @param ID
+     * @param id
      * @param xSize
      * @param ySize
      * @param xLoc
@@ -687,7 +711,7 @@ public final class Engine extends Threaded {
 
     /**
      * Set text on a shape. Sets properties for all text in the shape.
-     *
+     * @TODO for linting - reduce the amount of parameters called to 7 if possible
      * @param shapeID Target ID.
      * @param text Text to set.
      * @param hAlign Horizontal alignment.

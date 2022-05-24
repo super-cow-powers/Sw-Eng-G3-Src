@@ -49,7 +49,6 @@ import g3.project.playable.PlayerFactory;
 import g3.project.xmlIO.Io;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -69,15 +68,12 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Scale;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.util.Duration;
-import jfxtras.styles.jmetro.*;
+import javafx.util.Duration;    
 
 /**
  *
@@ -148,6 +144,8 @@ public final class MainController {
      * IO Console.
      */
     private Console console;
+
+    private static final Double MIN_POS_VAL = 0.15;
 
 //CHECKSTYLE:OFF
     //FXML bound objects
@@ -810,12 +808,19 @@ public final class MainController {
         ft.play();
     }
 
+    /**
+     * Allows editing elements - FXML
+     */
     @FXML
     public void handleTogEdit() {
         toggleEditable(!amEditable.get());
     }
 
-    public void toggleEditable(Boolean editable) {
+    /**
+     * Allows editing elements
+     * @param editable
+     */
+    public void toggleEditable(final Boolean editable) {
         this.amEditable.set(editable);
         if (!editable) {
             setCursorType(Cursor.DEFAULT);
@@ -888,8 +893,8 @@ public final class MainController {
         splitPane.getDividers().get(0)
                 .positionProperty()
                 .addListener((obs, oldPos, newPos) -> {
-                    if (newPos.doubleValue() > 0.15) {
-                        splitPane.getDividers().get(0).setPosition(0.15);
+                    if (newPos.doubleValue() > MIN_POS_VAL) {
+                        splitPane.getDividers().get(0).setPosition(MIN_POS_VAL);
                     }
                 });
         Platform.runLater(() -> { //Run when initialised

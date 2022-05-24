@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -39,7 +39,7 @@ public final class PlayerFactory {
     /**
      * Players.
      */
-    HashMap<Integer, Player> playerMap = new HashMap<>();
+    private HashMap<Integer, Player> playerMap = new HashMap<>();
 
     /**
      * Constructor.
@@ -48,8 +48,11 @@ public final class PlayerFactory {
 
     }
 
-    public Player newPlayer(){
-        return newPlayer(0d,0d);
+    /**
+     * @TODO javadoc
+     */
+    public Player newPlayer() {
+        return newPlayer(0d, 0d);
     }
     /**
      * Get a new player.
@@ -77,7 +80,7 @@ public final class PlayerFactory {
      * @param pl player to free.
      * @throws IllegalStateException Couldn't find player in my map.
      */
-    public void free(Player pl) throws IllegalStateException {
+    public void free(final Player pl) throws IllegalStateException {
         var intPl = playerMap.remove(pl.hashCode());
         if (intPl != null) {
             intPl.free();

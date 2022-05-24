@@ -28,9 +28,7 @@
  */
 package g3.project.elements;
 
-import g3.project.core.Engine;
 import g3.project.core.RecursiveBindings;
-import g3.project.core.Scripting;
 import g3.project.graphics.SizeObj;
 import java.util.Optional;
 import java.util.ArrayList;
@@ -309,7 +307,7 @@ public final class DocElement extends Element implements Scriptable {
     }
 
     @Override
-    public final String getRealType() {
+    public String getRealType() {
         return this.getClass().getName();
     }
 }

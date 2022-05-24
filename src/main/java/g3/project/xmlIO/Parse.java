@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -54,11 +54,26 @@ import org.xml.sax.helpers.XMLReaderFactory;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public final class Parse {
+final class Parse {
 
+    /**
+     * PWS file name
+     */
     private static final String PWS = "PWS.xsd";
+
+    /**
+     * @TODO javadoc
+     */
     public static final String PWS_NS = "PWS_Base";
+
+    /**
+     * Schema for our extension
+     */
     private static final String EXT_SCHEMA = "my_exts.xsd";
+
+    /**
+     * PWS extension schema
+     */
     public static final String EXT_NS = "PWS_Exts";
 
     /**

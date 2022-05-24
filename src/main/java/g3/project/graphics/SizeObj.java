@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -48,7 +48,7 @@ public final class SizeObj {
      * @param y Size in Y.
      * @param rot Rotation angle in degrees.
      */
-    public SizeObj(Double x, Double y, Double rot) {
+    public SizeObj(final Double x, final Double y, final Double rot) {
         this.x_px = x;
         this.y_px = y;
         this.rot_deg = rot;

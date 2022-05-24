@@ -28,21 +28,12 @@
  */
 package g3.project.elements;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.script.Invocable;
-import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
-import javax.script.ScriptException;
 import nu.xom.Attribute;
 import nu.xom.Builder;
 import nu.xom.Element;
-import nu.xom.Text;
 
 /**
  *

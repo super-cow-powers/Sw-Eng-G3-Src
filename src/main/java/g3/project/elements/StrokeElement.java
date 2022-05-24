@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -29,7 +29,6 @@
 package g3.project.elements;
 
 import g3.project.graphics.StrokeProps;
-import java.util.HashMap;
 import java.util.Optional;
 import javafx.scene.paint.Color;
 import nu.xom.*;
@@ -40,6 +39,9 @@ import nu.xom.*;
  */
 public class StrokeElement extends Element {
 
+    /**
+     * Creates builder thread for the element
+     */
     private static ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
@@ -48,15 +50,27 @@ public class StrokeElement extends Element {
 
     };
 
-    public StrokeElement(String name) {
+    /**
+     * Constructor
+     */
+    public StrokeElement(final String name) {
         super(name);
     }
 
-    public StrokeElement(String name, String uri) {
+    /**
+     * Constructor
+     * @param name
+     * @param uri
+     */
+    public StrokeElement(final String name, final String uri) {
         super(name, uri);
     }
 
-    public StrokeElement(Element element) {
+    /**
+     * Constructor
+     * @param element
+     */
+    public StrokeElement(final Element element) {
         super(element);
     }
 
@@ -69,10 +83,8 @@ public class StrokeElement extends Element {
         final int lenRGB = 6;
         final int lenRGBA = 8;
         var col = Optional.ofNullable(this.getAttribute(StrokeProps.COLOUR));
-        /**
-         * @todo: Find a nicer looking way of making this work Probably
-         * containing more streams.
-         */
+        // @todo: Find a nicer looking way of making this work Probably
+        // containing more streams.
         if (col.isPresent()) {
             //var colStr = col.get().getValue().replace("#", "");
             var colStr = col.get().getValue();

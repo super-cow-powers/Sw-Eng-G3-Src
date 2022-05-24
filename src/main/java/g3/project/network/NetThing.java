@@ -31,6 +31,8 @@ package g3.project.network;
 import g3.project.core.Threaded;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import javafx.event.Event;
 
 /**
@@ -76,6 +78,17 @@ public final class NetThing extends Threaded {
     public BlockingQueue<Event> getRxQueue() {
         return rxEventQueue;
     }
+
+    /**
+     * Get running
+     */
+    private AtomicBoolean running = getRunning();
+
+    /**
+     * Get suspended
+     */
+    private AtomicBoolean suspended = getSuspended();
+
 
     @Override
     public void run() {

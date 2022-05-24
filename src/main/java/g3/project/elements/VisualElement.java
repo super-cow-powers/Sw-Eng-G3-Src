@@ -47,8 +47,14 @@ import nu.xom.Element;
  */
 public class VisualElement extends Element implements Scriptable {
 
-    static public final String BASE_URI = "http://PWS_Base";
-    static public final String EXT_URI = "http://PWS_Exts";
+    /**
+     * @TODO javadoc
+     */
+    static final String BASE_URI = "http://PWS_Base";
+    /**
+     * @TODO javadoc
+     */
+    static final String EXT_URI = "http://PWS_Exts";
 
     /**
      * Script bindings for the element.
@@ -239,10 +245,8 @@ public class VisualElement extends Element implements Scriptable {
      */
     public final Optional<Color> getFillColour() {
         var colAttr = this.getAttribute("fill");
-        /**
-         * @todo: Find a nicer looking way of making this work Probably
-         * containing more streams.
-         */
+        // @todo: Find a nicer looking way of making this work Probably
+        // containing more streams.
         if (colAttr != null) {
 
             //var colStr = colAttr.get().getValue().replace("#", "");

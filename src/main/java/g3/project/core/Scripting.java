@@ -71,8 +71,14 @@ public final class Scripting {
      */
     private final RecursiveBindings topLevelBindings = new RecursiveBindings();
 
+    /**
+     * Default language string for the scripting
+     */
     private final String defaultLang;
 
+    /**
+     * Default writer object for the scripting
+     */
     private final Writer defaultWriter;
     /**
      * Ref to engine object.
@@ -245,6 +251,7 @@ public final class Scripting {
      * @param button_name Mouse button name.
      * @param x_loc x location.
      * @param y_loc y location.
+     * @param down Boolean, for whether item was placed down
      */
     public void execElementClick(final Scriptable element, final String button_name, final Double x_loc, final Double y_loc, final Boolean down) {
 
