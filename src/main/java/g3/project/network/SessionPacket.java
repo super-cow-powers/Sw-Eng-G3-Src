@@ -10,6 +10,7 @@ import javafx.scene.input.PickResult;
 
 
 public class SessionPacket implements Serializable {
+    private static final long serialVersionUID = 206007353L;
     private String currentPageID = "";
     private Event event = null;
     /**
@@ -36,6 +37,10 @@ public class SessionPacket implements Serializable {
      * Mouse click condition
      */
     private boolean down = false;
+    /**
+     * Connection Text
+     */
+    private String connectionText = "";
 
     /**
      * Session packet constructor for MouseEvent
@@ -79,6 +84,14 @@ public class SessionPacket implements Serializable {
         this.currentPageID = currentPageID;
     }
 
+    /**
+     * Session packet constructor for connection verification
+     * @param connectionText
+     */
+    public SessionPacket(String connectionText){
+        this.connectionText = connectionText;
+    }
+
     public String getCurrentPageID(){
         return currentPageID;
     }
@@ -109,5 +122,9 @@ public class SessionPacket implements Serializable {
 
     public boolean isDown() {
         return down;
+    }
+
+    public String getConnectionText() {
+        return connectionText;
     }
 }

@@ -114,7 +114,7 @@ public final class Server {
      * @throws IOException
      */
     public void closeServer() throws IOException {
-        broadcastObject("Server: closing server");
+        broadcastObject(new SessionPacket("Server: closing server"));
         for (var client : connectionsList) {
             client.closeSocket();
         }

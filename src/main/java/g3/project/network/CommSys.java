@@ -315,8 +315,8 @@ public final class CommSys extends Threaded {
         try {
             var packetIn = client.readStream();
             packetIn.ifPresent(pkt -> {
-                if (!pkt.equals("Server: closing server")) {
-                    rxBufferQueue.offer((SessionPacket) pkt);
+                if (!((SessionPacket) pkt).getConnectionText().equals("Server: closing server")) {
+                    rxBufferQueue.offer((SessionPacket)pkt);
                 } else {
                     stopViewing();
                 }
