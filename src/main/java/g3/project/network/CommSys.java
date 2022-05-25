@@ -134,7 +134,14 @@ public final class CommSys extends Threaded {
         }
     }
 
-
+    /**
+     * Request stop thread activity.
+     */
+    public final void stopCommSys() {
+        isViewing.set(false);
+        isPresenting.set(false);
+        stop();
+    }
 
     @Override
     @SuppressWarnings("empty-statement")
@@ -270,7 +277,7 @@ public final class CommSys extends Threaded {
      */
     private void transmitEvent(final SessionPacket packet) throws InterruptedException {
         try {
-            System.out.println(packet);
+            System.out.println(packet.getElID()+" "+packet.getScrType()+" "+ packet.getX()+" "+ packet.getY());
             txBufferQueue.offer(packet);
             if (!isPaused.get()) {
                 while(!txBufferQueue.isEmpty()) {
@@ -325,7 +332,7 @@ public final class CommSys extends Threaded {
                 // Update local session
                 while(!rxBufferQueue.isEmpty()){
                     SessionPacket currentPacket = rxBufferQueue.take();
-                    System.out.println(currentPacket);
+                    System.out.println(currentPacket.getElID()+" "+currentPacket.getScrType()+" "+ currentPacket.getX()+" "+ currentPacket.getY());
                     engine.offerSessionPacket(currentPacket);
                 }
             }

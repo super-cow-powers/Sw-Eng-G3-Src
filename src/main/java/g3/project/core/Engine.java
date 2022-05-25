@@ -291,7 +291,7 @@ public final class Engine extends Threaded {
                 ex.printStackTrace();
             }
         }
-        netComms.stop();
+        netComms.stopCommSys();
         if (docIO != null) {
             docIO.close(); //Cleanup resources
         }
