@@ -140,20 +140,25 @@ public final class Server {
      * @throws IOException IO Error.
      */
     public void checkConnection() throws IOException {
-        serverSocket.setSoTimeout(CHECK_TIMEOUT);
-        Iterator<Client> iterator = connectionsList.iterator();
-        while (iterator.hasNext()) {
-            var client = iterator.next();
-            var msg = client.readStream();
-            msg.ifPresent(m->{
-                if(m.equals("Disconnect")) {
-                    System.out.println("Server: client disconnected");
-                    client.closeSocket();
-                    connectionsList.remove(client);
-                }else{
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-            });
+        try{
+            serverSocket.setSoTimeout(CHECK_TIMEOUT);
+            Iterator<Client> iterator = connectionsList.iterator();
+            while (iterator.hasNext()) {
+                var client = iterator.next();
+                var msg = client.readStream();
+                msg.ifPresent(m->{
+                    if(m.equals("Disconnect")) { // Client disconnect from server gracefully
+                        client.closeSocket();
+                        connectionsList.remove(client);
+                    }else{
+                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    }
+                });
+            }
+        }catch(SocketException e){
+            // Loss connection with client
+            e.getStackTrace();
         }
+        
     }
 }

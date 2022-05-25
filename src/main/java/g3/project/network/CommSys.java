@@ -127,9 +127,9 @@ public final class CommSys extends Threaded {
      *
      * @param event Event to send.
      */
-    public void feedEvent(final String currentPageID,final Event event) {
+    public void feedEvent(final SessionPacket pkt) {
         if (isPresenting.get()) {
-            txEventQueue.offer(new SessionPacket(currentPageID, event));
+            txEventQueue.offer(pkt);
             unsuspend();
         }
     }
@@ -270,6 +270,7 @@ public final class CommSys extends Threaded {
      */
     private void transmitEvent(final SessionPacket packet) throws InterruptedException {
         try {
+            System.out.println(packet);
             txBufferQueue.offer(packet);
             if (!isPaused.get()) {
                 while(!txBufferQueue.isEmpty()) {
@@ -324,7 +325,8 @@ public final class CommSys extends Threaded {
                 // Update local session
                 while(!rxBufferQueue.isEmpty()){
                     SessionPacket currentPacket = rxBufferQueue.take();
-                    engine.offerEvent(currentPacket.getEvent());
+                    System.out.println(currentPacket);
+                    engine.offerSessionPacket(currentPacket);
                 }
             }
         } catch (SocketTimeoutException ste) {
