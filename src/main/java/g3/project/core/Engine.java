@@ -311,11 +311,6 @@ public final class Engine extends Threaded {
         } else if (evSrc instanceof javafx.scene.Node) {
             routeElementEvent(event);
         }
-        if (!(evSrc.getClass().equals(MouseEvent.class))) {
-            //Upload event to server if hosting.
-            //Seperate from mouse events because they are handled differently.
-            netComms.feedEvent(new SessionPacket(currentPageID, event));
-        }
     }
 
     /**

@@ -45,13 +45,9 @@ public class SessionPacket implements Serializable {
     /**
      * Session packet constructor for MouseEvent
      * 
-     * @param event
+     * @param currentPageID\
+     * @param mev
      * @param elID
-     * @param ScrType
-     * @param mouseButton
-     * @param x
-     * @param y
-     * @param down
      */
     public SessionPacket(final String currentPageID, final MouseEvent mev, final String elID) {
         this.currentPageID = currentPageID;
