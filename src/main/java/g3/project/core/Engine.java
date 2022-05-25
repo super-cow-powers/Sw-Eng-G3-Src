@@ -35,6 +35,7 @@ import g3.project.elements.VisualElement;
 import g3.project.graphics.FontProps;
 import g3.project.network.CommSys;
 import g3.project.network.ConnectionInfo;
+import g3.project.network.SessionPacket;
 import g3.project.graphics.StyledTextSeg;
 import g3.project.graphics.LocObj;
 import g3.project.ui.MainController;
@@ -119,6 +120,11 @@ public final class Engine extends Threaded {
      */
     private final BlockingQueue<File> docQueue
             = new LinkedBlockingQueue<File>();
+    /**
+     * Packet to extract queue.
+     */
+    private final BlockingQueue<SessionPacket> pktQueue
+            = new LinkedBlockingQueue<SessionPacket>();
 
     /**
      * Ref to the UI controller.
@@ -202,6 +208,14 @@ public final class Engine extends Threaded {
     }
 
     /**
+     * Send a session packet to the engine.
+     */
+    public void offerSessionPacket(final SessionPacket pkt) {
+        pktQueue.offer(pkt);
+        unsuspend();
+    }
+
+    /**
      * Returns the current Document IO object.
      *
      * @return doc IO.
@@ -261,6 +275,8 @@ public final class Engine extends Threaded {
                     handleEvent(eventQueue.take());
                 } else if (!callQueue.isEmpty()) { //Out-of-thread call request
                     callQueue.take().run();
+                } else if (!pktQueue.isEmpty()) { //New packet?
+                    handlePacket(pktQueue.take());
                 } else { //Nothing to do. Suspend
                     suspended.set(true);
                 }
@@ -295,8 +311,26 @@ public final class Engine extends Threaded {
         } else if (evSrc instanceof javafx.scene.Node) {
             routeElementEvent(event);
         }
-        //Upload event to server if hosting.
-        //netComms.feedEvent(event);
+    }
+
+    /**
+     * Extract event from a packet and handle it.
+     * 
+     * @param pkt Packet to extract event from.
+     */
+    private void handlePacket(final SessionPacket pkt) {
+        var event = pkt.getEvent();
+        final var mevType = pkt.getScrType();
+        if (event != null) {
+            handleEvent(event);
+        }else if(!mevType.isEmpty()){ //Check for mouse event
+            var elOpt = currentDoc.getElementByID(pkt.getElID());
+            if (mevType.equals(Scripting.CLICK_FN)) {
+                elOpt.ifPresent(el -> scriptingEngine.invokeOnElement(el, mevType, pkt.getMouseButton(), pkt.getX(), pkt.getY(), pkt.isDown()));
+            } else {
+                elOpt.ifPresent(el -> scriptingEngine.invokeOnElement(el, mevType, pkt.getX(), pkt.getY()));
+            }
+        }
     }
 
     /**
@@ -322,6 +356,8 @@ public final class Engine extends Threaded {
                 routeHrefEvt((MouseEvent) ev);
             }
         }
+        //Upload event to server if hosting.
+        netComms.feedEvent(new SessionPacket(currentPageID,(MouseEvent) ev, elID));
     }
 
     /**
@@ -451,6 +487,8 @@ public final class Engine extends Threaded {
                 handleNavButtonEvent(aev, source);
             }
         }
+        //Upload event to server if hosting.
+        netComms.feedEvent(new SessionPacket(currentPageID, ev));
     }
 
     /**
