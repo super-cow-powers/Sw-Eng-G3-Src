@@ -271,7 +271,7 @@ public final class Player extends Group implements Visual {
     /**
      * Set properties.
      *
-     * @param visualProps Properties.
+     * @param VisualProps Properties.
      */
     @Override
     public void setProps(final VisualProps props) {
