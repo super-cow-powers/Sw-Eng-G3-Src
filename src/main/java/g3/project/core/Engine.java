@@ -311,6 +311,11 @@ public final class Engine extends Threaded {
         } else if (evSrc instanceof javafx.scene.Node) {
             routeElementEvent(event);
         }
+        if (!(evSrc instanceof MouseEvent)) {
+            //Upload event to server if hosting.
+            //Seperate from mouse events because they are handled differently.
+            netComms.feedEvent(new SessionPacket(currentPageID, event));
+        }
     }
 
     /**
@@ -346,6 +351,8 @@ public final class Engine extends Threaded {
             var elOpt = currentDoc.getElementByID(elID);
             if (ev instanceof MouseEvent) {
                 routeMouseEvent((MouseEvent) ev, elID);
+                //Upload event to server if hosting.
+                netComms.feedEvent(new SessionPacket(currentPageID,(MouseEvent) ev, elID));
             } else if (ev instanceof KeyEvent) {
                 routeKeyEvent((KeyEvent) ev, elID);
             } else {
@@ -356,8 +363,7 @@ public final class Engine extends Threaded {
                 routeHrefEvt((MouseEvent) ev);
             }
         }
-        //Upload event to server if hosting.
-        netComms.feedEvent(new SessionPacket(currentPageID,(MouseEvent) ev, elID));
+        
     }
 
     /**
@@ -487,8 +493,6 @@ public final class Engine extends Threaded {
                 handleNavButtonEvent(aev, source);
             }
         }
-        //Upload event to server if hosting.
-        netComms.feedEvent(new SessionPacket(currentPageID, ev));
     }
 
     /**
