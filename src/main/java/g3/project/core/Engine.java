@@ -291,7 +291,7 @@ public final class Engine extends Threaded {
                 ex.printStackTrace();
             }
         }
-        netComms.stopCommSys();
+        netComms.stop();
         if (docIO != null) {
             docIO.close(); //Cleanup resources
         }
@@ -310,6 +310,9 @@ public final class Engine extends Threaded {
             handleButtonEvent(event);
         } else if (evSrc instanceof javafx.scene.Node) {
             routeElementEvent(event);
+        }
+        if (!(event.getClass().equals(MouseEvent.class))) {
+            netComms.feedEvent(new SessionPacket(currentPageID,event));
         }
     }
 

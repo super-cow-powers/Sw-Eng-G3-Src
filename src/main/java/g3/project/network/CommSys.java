@@ -332,7 +332,6 @@ public final class CommSys extends Threaded {
                 // Update local session
                 while(!rxBufferQueue.isEmpty()){
                     SessionPacket currentPacket = rxBufferQueue.take();
-                    System.out.println(currentPacket.getElID()+" "+currentPacket.getScrType()+" "+ currentPacket.getX()+" "+ currentPacket.getY());
                     engine.offerSessionPacket(currentPacket);
                 }
             }
