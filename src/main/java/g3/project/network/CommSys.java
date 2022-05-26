@@ -32,6 +32,7 @@ import g3.project.core.Engine;
 import g3.project.core.Threaded;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -328,6 +329,11 @@ public final class CommSys extends Threaded {
             }
         } catch (SocketTimeoutException ste) {
             throw ste;
+        } catch (SocketException ex) {
+            // Server has shut down
+            if(ex.getMessage().equals("Connection reset")){
+                stopViewing();
+            }
         } catch (IOException ex) {
             ex.printStackTrace();
             Platform.runLater(() -> engine.

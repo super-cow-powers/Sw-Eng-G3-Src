@@ -30,8 +30,7 @@ package g3.project.network;
 
 import java.net.*;
 import java.util.ArrayList;
-import java.util.Iterator;
-
+import java.util.ListIterator;
 import java.io.*;
 
 /**
@@ -140,9 +139,9 @@ public final class Server {
      * @throws IOException IO Error.
      */
     public void checkConnection() throws IOException {
+        serverSocket.setSoTimeout(CHECK_TIMEOUT);
+        ListIterator<Client> iterator = connectionsList.listIterator();
         try{
-            serverSocket.setSoTimeout(CHECK_TIMEOUT);
-            Iterator<Client> iterator = connectionsList.iterator();
             while (iterator.hasNext()) {
                 var client = iterator.next();
                 var msg = client.readStream();
@@ -156,7 +155,14 @@ public final class Server {
                 });
             }
         }catch(SocketException e){
-            // Loss connection with client
+            // Lose connection with client\
+            if(e.getMessage().equals("Connection reset by peer")){
+                System.out.println("Lose connection with client");
+                iterator.previous();
+                var clientExited = iterator.next();
+                clientExited.closeSocket();
+                connectionsList.remove(clientExited);
+            }
             e.getStackTrace();
         }
         
