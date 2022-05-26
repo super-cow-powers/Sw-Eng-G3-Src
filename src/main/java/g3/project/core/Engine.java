@@ -311,9 +311,7 @@ public final class Engine extends Threaded {
         } else if (evSrc instanceof javafx.scene.Node) {
             routeElementEvent(event);
         }
-        if (!(event.getClass().equals(MouseEvent.class))) {
-            netComms.feedEvent(new SessionPacket(currentPageID,event));
-        }
+        netComms.feedEvent(new SessionPacket(currentPageID,event));
     }
 
     /**
@@ -349,8 +347,6 @@ public final class Engine extends Threaded {
             var elOpt = currentDoc.getElementByID(elID);
             if (ev instanceof MouseEvent) {
                 routeMouseEvent((MouseEvent) ev, elID);
-                //Upload event to server if hosting.
-                netComms.feedEvent(new SessionPacket(currentPageID,(MouseEvent) ev, elID));
             } else if (ev instanceof KeyEvent) {
                 routeKeyEvent((KeyEvent) ev, elID);
             } else {
