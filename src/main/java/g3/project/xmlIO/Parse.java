@@ -28,6 +28,7 @@
  */
 package g3.project.xmlIO;
 
+import g3.project.core.ToolsFactory;
 import g3.project.elements.DocElement;
 import g3.project.elements.ElementFactory;
 import java.io.File;
@@ -143,15 +144,14 @@ public final class Parse {
     /**
      * Return the fully parsed representation of the XML doc.
      *
-     * @param xmlFile File.
-     * @param factory Custom factory.
+     * @param xmlStream XML Doc stream.
      * @return Optional of doc.
      */
-    public static Optional<Document> parseGenericXML(final File xmlFile, final NodeFactory factory) {
-        Builder parser = (factory == null) ? new Builder(false) : new Builder(factory);
+    public static Optional<Document> parseToolXML(final InputStream xmlStream) {
+        Builder parser = new Builder(false, new ToolsFactory());
         Document doc = null;
         try {
-            doc = parser.build(xmlFile);
+            doc = parser.build(xmlStream);
         } catch (ParsingException | IOException ex) { //We're returning an optional
             ex.printStackTrace();   //So I'm not throwing this out of the method
             return Optional.empty();

@@ -41,6 +41,7 @@ import g3.project.graphics.SizeObj;
 import g3.project.graphics.StrokeProps;
 import g3.project.graphics.VisualProps;
 import g3.project.xmlIO.DocIO;
+import g3.project.xmlIO.ToolIO;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -81,7 +82,7 @@ public final class Engine extends Threaded {
     /**
      * Tools IO.
      */
-    private DocIO toolIO;
+    private ToolIO toolIO;
 
     /**
      * Network Communications module.
@@ -96,7 +97,8 @@ public final class Engine extends Threaded {
     /**
      * List of tools.
      */
-    private ArrayList<Tool> myTools;
+    private Tools currentTools;
+
     /**
      * Document currently open.
      */
@@ -105,6 +107,8 @@ public final class Engine extends Threaded {
      * ID of currently open page/card.
      */
     private String currentPageID = "";
+
+    private String currentToolID = "";
 
     /**
      * Navigation history stack.
@@ -236,17 +240,28 @@ public final class Engine extends Threaded {
             loadTools()
                     .ifPresentOrElse(
                             t -> {
-                                myTools = t.getTools();
+                                currentTools = t;
                                 // Add tool buttons
-                                var iterTool = myTools.iterator();
+                                var iterTool = t.getTools().iterator();
                                 while (iterTool.hasNext()) {
                                     var currentTool = iterTool.next();
+                                    try {
+                                        scriptingEngine.evalElement(currentTool); //Evaluate/load tool's script.
+                                    } catch (ScriptException | IOException ex) {
+                                        Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
+                                    final String imagePath;
+                                    var maybeImPath = currentTool.getImagePath();
+                                    if (maybeImPath.isPresent()) {
+                                        imagePath = maybeImPath.get();
+                                    } else {
+                                        imagePath = "";
+                                    }
                                     Platform.runLater(() -> controller.
-                                    addTool(currentTool.getName(), currentTool.getID()));
+                                    addTool(currentTool.getName(), currentTool.getID(), imagePath));
                                 }
                             },
                             () -> {
-                                myTools = new ArrayList<>();
                                 putMessage("Failed Loading Tools!", false);
                             });
         } catch (Exception ex) {
@@ -296,7 +311,8 @@ public final class Engine extends Threaded {
         if (evSrc instanceof Button) {
             handleButtonEvent(event);
         } else if (evSrc instanceof javafx.scene.Node) {
-            routeElementEvent(event);
+            //Pass to tools, then to elements if the event wasn't sunk by a tool.
+            routeToolEvent(event).ifPresent(e -> routeElementEvent(e));
         }
     }
 
@@ -306,18 +322,23 @@ public final class Engine extends Threaded {
      * @param ev event.
      */
     private void routeElementEvent(final Event ev) {
+
         final var evSrc = (javafx.scene.Node) ev.getSource();
         var elID = evSrc.getId();
 
         if (elID != null) { //Element has an ID
-            var elOpt = currentDoc.getElementByID(elID);
-            if (ev instanceof MouseEvent) {
-                routeMouseEvent((MouseEvent) ev, elID);
-            } else if (ev instanceof KeyEvent) {
-                routeKeyEvent((KeyEvent) ev, elID);
-            } else {
-                System.out.println("Unsupported Event: " + ev);
-            }
+            //Route event to element. Only route to scriptable ones.
+            currentDoc.getElementByID(elID)
+                    .filter(el -> el instanceof Scriptable)
+                    .ifPresent(el -> {
+                        if (ev instanceof MouseEvent) {
+                            routeMouseEvent((MouseEvent) ev, el);
+                        } else if (ev instanceof KeyEvent) {
+                            routeKeyEvent((KeyEvent) ev, elID);
+                        } else {
+                            System.out.println("Unsupported Event: " + ev);
+                        }
+                    });
         } else { //No ID - find it's container
             if (evSrc instanceof Hyperlink) {
                 routeHrefEvt((MouseEvent) ev);
@@ -329,31 +350,27 @@ public final class Engine extends Threaded {
      * Route a MouseEvent to the correct location.
      *
      * @param mev Event.
-     * @param elID Element.
+     * @param el Scriptable Element.
      */
-    private void routeMouseEvent(final MouseEvent mev, final String elID) {
+    private void routeMouseEvent(final MouseEvent mev, final Scriptable el) {
         final var evType = mev.getEventType();
-        var elOpt = currentDoc.getElementByID(elID);
-        elOpt.ifPresent(el -> {
-            try {
-                if (evType == MouseEvent.MOUSE_PRESSED || evType == MouseEvent.MOUSE_RELEASED || evType == MouseEvent.MOUSE_CLICKED) {
-                    var down = (mev.getEventType() == MouseEvent.MOUSE_PRESSED); //Is the mouse pressed right now?
-                    scriptingEngine.invokeOnElement(el, Scripting.CLICK_FN, mev.getButton(), mev.getX(), mev.getY(), down);
-                } else if (evType == MouseEvent.MOUSE_MOVED) {
-                    scriptingEngine.invokeOnElement(el, Scripting.MOUSE_MOVED_FN, mev.getX(), mev.getY());
-                } else if (evType == MouseEvent.MOUSE_ENTERED) {
-                    scriptingEngine.invokeOnElement(el, Scripting.MOUSE_ENTER_FN, mev.getX(), mev.getY());
-                } else if (evType == MouseEvent.MOUSE_EXITED) {
-                    scriptingEngine.invokeOnElement(el, Scripting.MOUSE_EXIT_FN, mev.getX(), mev.getY());
-                } else if (evType == MouseEvent.MOUSE_DRAGGED) {
-                    scriptingEngine.invokeOnElement(el, Scripting.DRAG_FUNCTION, mev.getX(), mev.getY());
-                }
-            } catch (ScriptException ex) {
-            } catch (IOException ex) {
-                System.err.println(ex);
+        try {
+            if (evType == MouseEvent.MOUSE_PRESSED || evType == MouseEvent.MOUSE_RELEASED || evType == MouseEvent.MOUSE_CLICKED) {
+                var down = (mev.getEventType() == MouseEvent.MOUSE_PRESSED); //Is the mouse pressed right now?
+                scriptingEngine.invokeOnElement(el, Scripting.CLICK_FN, mev.getButton(), mev.getX(), mev.getY(), down);
+            } else if (evType == MouseEvent.MOUSE_MOVED) {
+                scriptingEngine.invokeOnElement(el, Scripting.MOUSE_MOVED_FN, mev.getX(), mev.getY());
+            } else if (evType == MouseEvent.MOUSE_ENTERED) {
+                scriptingEngine.invokeOnElement(el, Scripting.MOUSE_ENTER_FN, mev.getX(), mev.getY());
+            } else if (evType == MouseEvent.MOUSE_EXITED) {
+                scriptingEngine.invokeOnElement(el, Scripting.MOUSE_EXIT_FN, mev.getX(), mev.getY());
+            } else if (evType == MouseEvent.MOUSE_DRAGGED) {
+                scriptingEngine.invokeOnElement(el, Scripting.DRAG_FUNCTION, mev.getX(), mev.getY());
             }
-        });
-
+        } catch (ScriptException ex) {
+        } catch (IOException ex) {
+            System.err.println(ex);
+        }
     }
 
     /**
@@ -533,7 +550,7 @@ public final class Engine extends Threaded {
         var child = doc.getRootElement();
         if (child instanceof DocElement) { //Make sure that doc is sane.
             currentDoc = (DocElement) child;
-            currentDoc.setTopLevelBindings(scriptingEngine.getTopLevelBindings());
+            currentDoc.setTopLevelBindings(scriptingEngine.getTopLevelBindings()); //Attach the globals.
             scriptingEngine.setGlobal("doc", currentDoc); //Expose the doc to the scripting engine.
             //Check for and show any validation errors.
             var valErrs = currentDoc.getValidationErrors();
@@ -1018,21 +1035,32 @@ public final class Engine extends Threaded {
     }
 
     /**
+     * Get the current Tool IO.
+     *
+     * @return toolIO.
+     */
+    public ToolIO getToolIO() {
+        return toolIO;
+    }
+
+    /**
      * Load Tools from XML.
      *
      * @return Optional<Tools>
      */
     private Optional<Tools> loadTools() {
-        var toolsXMLPath = Engine.class.getResource("tools.xml").getPath();
-        toolIO = new DocIO(new File(toolsXMLPath), new ToolsFactory());
+        var toolsStream = Engine.class.getResourceAsStream("tools.zip");
+        if (toolsStream == null) {
+            this.putMessage("Unable to load Tools", true);
+            return Optional.empty();
+        }
+        toolIO = new ToolIO(toolsStream);
         var parsedDoc = toolIO.getDoc();
-        var root
-                = parsedDoc
-                        .filter(d -> d.getRootElement() instanceof Tools)
-                        .map(d -> (Tools) d.getRootElement());
+        var root = parsedDoc
+                .filter(d -> d.getRootElement() instanceof Tools)
+                .map(d -> (Tools) d.getRootElement());
         this.putMessage("Tools Loaded", false);
         return root;
-        return Optional.empty();
     }
 
     /**
@@ -1041,7 +1069,35 @@ public final class Engine extends Threaded {
      * @param toolID Tool to activate.
      */
     public void activateTool(final String toolID) {
+        currentToolID = toolID;
+        var maybeTool = currentTools.getTool(toolID);
+        maybeTool.ifPresent(t -> {
+            try {
+                scriptingEngine.invokeOnElement(t, Scripting.LOAD_FUNCTION);
+            } catch (ScriptException | IOException ex) {
+                Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+    }
 
+    /**
+     * Route incoming event to tools.
+     *
+     * @param ev Event.
+     * @return Incoming Event if tool is not a Sink.
+     */
+    private Optional<Event> routeToolEvent(final Event ev) {
+        //This is all kind of yucky, but nvm.
+        var maybeTool = currentTools.getTool(currentToolID);
+        Optional<Event> ret = Optional.of(ev);
+        if (ev instanceof MouseEvent) { //Only giving tools mousevents right now.
+            maybeTool.ifPresent(t -> routeMouseEvent((MouseEvent) ev, t));
+        }
+        if ((maybeTool.isPresent()) && (ev instanceof MouseEvent)) {
+            var tool = maybeTool.get();
+            ret = (tool.sinkEvents() == true) ? Optional.empty() : ret; //Get whether to sink the event.
+        }
+        return ret;
     }
 
     /**

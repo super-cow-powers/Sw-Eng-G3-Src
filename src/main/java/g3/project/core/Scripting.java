@@ -30,6 +30,7 @@ package g3.project.core;
 
 import g3.project.elements.Scriptable;
 import g3.project.xmlIO.DocIO;
+import g3.project.xmlIO.IO;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -68,9 +69,10 @@ public final class Scripting {
     private HashMap<String, ScriptEngine> knownScriptEngines = new HashMap<>();
 
     /**
-     * Top-level bindings to put base functions into.
+     * Top-level bindings to put base functions into. Kind of gross to be
+     * static, but NVM.
      */
-    private final RecursiveBindings topLevelBindings = new RecursiveBindings();
+    private final static RecursiveBindings TOP_LEVEL_BINDINGS = new RecursiveBindings();
 
     private final String defaultLang;
 
@@ -104,7 +106,7 @@ public final class Scripting {
                 throw new IOException("Couldn't get functions file");
             }
             var fnStr = new String(fns.get(), StandardCharsets.UTF_8);
-            this.evalString(fnStr, defaultLanguage, topLevelBindings);
+            this.evalString(fnStr, defaultLanguage, TOP_LEVEL_BINDINGS);
         } catch (IOException | NullPointerException | ScriptException ex) {
             //Default function loading failed.
             Logger.getLogger(DocIO.class.getName()).log(Level.SEVERE, null, ex);
@@ -140,8 +142,8 @@ public final class Scripting {
      *
      * @return RecursiveBindings
      */
-    public RecursiveBindings getTopLevelBindings() {
-        return topLevelBindings;
+    public static RecursiveBindings getTopLevelBindings() {
+        return TOP_LEVEL_BINDINGS;
     }
 
     /**
@@ -153,7 +155,12 @@ public final class Scripting {
      * @throws IOException Couldn't get script.
      */
     public void evalElement(final Scriptable element) throws ScriptException, IOException {
-        DocIO docIo = engine.getDocIO();
+        IO elIo;
+        if (element instanceof Tool) { //Tools have their own IO stuff.
+            elIo = engine.getToolIO();
+        } else {
+            elIo = engine.getDocIO();
+        }
         var scrElOpt = element.getScriptEl();
         //Setup bindings
         var bindings = element.getScriptingBindings();
@@ -168,7 +175,7 @@ public final class Scripting {
                 throw new IOException("No script file specified");
             }
             var loc = locOpt.get();
-            var bytesOpt = docIo.getResource(loc);
+            var bytesOpt = elIo.getResource(loc);
             if (bytesOpt.isPresent()) {
                 var b = bytesOpt.get();
                 var str = new String(b, StandardCharsets.UTF_8);
@@ -201,7 +208,7 @@ public final class Scripting {
      * @throws ScriptException Bad code.
      */
     public void evalString(final String code, final String lang) throws ScriptException {
-        evalString(code, lang, topLevelBindings);
+        evalString(code, lang, TOP_LEVEL_BINDINGS);
     }
 
     /**
@@ -228,7 +235,7 @@ public final class Scripting {
      * @param args Arguments to function.
      */
     public void invokeOnElement(final Scriptable element, final String function, final Object... args) throws ScriptException, IOException {
-        if (element.getEvalRequired()){
+        if (element.getEvalRequired()) {
             this.evalElement(element);
             element.setEvalRequired(false);
         }

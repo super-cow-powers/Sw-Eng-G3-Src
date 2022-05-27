@@ -30,24 +30,16 @@ POSSIBILITY OF SUCH DAMAGE.
 
 
 <tools>
-    <tool name="Cursor" ID="tool-cursor">
-        <icon></icon>
-        <script>
-        </script>
+    <tool name="Cursor" ID="tool-cursor" is_sink="false">
+        <image include_source="/images/cursor.jpg"/>
     </tool>
     
-    <tool name="Test" ID="tool-test">
-        <icon></icon>
-        <script>
-            def onClick():
-                print("hello")
-            
-        </script>
+    <tool name="Test" ID="tool-test" is_sink="true">
+        <image/>
     </tool>
     
-    <tool name="Rectangle" ID="tool-rect">
-        <icon></icon>
-        <script>
-        </script>
+    <tool name="Square" ID="tool-square" is_sink="true">
+        <image include_source="/images/square.jpg"/>
+        <script include_source="/scripts/square.py"/>
     </tool>
 </tools>

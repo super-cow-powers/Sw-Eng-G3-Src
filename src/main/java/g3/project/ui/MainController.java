@@ -154,34 +154,34 @@ public final class MainController {
     //FXML bound objects
     @FXML
     private MenuBar menuBar;
-    
+
     @FXML
     private SplitPane splitPane;
-    
+
     @FXML
     private VBox propPane;
-    
+
     @FXML
     private FlowPane toolPane;
-    
+
     @FXML
     private HBox cardSelBox;
-    
+
     @FXML
     private Label messageLabel;
-    
+
     @FXML
     private Pane pagePane;
-    
+
     @FXML
     private ScrollPane cardSelPane;
-    
+
     @FXML
     private VBox pageVBox;
-    
+
     @FXML
     private MenuItem saveMenuItem;
-    
+
     @FXML
     private MenuItem saveAsMenuItem;
 //CHECKSTYLE:ON
@@ -329,7 +329,7 @@ public final class MainController {
                 new FileChooser.ExtensionFilter("SuperPres", "*.spres"),
                 new FileChooser.ExtensionFilter("ZIP", "*.zip")
         );
-        
+
         var newFile = fileChooser.showOpenDialog(pagePane.getScene().getWindow());
         if (newFile != null) {
             engine.offerNewDoc(newFile);
@@ -349,7 +349,7 @@ public final class MainController {
                 new FileChooser.ExtensionFilter("SuperPres", "*.spres"),
                 new FileChooser.ExtensionFilter("ZIP", "*.zip")
         );
-        
+
         var newFile = fileChooser.showSaveDialog(pagePane.getScene().getWindow());
         if (newFile != null) {
             if (!newFile.getName().endsWith(".spress")) {
@@ -380,13 +380,13 @@ public final class MainController {
      */
     public void updateShape(final String id, final String shapeType, final StrokeProps stroke,
             final ArrayList<StyledTextSeg> text, final ArrayList<Double> segments) {
-        
+
         final var drawnShape = drawnElements.get(id);
 
 //Get the shape. Either a new or existing one.
         Optional<ExtShape> maybeShape = (drawnShape == null)
                 ? extShapeFactory.makeShape(ExtShapeFactory.ShapeType.valueOf(shapeType.toLowerCase())) : Optional.of((ExtShape) drawnShape);
-        
+
         maybeShape.ifPresent(s -> {
             //Set-up the shape.
             drawnElements.put(id, s);
@@ -613,17 +613,31 @@ public final class MainController {
      *
      * @param toolname Name of tool.
      * @param toolID Tool ID.
+     * @param iconPath Path to tool icon.
      */
-    public void addTool(final String toolname, final String toolID) {
-        Button toolButton = new Button(toolname);
+    public void addTool(final String toolname, final String toolID, final String iconPath) {
+        final Double iconX = 50d;
+        final Double iconY = 50d;
+        
+        final Button toolButton = new Button();
+        Optional<byte[]> maybeImage = engine.getToolIO().getResource(iconPath);
+        maybeImage.map(imB -> new Image(new ByteArrayInputStream(imB)))
+                .map(im -> {
+                    var imv = new ImageView(im);
+                    imv.setFitWidth(iconX);
+                    imv.setFitHeight(iconY);
+                    return imv;
+                })
+                .ifPresentOrElse(imv -> toolButton.setGraphic(imv),
+                        () -> toolButton.setText(toolname));
         //CHECKSTYLE:OFF
         toolButton.setMaxSize(75, 75);
-        toolButton.setMinSize(50, 50);
+        toolButton.setMinSize(iconX, iconY);
         //CHECKSTYLE:ON
         toolButton.setId(toolID);
         toolButton.setWrapText(false);
-        toolButton.setOnAction(event -> {
-            engine.offerEvent(event);
+        toolButton.setOnMouseClicked(event -> {
+            engine.activateTool(toolButton.getId());
         });
         toolPane.getChildren().add(toolButton);
     }
@@ -659,7 +673,7 @@ public final class MainController {
                 loadPath = loadPath.replaceFirst("~", System.getProperty("user.home"));
             }
             newplayer.load(loadPath, seekOffset);
-            
+
             pagePane.getChildren().add(newplayer);
             player = newplayer;
         }
@@ -718,7 +732,7 @@ public final class MainController {
             /* In Cache */
             var im = loadedImages.get(path);
             drawImage(id, im);
-            
+
         } else {
             /* Not cached */
             drawImage(id, loadingGif); //Show loading GIF
@@ -795,9 +809,9 @@ public final class MainController {
         console.show();
         console.putMessage(message);
     }
-    
+
     public void showProperties(final HashMap<String, Props> props) {
-        
+
     }
 
     /**
@@ -817,12 +831,12 @@ public final class MainController {
         ft.setToValue(0d);
         ft.play();
     }
-    
+
     @FXML
     public void handleTogEdit() {
         toggleEditable(!amEditable.get());
     }
-    
+
     public void toggleEditable(Boolean editable) {
         this.amEditable.set(editable);
         if (!editable) {
@@ -839,13 +853,13 @@ public final class MainController {
         var loadingGifStr = MainController.class
                 .getResourceAsStream("loading.gif");
         loadingGif = new Image(loadingGifStr);
-        
+
         var notFoundImStr = MainController.class
                 .getResourceAsStream("not-found.png");
         notFoundIm = new Image(notFoundImStr);
-        
+
         engine = new Engine(this);
-        
+
         pagePane.setViewOrder(0);
         pagePane.getChildren()
                 .addListener((Change<? extends Node> c) -> {
@@ -882,7 +896,7 @@ public final class MainController {
                                     handleEvent(e);
                                     e.consume();
                                 });
-                                
+
                                 addedNode.addEventHandler(KeyEvent.ANY, (e) -> {
                                     handleEvent(e);
                                     e.consume();
@@ -911,7 +925,7 @@ public final class MainController {
                     event.consume();
                 }
             });
-            
+
             engine.start();
         });
 
@@ -926,7 +940,7 @@ public final class MainController {
             handleEvent(ev);
         });
         cardSelPane.setFocusTraversable(false);
-        
+
         var ds = new DropShadow();
         pagePane.setEffect(ds);
     }

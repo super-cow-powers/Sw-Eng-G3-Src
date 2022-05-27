@@ -28,32 +28,19 @@
  */
 package g3.project.xmlIO;
 
-import g3.project.elements.DocElement;
-import g3.project.elements.ElementFactory;
-import g3.project.ui.MainController;
-import java.io.BufferedWriter;
 import java.util.Optional;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.function.Function;
-import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nu.xom.*;
@@ -62,55 +49,101 @@ import nu.xom.*;
  *
  * @author david
  */
-public class IO {
+public abstract class IO {
 
-    private final static String xmlFileName = "doc.xml";
+    protected final static String mediaDirString = "/media";
 
-    private final static String mediaDirString = "/media";
+    protected final static String imagesDirString = "/images";
 
-    private final static String imagesDirString = "/images";
+    protected final static String scriptsDirString = "/scripts";
 
-    private final static String scriptsDirString = "/scripts";
+    protected final static String tempFilePrefix = "_sprestmp_";
 
-    private final static String tempFilePrefix = "_sprestmp_";
+    /**
+     * Document Name.
+     */
+    protected String docName;
+
+    protected File origZip;
+
     /**
      * Open Document.
      */
-    private final Optional<Document> myDoc;
+    protected final Optional<Document> myDoc;
 
-    private FileSystem zipFs;
+    protected FileSystem zipFs;
 
-    private Path tempPath;
+    protected Path tempPath;
 
-    private Boolean allowSave = true;
+    protected Boolean allowSave = false;
     /**
      * Temporary files requiring cleanup.
      */
-    private final HashMap<String, Path> tempFiles = new HashMap<>();
+    protected final HashMap<String, Path> tempFiles = new HashMap<>();
 
     /**
-     * Create new IO.
+     * Create new IO and parse the project doc.
+     *
+     * @param presFilePath path to pres. Zip.
      */
-    public IO() {
+    public IO(final String presFilePath) {
 
+        var presFileUriString = pathToUriString(presFilePath);
+        var presFileUriOpt = maybeURI(presFileUriString);
+        var zipFile = presFileUriOpt.filter(uri -> uri.getPath().matches("^.*\\.(zip|ZIP|spres|SPRES)$"))
+                .flatMap(Uri -> getArchive(Uri)); //Retrieve the Zip archive.
+        var fsOpt = zipFile.flatMap(file -> {
+            docName = file.getName();
+            origZip = file;
+            try {
+                tempPath = Files.createTempFile(tempFilePrefix, "");
+                Files.copy(file.toPath(), tempPath, StandardCopyOption.REPLACE_EXISTING);
+                tempFiles.put(docName, tempPath);
+            } catch (IOException ex) {
+                Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
+                return null;
+            }
+            return makeFs(tempPath);
+        }); //Get the zip file-system. Maybe.
+
+        myDoc = fsOpt.flatMap(fs -> {
+            zipFs = fs;
+            return retrieveDoc(fs);
+        }); //Maybe get the doc.
     }
 
     /**
-     * Get doc from FileSystem.
+     * Build from a byte array.
+     *
+     * @param presStream Stream containing archive.
+     */
+    public IO(final InputStream presStream) {
+        docName = "unknown.spres";
+        Optional<FileSystem> fsOpt = Optional.empty();
+        try {
+            tempPath = Files.createTempFile(tempFilePrefix, "");
+            tempFiles.put(docName, tempPath);
+            var pres = presStream.readAllBytes();
+            allowSave = false;
+            Files.write(tempPath, pres);
+            fsOpt = makeFs(tempPath);
+        } catch (IOException | NullPointerException ex) {
+            Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        myDoc = fsOpt.flatMap(fs -> {
+            zipFs = fs;
+            return retrieveDoc(fs);
+        });
+    }
+
+    /**
+     * Get doc from FileSystem. Must be implemented by subclass!
      *
      * @param fs FileSystem
      * @return Maybe Doc.
      */
-    private Optional<Document> retrieveDoc(final FileSystem fs) {
-        var docPath = fs.getPath(xmlFileName);
-        try {
-            var docIs = Files.newInputStream(docPath);
-            return Parse.parseDocXML(docIs);
-        } catch (IOException ex) {
-            Logger.getLogger(IO.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return Optional.empty();
-    }
+    protected abstract Optional<Document> retrieveDoc(final FileSystem fs);
 
     /**
      * Make a new Zip FS.
@@ -118,7 +151,7 @@ public class IO {
      * @param path Path to zip
      * @return Maybe FS.
      */
-    protected Optional<FileSystem> makeFs(Path path) {
+    protected static final Optional<FileSystem> makeFs(final Path path) {
         HashMap<String, String> env = new HashMap<>();
         env.put("create", "true");
         FileSystem fs = null;
@@ -138,7 +171,7 @@ public class IO {
      * @param target URI of target zip.
      * @return Maybe zip file.
      */
-    protected Optional<File> getPresArchive(final URI target) {
+    protected static final Optional<File> getArchive(final URI target) {
         var uriScheme = target.getScheme();
         File zipFile = null;
         if (uriScheme.startsWith("file")) {
@@ -219,6 +252,7 @@ public class IO {
      * @return True or False.
      */
     public static Boolean isUriInternal(final String path) {
+        //CHECKSTYLE:OFF
         if (path.startsWith("http")) {
             return false;
         } else if (path.startsWith("file:")) {
@@ -226,6 +260,7 @@ public class IO {
         } else {
             return true;
         }
+        //CHECKSTYLE:ON
     }
 
     /**
@@ -306,7 +341,7 @@ public class IO {
      */
     public Optional<URI> maybeURI(final String UrString) {
         URI uri = null;
-        
+
         try {
             uri = new URI(UrString);
         } catch (URISyntaxException ex) {

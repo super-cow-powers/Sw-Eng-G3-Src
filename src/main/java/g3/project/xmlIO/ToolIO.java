@@ -64,91 +64,24 @@ import nu.xom.*;
  */
 public final class ToolIO extends IO {
 
-    private final static String xmlFileName = "doc.xml";
-
-    private final static String mediaDirString = "/media";
-
-    private final static String imagesDirString = "/images";
-
-    private final static String scriptsDirString = "/scripts";
-
-    private final static String tempFilePrefix = "_sprestmp_";
-    /**
-     * Open Document.
-     */
-    private final Optional<Document> myDoc;
+    protected final static String xmlFileName = "tools.xml";
 
     /**
-     * Document Name.
-     */
-    private String docName;
-
-    private File origZip;
-
-    private FileSystem zipFs;
-
-    private Path tempPath;
-
-    private Boolean allowSave = true;
-    /**
-     * Temporary files requiring cleanup.
-     */
-    private final HashMap<String, Path> tempFiles = new HashMap<>();
-
-    /**
-     * Create new IO and parse the project doc.
+     * Load tools from path string.
      *
-     * @param presFilePath path to pres. Zip.
+     * @param toolFilePath Path to tools Zip.
      */
-    public ToolIO(final String presFilePath) {
-
-        var presFileUriString = pathToUriString(presFilePath);
-        var presFileUriOpt = maybeURI(presFileUriString);
-        var zipFile = presFileUriOpt.filter(uri -> uri.getPath().matches("^.*\\.(zip|ZIP|spres|SPRES)$"))
-                .flatMap(Uri -> getPresArchive(Uri));
-        var fsOpt = zipFile.flatMap(file -> {
-            docName = file.getName();
-            origZip = file;
-            try {
-                tempPath = Files.createTempFile(tempFilePrefix, "");
-                Files.copy(file.toPath(), tempPath, StandardCopyOption.REPLACE_EXISTING);
-                tempFiles.put(docName, tempPath);
-            } catch (IOException ex) {
-                Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
-                return null;
-            }
-            return makeFs(tempPath);
-        });
-
-        myDoc = fsOpt.flatMap(fs -> {
-            zipFs = fs;
-            return retrieveDoc(fs);
-        });
+    public ToolIO(final String toolFilePath) {
+        super(toolFilePath);
     }
 
     /**
-     * Build from a byte array.
+     * Load tools from Stream.
      *
-     * @param presStream Stream containing archive.
+     * @param toolStream Stream of tools Zip.
      */
-    public ToolIO(final InputStream presStream) {
-        docName = "unknown.spres";
-        Optional<FileSystem> fsOpt = Optional.empty();
-        try {
-            tempPath = Files.createTempFile(tempFilePrefix, "");
-            tempFiles.put(docName, tempPath);
-            var pres = presStream.readAllBytes();
-            allowSave = false;
-            Files.write(tempPath, pres);
-            fsOpt = makeFs(tempPath);
-        } catch (IOException | NullPointerException ex) {
-            Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        myDoc = fsOpt.flatMap(fs -> {
-            zipFs = fs;
-            return retrieveDoc(fs);
-        });
+    public ToolIO(final InputStream toolStream) {
+        super(toolStream);
     }
 
     /**
@@ -157,52 +90,16 @@ public final class ToolIO extends IO {
      * @param fs FileSystem
      * @return Maybe Doc.
      */
-    private Optional<Document> retrieveDoc(final FileSystem fs) {
+    @Override
+    protected Optional<Document> retrieveDoc(final FileSystem fs) {
         var docPath = fs.getPath(xmlFileName);
         try {
             var docIs = Files.newInputStream(docPath);
-            return Parse.parseDocXML(docIs);
+            return Parse.parseToolXML(docIs);
         } catch (IOException ex) {
             Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
         }
         return Optional.empty();
-    }
-
-    /**
-     * Make a new Zip FS.
-     *
-     * @param path Path to zip
-     * @return Maybe FS.
-     */
-    private Optional<FileSystem> makeFs(Path path) {
-        HashMap<String, String> env = new HashMap<>();
-        env.put("create", "true");
-        FileSystem fs = null;
-        try {
-            var urStr = path.toAbsolutePath().toFile().toURI().toString();
-            var ur = URI.create("jar:" + urStr);
-            fs = FileSystems.newFileSystem(ur, env);
-        } catch (IOException ex) {
-            Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return Optional.ofNullable(fs);
-    }
-
-    /**
-     * Retrieve a presentation archive.
-     *
-     * @param target URI of target zip.
-     * @return Maybe zip file.
-     */
-    private Optional<File> getPresArchive(final URI target) {
-        var uriScheme = target.getScheme();
-        File zipFile = null;
-        if (uriScheme.startsWith("file")) {
-            //local
-            zipFile = new File(target);
-        }
-
-        return Optional.ofNullable(zipFile);
     }
 
     /**
@@ -215,56 +112,15 @@ public final class ToolIO extends IO {
     }
 
     /**
-     * Save document to current location.
-     *
-     * @throws IOException bad file.
-     */
-    public void save() throws IOException {
-        if (allowSave == true | origZip != null) {
-            saveAs(origZip.getAbsolutePath());
-        } else {
-            throw new IOException("Can't save.");
-        }
-    }
-
-    /**
-     * Save document to new location.
-     *
-     * @param newPath Path to save to.
-     * @throws IOException bad file.
-     */
-    public void saveAs(final String newPath) throws IOException {
-        if (zipFs == null || myDoc.isEmpty()) {
-            throw new IOException("Can't save.");
-        } else if (!newPath.matches("^.*\\.(zip|ZIP|spres|SPRES)$")) {
-            throw new IOException("Bad File Name!");
-        }
-        Path docPath = zipFs.getPath(xmlFileName);
-        Path tmpDocPath = Files.createTempFile("_tmpdoc", "");
-        Files.deleteIfExists(docPath);
-        var fileOutStream = Files.newOutputStream(tmpDocPath);
-        Serializer serializer = new Serializer(fileOutStream, "ISO-8859-1");
-        serializer.write(myDoc.get());
-        Files.move(tmpDocPath, docPath, StandardCopyOption.REPLACE_EXISTING);
-        //Close and reopen (sync). This is undocumented!!!
-        zipFs.close();
-        makeFs(tempPath).ifPresent(fs -> zipFs = fs);
-        var newPathPath = Paths.get(newPath);
-        //Copy the temp file to the expected place
-        Files.copy(tempPath,
-                newPathPath,
-                StandardCopyOption.REPLACE_EXISTING);
-        origZip = newPathPath.toFile();
-        allowSave = true;
-    }
-
-    /**
      * Get a resource from the zip.
      *
      * @param path Resource path.
      * @return Optional resource bytes.
      */
     public synchronized Optional<byte[]> getResource(final String path) {
+        if (path.isEmpty()) {
+            return Optional.empty();
+        }
         byte[] arr = null;
         if (isUriInternal(path)) { //Get an internal resource
             var fPath = zipFs.getPath(path);
@@ -370,65 +226,8 @@ public final class ToolIO extends IO {
      *
      * @return Boolean.
      */
+    @Override
     public boolean canSave() {
-        return this.allowSave;
-    }
-
-    /**
-     * Turn a (possibly relative) path into a correct URI.
-     *
-     * @param path Path to convert.
-     * @return Converted path.
-     */
-    public String pathToUriString(final String path) {
-        String loc = null;
-        if (path.contains(":/") || path.startsWith("/") || path.contains(":\\")) {
-            //Must be an absolute Path
-            loc = path;
-        } else if (path.startsWith(".")) {
-            //Must be a relative Path
-            var parent = origZip.getAbsoluteFile().getParentFile().getPath();
-            loc = parent.concat(path);
-        }
-        if (!path.startsWith("http")) {
-            //Not a URL? Must be a local file
-            var p = Paths.get(path);
-            loc = p.toUri().toString();
-        }
-        return loc;
-    }
-
-    /**
-     * Returns a maybe URI from an input string containing an URI.
-     *
-     * @param UrString URI/Path String.
-     * @return Maybe URI.
-     */
-    public Optional<URI> maybeURI(final String UrString) {
-        URI uri = null;
-        
-        try {
-            uri = new URI(UrString);
-        } catch (URISyntaxException ex) {
-            System.err.println(ex);
-        }
-
-        return Optional.ofNullable(uri);
-    }
-
-    /**
-     * Closes associated File Systems. Must be run when object is finished with.
-     */
-    public void close() {
-        if (zipFs != null) {
-            try {
-                zipFs.close();
-            } catch (IOException ex) {
-                Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-        tempFiles.forEach((id, p) -> {
-            p.toFile().delete();
-        });
+        return false;
     }
 }
