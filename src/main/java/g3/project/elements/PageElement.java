@@ -37,6 +37,8 @@ import nu.xom.*;
  */
 public class PageElement extends VisualElement {
 
+    private Integer index = 0;
+    
     private static ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
@@ -65,6 +67,21 @@ public class PageElement extends VisualElement {
     public Optional<String> setTitle(String name) {
         this.addAttribute(new Attribute("title", name));
         return getTitle();
+    }
+    /**
+     * Set the page index.
+     * This should be done before return from the Document to a user.
+     * @param ind Index.
+     */
+    protected void setIndex(final Integer ind){
+        index = ind;
+    }
+    /**
+     * Get the page index. This should be set before use in the engine.
+     * @return Index.
+     */
+    public Integer getIndex(){
+        return index;
     }
 
 }

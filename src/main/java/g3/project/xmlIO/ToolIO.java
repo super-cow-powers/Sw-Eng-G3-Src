@@ -62,7 +62,7 @@ import nu.xom.*;
  *
  * @author david
  */
-public final class Io {
+public final class ToolIO extends IO {
 
     private final static String xmlFileName = "doc.xml";
 
@@ -100,7 +100,7 @@ public final class Io {
      *
      * @param presFilePath path to pres. Zip.
      */
-    public Io(final String presFilePath) {
+    public ToolIO(final String presFilePath) {
 
         var presFileUriString = pathToUriString(presFilePath);
         var presFileUriOpt = maybeURI(presFileUriString);
@@ -114,7 +114,7 @@ public final class Io {
                 Files.copy(file.toPath(), tempPath, StandardCopyOption.REPLACE_EXISTING);
                 tempFiles.put(docName, tempPath);
             } catch (IOException ex) {
-                Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
                 return null;
             }
             return makeFs(tempPath);
@@ -131,7 +131,7 @@ public final class Io {
      *
      * @param presStream Stream containing archive.
      */
-    public Io(final InputStream presStream) {
+    public ToolIO(final InputStream presStream) {
         docName = "unknown.spres";
         Optional<FileSystem> fsOpt = Optional.empty();
         try {
@@ -142,7 +142,7 @@ public final class Io {
             Files.write(tempPath, pres);
             fsOpt = makeFs(tempPath);
         } catch (IOException | NullPointerException ex) {
-            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         myDoc = fsOpt.flatMap(fs -> {
@@ -163,7 +163,7 @@ public final class Io {
             var docIs = Files.newInputStream(docPath);
             return Parse.parseDocXML(docIs);
         } catch (IOException ex) {
-            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
         }
         return Optional.empty();
     }
@@ -183,7 +183,7 @@ public final class Io {
             var ur = URI.create("jar:" + urStr);
             fs = FileSystems.newFileSystem(ur, env);
         } catch (IOException ex) {
-            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
         }
         return Optional.ofNullable(fs);
     }
@@ -271,7 +271,7 @@ public final class Io {
             try {
                 arr = Files.readAllBytes(fPath);
             } catch (IOException ex) {
-                Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else { //Get an external resource
             try {
@@ -279,7 +279,7 @@ public final class Io {
                 var is = uri.toURL().openStream();
                 arr = is.readAllBytes();
             } catch (URISyntaxException | MalformedURIException | IOException ex) {
-                Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         return Optional.ofNullable(arr);
@@ -304,7 +304,7 @@ public final class Io {
                 tempFiles.put(path, tempfPath);
                 return Optional.of(tempfPath.toAbsolutePath().toString());
             } catch (IOException ex) {
-                Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
                 return Optional.empty();
             }
         } else { //External resource. Return input.
@@ -341,7 +341,7 @@ public final class Io {
         try {
             Files.copy(resPath, internalPath, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException ex) {
-            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
             return Optional.empty();
         }
         return getResource(newPath);
@@ -360,7 +360,7 @@ public final class Io {
         try {
             arr = is.readAllBytes();
         } catch (IOException ex) {
-            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
         }
         return Optional.ofNullable(arr);
     }
@@ -424,7 +424,7 @@ public final class Io {
             try {
                 zipFs.close();
             } catch (IOException ex) {
-                Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         tempFiles.forEach((id, p) -> {

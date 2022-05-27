@@ -32,7 +32,7 @@ import g3.project.core.Engine;
 import g3.project.core.RecursiveBindings;
 import g3.project.core.Scripting;
 import g3.project.graphics.SizeObj;
-import g3.project.xmlIO.Io;
+import g3.project.xmlIO.DocIO;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -67,7 +67,7 @@ public final class DocElement extends Element implements Scriptable {
      */
     private Consumer<VisualElement> updateCallback = (f) -> {
     };
-    
+
     /**
      * Does the script need evaluating again?
      */
@@ -152,6 +152,15 @@ public final class DocElement extends Element implements Scriptable {
     }
 
     /**
+     * Get the currently open page.
+     *
+     * @return Maybe Page (if open).
+     */
+    public Optional<PageElement> getCurrentPage() {
+        return Optional.ofNullable(currentPage);
+    }
+
+    /**
      * Maybe get target page.
      *
      * @param pageID Target page ID.
@@ -160,13 +169,16 @@ public final class DocElement extends Element implements Scriptable {
     public Optional<PageElement> getPage(final String pageID) {
         var pages = this.getPages();
         var it = pages.iterator();
+        Integer ind = 0;
         while (it.hasNext()) {
             var page = it.next();
             var pgID = page.getID();
             if (pgID.equals(pageID)) {
                 currentPage = page;
+                page.setIndex(ind);
                 return Optional.of(page);
             }
+            ind ++;
         }
         return Optional.empty();
     }
@@ -181,6 +193,7 @@ public final class DocElement extends Element implements Scriptable {
         var pages = this.getPages();
         try {
             PageElement page = pages.get(pageNum);
+            page.setIndex(pageNum);
             currentPage = page;
             return Optional.of(page);
         } catch (IndexOutOfBoundsException ex) {

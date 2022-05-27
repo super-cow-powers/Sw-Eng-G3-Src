@@ -29,7 +29,7 @@
 package g3.project.core;
 
 import g3.project.elements.Scriptable;
-import g3.project.xmlIO.Io;
+import g3.project.xmlIO.DocIO;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -98,7 +98,7 @@ public final class Scripting {
         defaultLang = defaultLanguage;
         defaultWriter = writer;
         //Load in the custom global functions
-        var fns = Io.getInternalResource("globalFunctions.py", Scripting.class);
+        var fns = DocIO.getInternalResource("globalFunctions.py", Scripting.class);
         try {
             if (fns.isEmpty()) {
                 throw new IOException("Couldn't get functions file");
@@ -107,7 +107,7 @@ public final class Scripting {
             this.evalString(fnStr, defaultLanguage, topLevelBindings);
         } catch (IOException | NullPointerException | ScriptException ex) {
             //Default function loading failed.
-            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DocIO.class.getName()).log(Level.SEVERE, null, ex);
             //Pre-init a script engine.
             getScriptEngine(defaultLanguage);
         }
@@ -153,7 +153,7 @@ public final class Scripting {
      * @throws IOException Couldn't get script.
      */
     public void evalElement(final Scriptable element) throws ScriptException, IOException {
-        Io docIo = engine.getDocIO();
+        DocIO docIo = engine.getDocIO();
         var scrElOpt = element.getScriptEl();
         //Setup bindings
         var bindings = element.getScriptingBindings();

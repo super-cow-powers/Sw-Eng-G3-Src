@@ -74,7 +74,7 @@ public final class Parse {
             xerces = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
             xerces.setFeature("http://apache.org/xml/features/validation/schema", validate);
         } catch (SAXException ex) {
-            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DocIO.class.getName()).log(Level.SEVERE, null, ex);
         }
         return xerces;
     }
@@ -90,7 +90,7 @@ public final class Parse {
             var doc = parseDocXML(new FileInputStream(xmlFile));
             return doc;
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DocIO.class.getName()).log(Level.SEVERE, null, ex);
         }
         return Optional.empty();
     }
@@ -105,13 +105,13 @@ public final class Parse {
         Builder parser;
         var xer = (XMLReader) getParser(true);
         try {
-            var pwsURL = Io.class.getResource(PWS);
-            var extURL = Io.class.getResource(EXT_SCHEMA);
+            var pwsURL = DocIO.class.getResource(PWS);
+            var extURL = DocIO.class.getResource(EXT_SCHEMA);
             var schemaString = "http://" + PWS_NS + " " + pwsURL.toString() + " " + "http://" + EXT_NS + " " + extURL.toString();
             //Set Schemas
             xer.setProperty("http://apache.org/xml/properties/schema/external-schemaLocation", schemaString);
         } catch (SAXNotRecognizedException | SAXNotSupportedException ex) {
-            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DocIO.class.getName()).log(Level.SEVERE, null, ex);
         }
         try {
             parser = new Builder(xer, true, new ElementFactory());

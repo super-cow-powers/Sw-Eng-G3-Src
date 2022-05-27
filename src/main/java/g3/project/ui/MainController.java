@@ -47,7 +47,7 @@ import g3.project.graphics.StyledTextSeg;
 import g3.project.graphics.VisualProps;
 import g3.project.playable.Player;
 import g3.project.playable.PlayerFactory;
-import g3.project.xmlIO.Io;
+import g3.project.xmlIO.DocIO;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -645,7 +645,7 @@ public final class MainController {
             drawnElements.put(id, newplayer);
             String loadPath = path;
             //Get a resource from the archive. This is typically slower, as the resource system will copy the resource out.
-            if (Io.isUriInternal(path)) {
+            if (DocIO.isUriInternal(path)) {
                 var resMaybe = engine.getDocIO().getResourceTempPath(path);
                 if (resMaybe.isPresent()) {
                     loadPath = resMaybe.get();

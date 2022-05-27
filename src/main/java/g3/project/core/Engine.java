@@ -40,7 +40,7 @@ import g3.project.ui.MainController;
 import g3.project.graphics.SizeObj;
 import g3.project.graphics.StrokeProps;
 import g3.project.graphics.VisualProps;
-import g3.project.xmlIO.Io;
+import g3.project.xmlIO.DocIO;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,12 +76,12 @@ public final class Engine extends Threaded {
     /**
      * XML IO.
      */
-    private Io docIO;
+    private DocIO docIO;
 
     /**
      * Tools IO.
      */
-    private Io toolIO;
+    private DocIO toolIO;
 
     /**
      * Network Communications module.
@@ -105,6 +105,7 @@ public final class Engine extends Threaded {
      * ID of currently open page/card.
      */
     private String currentPageID = "";
+
     /**
      * Navigation history stack.
      */
@@ -213,7 +214,7 @@ public final class Engine extends Threaded {
      *
      * @return doc IO.
      */
-    public Io getDocIO() {
+    public DocIO getDocIO() {
         return docIO;
     }
 
@@ -488,7 +489,7 @@ public final class Engine extends Threaded {
      * @param xmlFile Doc to load
      */
     private void parseNewDoc(final File xmlFile) { // Load a new doc
-        initDoc(new Io(xmlFile.getAbsolutePath()));
+        initDoc(new DocIO(xmlFile.getAbsolutePath()));
     }
 
     /**
@@ -497,7 +498,7 @@ public final class Engine extends Threaded {
      * @param archStream Doc to load
      */
     private void parseNewDoc(final InputStream archStream) {
-        initDoc(new Io(archStream));
+        initDoc(new DocIO(archStream));
         //Platform.runLater(() -> controller.showPlayable("test-player", new SizeObj(200d, 200d, 0d), new LocObj(new Point2D(50d, 50d), 0d), "file:/home/david/Videos/Popcornarchive-aClockworkOrange1971.mp4"));
     }
 
@@ -506,7 +507,7 @@ public final class Engine extends Threaded {
      *
      * @param docio doc to init.
      */
-    private void initDoc(final Io docio) {
+    private void initDoc(final DocIO docio) {
         if (docIO != null) {
             docIO.close(); //Close the previous
         }
@@ -837,11 +838,12 @@ public final class Engine extends Threaded {
             runFunction(() -> gotoNextPage());
             return;
         }
-        var currentCard = getPageIndex(currentPageID);
-        if (currentCard < currentDoc.getPages().size() - 1) {
-            currentCard++;
-        }
-        this.gotoPage(currentCard, true);
+        currentDoc.getCurrentPage().flatMap(card -> {
+            if (card.getIndex() < currentDoc.getPages().size() - 1) {
+                return currentDoc.getPage(card.getIndex() + 1);
+            }
+            return Optional.empty();
+        }).ifPresent(next -> this.gotoPage(next, true));
     }
 
     /**
@@ -866,8 +868,8 @@ public final class Engine extends Threaded {
             runFunction(() -> gotoPage(pageNum, storeHistory));
             return;
         }
-        Optional<PageElement> page = currentDoc.getPage(pageNum);
-        page.ifPresent(f -> gotoPage(f, storeHistory));
+        currentDoc.getPage(pageNum)
+                .ifPresent(f -> gotoPage(f, storeHistory));
     }
 
     /**
@@ -1021,16 +1023,25 @@ public final class Engine extends Threaded {
      * @return Optional<Tools>
      */
     private Optional<Tools> loadTools() {
-        /*var toolsXMLPath = Engine.class.getResource("tools.xml").getPath();
-        toolIO = new Io(new File(toolsXMLPath), new ToolsFactory());
+        var toolsXMLPath = Engine.class.getResource("tools.xml").getPath();
+        toolIO = new DocIO(new File(toolsXMLPath), new ToolsFactory());
         var parsedDoc = toolIO.getDoc();
         var root
                 = parsedDoc
                         .filter(d -> d.getRootElement() instanceof Tools)
                         .map(d -> (Tools) d.getRootElement());
         this.putMessage("Tools Loaded", false);
-        return root;*/
+        return root;
         return Optional.empty();
+    }
+
+    /**
+     * Activate tool
+     *
+     * @param toolID Tool to activate.
+     */
+    public void activateTool(final String toolID) {
+
     }
 
     /**
