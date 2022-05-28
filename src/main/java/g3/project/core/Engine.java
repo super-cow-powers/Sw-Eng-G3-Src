@@ -320,18 +320,15 @@ public final class Engine extends Threaded {
      * @param pkt Packet to extract event from.
      */
     private void handlePacket(final SessionPacket pkt) {
-        var event = pkt.getEvent();
-        final var mevType = pkt.getScrType();
-        if (event != null) {
-            handleEvent(event);
-        }else if(!mevType.isEmpty()){ //Check for mouse event
-            var elOpt = currentDoc.getElementByID(pkt.getElID());
-            if (mevType.equals(Scripting.CLICK_FN)) {
-                elOpt.ifPresent(el -> scriptingEngine.invokeOnElement(el, mevType, pkt.getMouseButton(), pkt.getX(), pkt.getY(), pkt.isDown()));
-            } else {
-                elOpt.ifPresent(el -> scriptingEngine.invokeOnElement(el, mevType, pkt.getX(), pkt.getY()));
-            }
-        }
+        final var event = pkt.getEvent();
+        final var mevType = pkt.getMevType();
+        event.ifPresentOrElse(
+                ev -> {
+                    handleEvent(ev);
+                },
+                () -> {
+                    
+            });
     }
 
     /**
