@@ -31,11 +31,16 @@ package g3.project.core;
 import g3.project.elements.Scriptable;
 import g3.project.xmlIO.DocIO;
 import g3.project.xmlIO.IO;
+
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.script.Invocable;
@@ -97,7 +102,8 @@ public final class Scripting {
         var globals = scriptingEngineManager.getBindings();
         globals.put("engine", globalEngine);
         engine = globalEngine;
-        defaultLang = defaultLanguage;
+        //Make sure not to use an unsupported language
+        defaultLang = checkIfLanguageSupported(defaultLanguage);
         defaultWriter = writer;
         //Load in the custom global functions
         var fns = DocIO.getInternalResource("globalFunctions.py", Scripting.class);
@@ -113,7 +119,6 @@ public final class Scripting {
             //Pre-init a script engine.
             getScriptEngine(defaultLanguage);
         }
-
     }
 
     /**
@@ -299,6 +304,33 @@ public final class Scripting {
             knownScriptEngines.put(lang, scrEngine);
         }
         return scrEngine;
+    }
+
+    /**
+     * Checks if the scripting language is supported
+     * @return String, original language if supported, python if not supported.
+     */
+    private String checkIfLanguageSupported(String defaultLanguage) {
+        ArrayList<String> langList = new ArrayList<>();
+        langList = findSupportedLanguages(langList);
+        for (int i = 0; i < langList.size(); i++) {
+            if (defaultLanguage.equals(langList.get(i))) {
+                return defaultLanguage;
+            }
+        }
+        return "python";
+    }
+
+    /**
+     * Finds supported languages and adds them to array
+     * @todo Set this up to read from a text file instead of being hardcoded
+     * @param langList
+     * @return filled langList
+     */
+    private ArrayList<String> findSupportedLanguages(ArrayList<String> langList) {
+        langList.add("python");
+        langList.add("html");
+        return langList;
     }
 
     private ScriptEngine getDefaultScriptEngine() {

@@ -614,7 +614,7 @@ public final class Engine extends Threaded {
     /**
      * Instruct the UI to draw an image using discrete values.
      *
-     * @param ID
+     * @param id
      * @param xSize
      * @param ySize
      * @param xLoc
