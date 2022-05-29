@@ -617,12 +617,12 @@ public final class MainController {
     public void addTool(final String toolname, final String toolID, final String iconPath) {
         final Double iconX = 50d;
         final Double iconY = 50d;
-        
+
         final Button toolButton = new Button();
         Optional<byte[]> maybeImage = engine.getToolIO().getResource(iconPath);
         maybeImage.map(imB -> new Image(new ByteArrayInputStream(imB)))
                 .map(im -> {
-                    var imv = new ImageView(im);
+                    var imv = new VisImageView(im);
                     imv.setFitWidth(iconX);
                     imv.setFitHeight(iconY);
                     return imv;
@@ -841,6 +841,7 @@ public final class MainController {
 
     /**
      * Allows editing elements
+     *
      * @param editable
      */
     public void toggleEditable(final Boolean editable) {

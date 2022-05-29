@@ -168,7 +168,6 @@ public final class Engine extends Threaded {
      */
     private AtomicBoolean running = getRunning();
 
-
     /**
      * Get suspended
      */
@@ -736,7 +735,9 @@ public final class Engine extends Threaded {
 
     /**
      * Set text on a shape. Sets properties for all text in the shape.
-     * @TODO for linting - reduce the amount of parameters called to 7 if possible
+     *
+     * @TODO for linting - reduce the amount of parameters called to 7 if
+     * possible
      * @param shapeID Target ID.
      * @param text Text to set.
      * @param hAlign Horizontal alignment.
