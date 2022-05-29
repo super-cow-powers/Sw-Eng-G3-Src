@@ -49,77 +49,51 @@ import nu.xom.*;
  *
  * @author david
  */
-public final class Io {
+public abstract class IO {
+    //CHECKSTYLE:OFF
+    protected final static String mediaDirString = "/media";
 
-    /**
-     * Filename for document
-     */
-    private final String xmlFileName = "doc.xml";
+    protected final static String imagesDirString = "/images";
 
-    /**
-     * Path for media (video and audio)
-     */
-    private final String mediaDirString = "/media";
+    protected final static String scriptsDirString = "/scripts";
 
-    /**
-     * Path for images
-     */
-    private final String imagesDirString = "/images";
-
-    /**
-     * Path for python scripts
-     */
-    private final String scriptsDirString = "/scripts";
-
-    /**
-     * Temporary pre fix for files
-     */
-    private final String tempFilePrefix = "_sprestmp_";
-    /**
-     * Open Document.
-     */
-    private final Optional<Document> myDoc;
+    protected final static String tempFilePrefix = "_sprestmp_";
 
     /**
      * Document Name.
      */
-    private String docName;
+    protected String docName;
+
+    protected File origZip;
 
     /**
-     * Zip File
+     * Open Document.
      */
-    private File origZip;
+    protected final Optional<Document> myDoc;
 
-    /**
-     * Zip file parser
-     */
-    private FileSystem zipFs;
+    protected FileSystem zipFs;
 
-    /**
-     * Temporary path for data
-     */
-    private Path tempPath;
+    protected Path tempPath;
 
-    /**
-     * Whether saving is allowed or not
-     */
-    private Boolean allowSave = true;
+    protected Boolean allowSave = false;
+    //CHECKSTYLE:ON
+
     /**
      * Temporary files requiring cleanup.
      */
-    private final HashMap<String, Path> tempFiles = new HashMap<>();
+    protected final HashMap<String, Path> tempFiles = new HashMap<>();
 
     /**
      * Create new IO and parse the project doc.
      *
      * @param presFilePath path to pres. Zip.
      */
-    public Io(final String presFilePath) {
+    public IO(final String presFilePath) {
 
         var presFileUriString = pathToUriString(presFilePath);
         var presFileUriOpt = maybeURI(presFileUriString);
         var zipFile = presFileUriOpt.filter(uri -> uri.getPath().matches("^.*\\.(zip|ZIP|spres|SPRES)$"))
-                .flatMap(Uri -> getPresArchive(Uri));
+                .flatMap(Uri -> getArchive(Uri)); //Retrieve the Zip archive.
         var fsOpt = zipFile.flatMap(file -> {
             docName = file.getName();
             origZip = file;
@@ -128,16 +102,16 @@ public final class Io {
                 Files.copy(file.toPath(), tempPath, StandardCopyOption.REPLACE_EXISTING);
                 tempFiles.put(docName, tempPath);
             } catch (IOException ex) {
-                Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
                 return null;
             }
             return makeFs(tempPath);
-        });
+        }); //Get the zip file-system. Maybe.
 
         myDoc = fsOpt.flatMap(fs -> {
             zipFs = fs;
             return retrieveDoc(fs);
-        });
+        }); //Maybe get the doc.
     }
 
     /**
@@ -145,7 +119,7 @@ public final class Io {
      *
      * @param presStream Stream containing archive.
      */
-    public Io(final InputStream presStream) {
+    public IO(final InputStream presStream) {
         docName = "unknown.spres";
         Optional<FileSystem> fsOpt = Optional.empty();
         try {
@@ -156,7 +130,7 @@ public final class Io {
             Files.write(tempPath, pres);
             fsOpt = makeFs(tempPath);
         } catch (IOException | NullPointerException ex) {
-            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         myDoc = fsOpt.flatMap(fs -> {
@@ -166,21 +140,12 @@ public final class Io {
     }
 
     /**
-     * Get doc from FileSystem.
+     * Get doc from FileSystem. Must be implemented by subclass!
      *
      * @param fs FileSystem
      * @return Maybe Doc.
      */
-    private Optional<Document> retrieveDoc(final FileSystem fs) {
-        var docPath = fs.getPath(xmlFileName);
-        try {
-            var docIs = Files.newInputStream(docPath);
-            return Parse.parseDocXML(docIs);
-        } catch (IOException ex) {
-            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return Optional.empty();
-    }
+    protected abstract Optional<Document> retrieveDoc(final FileSystem fs);
 
     /**
      * Make a new Zip FS.
@@ -188,7 +153,7 @@ public final class Io {
      * @param path Path to zip
      * @return Maybe FS.
      */
-    private Optional<FileSystem> makeFs(file Path path) {
+    protected static final Optional<FileSystem> makeFs(final Path path) {
         HashMap<String, String> env = new HashMap<>();
         env.put("create", "true");
         FileSystem fs = null;
@@ -197,7 +162,7 @@ public final class Io {
             var ur = URI.create("jar:" + urStr);
             fs = FileSystems.newFileSystem(ur, env);
         } catch (IOException ex) {
-            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(IO.class.getName()).log(Level.SEVERE, null, ex);
         }
         return Optional.ofNullable(fs);
     }
@@ -208,7 +173,7 @@ public final class Io {
      * @param target URI of target zip.
      * @return Maybe zip file.
      */
-    private Optional<File> getPresArchive(final URI target) {
+    protected static final Optional<File> getArchive(final URI target) {
         var uriScheme = target.getScheme();
         File zipFile = null;
         if (uriScheme.startsWith("file")) {
@@ -229,50 +194,6 @@ public final class Io {
     }
 
     /**
-     * Save document to current location.
-     *
-     * @throws IOException bad file.
-     */
-    public void save() throws IOException {
-        if (allowSave == true | origZip != null) {
-            saveAs(origZip.getAbsolutePath());
-        } else {
-            throw new IOException("Can't save.");
-        }
-    }
-
-    /**
-     * Save document to new location.
-     *
-     * @param newPath Path to save to.
-     * @throws IOException bad file.
-     */
-    public void saveAs(final String newPath) throws IOException {
-        if (zipFs == null || myDoc.isEmpty()) {
-            throw new IOException("Can't save.");
-        } else if (!newPath.matches("^.*\\.(zip|ZIP|spres|SPRES)$")) {
-            throw new IOException("Bad File Name!");
-        }
-        Path docPath = zipFs.getPath(xmlFileName);
-        Path tmpDocPath = Files.createTempFile("_tmpdoc", "");
-        Files.deleteIfExists(docPath);
-        var fileOutStream = Files.newOutputStream(tmpDocPath);
-        Serializer serializer = new Serializer(fileOutStream, "ISO-8859-1");
-        serializer.write(myDoc.get());
-        Files.move(tmpDocPath, docPath, StandardCopyOption.REPLACE_EXISTING);
-        //Close and reopen (sync). This is undocumented!!!
-        zipFs.close();
-        makeFs(tempPath).ifPresent(fs -> zipFs = fs);
-        var newPathPath = Paths.get(newPath);
-        //Copy the temp file to the expected place
-        Files.copy(tempPath,
-                newPathPath,
-                StandardCopyOption.REPLACE_EXISTING);
-        origZip = newPathPath.toFile();
-        allowSave = true;
-    }
-
-    /**
      * Get a resource from the zip.
      *
      * @param path Resource path.
@@ -285,7 +206,7 @@ public final class Io {
             try {
                 arr = Files.readAllBytes(fPath);
             } catch (IOException ex) {
-                Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(IO.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else { //Get an external resource
             try {
@@ -293,7 +214,7 @@ public final class Io {
                 var is = uri.toURL().openStream();
                 arr = is.readAllBytes();
             } catch (URISyntaxException | MalformedURIException | IOException ex) {
-                Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(IO.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         return Optional.ofNullable(arr);
@@ -318,7 +239,7 @@ public final class Io {
                 tempFiles.put(path, tempfPath);
                 return Optional.of(tempfPath.toAbsolutePath().toString());
             } catch (IOException ex) {
-                Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(IO.class.getName()).log(Level.SEVERE, null, ex);
                 return Optional.empty();
             }
         } else { //External resource. Return input.
@@ -327,19 +248,21 @@ public final class Io {
     }
 
     /**
-     * Check if given URI will be returned from the ZIP archive.
+     * Check if given Path should be in the ZIP archive.
      *
-     * @param uri URI to check.
+     * @param path Path to check.
      * @return True or False.
      */
-    public static Boolean isUriInternal(final String uri) {
-        if (uri.startsWith("http")) {
+    public static Boolean isUriInternal(final String path) {
+        //CHECKSTYLE:OFF
+        if (path.startsWith("http")) {
             return false;
-        } else if (uri.startsWith("file:")) {
+        } else if (path.startsWith("file:")) {
             return false;
         } else {
             return true;
         }
+        //CHECKSTYLE:ON
     }
 
     /**
@@ -355,7 +278,7 @@ public final class Io {
         try {
             Files.copy(resPath, internalPath, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException ex) {
-            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(IO.class.getName()).log(Level.SEVERE, null, ex);
             return Optional.empty();
         }
         return getResource(newPath);
@@ -374,7 +297,7 @@ public final class Io {
         try {
             arr = is.readAllBytes();
         } catch (IOException ex) {
-            Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(IO.class.getName()).log(Level.SEVERE, null, ex);
         }
         return Optional.ofNullable(arr);
     }
@@ -396,7 +319,7 @@ public final class Io {
      */
     public String pathToUriString(final String path) {
         String loc = null;
-        if (path.contains(":/") || path.startsWith("/")) {
+        if (path.contains(":/") || path.startsWith("/") || path.contains(":\\")) {
             //Must be an absolute Path
             loc = path;
         } else if (path.startsWith(".")) {
@@ -406,7 +329,8 @@ public final class Io {
         }
         if (!path.startsWith("http")) {
             //Not a URL? Must be a local file
-            loc = "file:".concat(loc);
+            var p = Paths.get(path);
+            loc = p.toUri().toString();
         }
         return loc;
     }
@@ -414,14 +338,16 @@ public final class Io {
     /**
      * Returns a maybe URI from an input string containing an URI.
      *
-     * @param UrString URI String.
+     * @param UrString URI/Path String.
      * @return Maybe URI.
      */
     public Optional<URI> maybeURI(final String UrString) {
         URI uri = null;
+
         try {
             uri = new URI(UrString);
         } catch (URISyntaxException ex) {
+            System.err.println(ex);
         }
 
         return Optional.ofNullable(uri);
@@ -435,7 +361,7 @@ public final class Io {
             try {
                 zipFs.close();
             } catch (IOException ex) {
-                Logger.getLogger(Io.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(IO.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         tempFiles.forEach((id, p) -> {

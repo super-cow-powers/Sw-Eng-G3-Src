@@ -36,6 +36,10 @@ import nu.xom.*;
  * @author David Miall <dm1306@york.ac.uk>
  */
 public class PageElement extends VisualElement {
+    /**
+     * My Index.
+     */
+    private Integer index = 0;
 
     /**
      * Creates builder thread for the element
@@ -90,6 +94,21 @@ public class PageElement extends VisualElement {
     public Optional<String> setTitle(final String name) {
         this.addAttribute(new Attribute("title", name));
         return getTitle();
+    }
+    /**
+     * Set the page index.
+     * This should be done before return from the Document to a user.
+     * @param ind Index.
+     */
+    protected void setIndex(final Integer ind){
+        index = ind;
+    }
+    /**
+     * Get the page index. This should be set before use in the engine.
+     * @return Index.
+     */
+    public Integer getIndex(){
+        return index;
     }
 
 }

@@ -64,7 +64,7 @@ public class VisImageView extends ImageView implements Visual {
      * @param props Properties map.
      */
     @Override
-    public void setProps(final VisualProps props) {
+    public void setVisualProps(VisualProps props) {
         var shad = props.makeShadow();
         shad.ifPresent(sh -> this.setEffect(sh));
         var vis = props.getProp(VisualProps.VISIBLE);

@@ -37,12 +37,13 @@ import g3.project.graphics.VisualProps;
  */
 public interface Visual {
     /**
-     * @TODO javadoc
+     * Set item visual properties.
+     * @param visualProps Properties.
      */
-    void setProps(VisualProps visualProps);
+    public void setVisualProps(final VisualProps visualProps);
     /**
-     * javadoc
-     * @param size
+     * Set the item's size.
+     * @param size Size to set.
      */
-    void setSize(SizeObj size);
+    public void setSize(final SizeObj size);
 }

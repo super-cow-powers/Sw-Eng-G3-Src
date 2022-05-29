@@ -227,7 +227,7 @@ public abstract class ExtShape extends Group implements Visual {
      *
      * @param visualProps properties.
      */
-    public final void setProps(final VisualProps visualProps) {
+    public final void setVisualProps(final VisualProps visualProps) {
         var maybeShadow = visualProps.makeShadow();
         maybeShadow.ifPresent(sh -> {
             shape.setEffect(sh);

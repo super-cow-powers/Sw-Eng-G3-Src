@@ -29,6 +29,7 @@
 package g3.project.core;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import nu.xom.Builder;
 import nu.xom.Element;
 
@@ -57,25 +58,31 @@ public class Tools extends Element {
     public Tools(final String name) {
         super(name);
     }
-/**
- * Constructor.
- * @param name Tools element name.
- * @param uri Tools element URI.
- */
+
+    /**
+     * Constructor.
+     *
+     * @param name Tools element name.
+     * @param uri Tools element URI.
+     */
     public Tools(final String name, final String uri) {
         super(name, uri);
     }
-/**
- * Constructor.
- * @param element Tools Element.
- */
+
+    /**
+     * Constructor.
+     *
+     * @param element Tools Element.
+     */
     public Tools(final Element element) {
         super(element);
     }
-/**
- * Get list of available tools.
- * @return ArrayList of tools.
- */
+
+    /**
+     * Get list of available tools.
+     *
+     * @return ArrayList of tools.
+     */
     public final ArrayList<Tool> getTools() {
         ArrayList<Tool> list = new ArrayList<Tool>();
         for (int i = 0; i < this.getChildCount(); i++) {
@@ -85,5 +92,23 @@ public class Tools extends Element {
             }
         }
         return list;
+    }
+
+    /**
+     * Get a tool by it's ID.
+     *
+     * @param toolID Target ID.
+     * @return Maybe tool.
+     */
+    public Optional<Tool> getTool(final String toolID) {
+        var children = this.getChildElements();
+        for (var ch : children) {
+            if (ch instanceof Tool) {
+                if (((Tool) ch).getID().equals(toolID)) {
+                    return Optional.of((Tool) ch);
+                }
+            }
+        }
+        return Optional.empty();
     }
 }

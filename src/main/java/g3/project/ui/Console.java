@@ -110,7 +110,11 @@ public final class Console {
      * @param message Message to show.
      */
     public void putMessage(final String message) {
-        historyArea.appendText(message);
+        if (!message.endsWith("\n")) {
+            historyArea.appendText(message.concat("\n"));
+        } else {
+            historyArea.appendText(message);
+        }
     }
 
 }

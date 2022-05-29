@@ -34,6 +34,8 @@ import g3.project.graphics.LocObj;
 import g3.project.graphics.SizeObj;
 import g3.project.graphics.StrokeProps;
 import g3.project.graphics.VisualProps;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Optional;
 import javafx.geometry.Point2D;
@@ -67,9 +69,9 @@ public class VisualElement extends Element implements Scriptable {
     private Optional<Engine> engine = Optional.empty();
 
     /**
-     * Clone of this object. Might not use it.
+     * Does the script need evaluating again?
      */
-    private VisualElement scriptedClone;
+    private Boolean evalRequired = true;
 
     /**
      * Constructor.
@@ -371,6 +373,16 @@ public class VisualElement extends Element implements Scriptable {
     }
 
     /**
+     * Element has changed/updated. Notify the engine.
+     */
+    protected final void hasUpdated() {
+        var root = this.getDocument().getRootElement();
+        if (root instanceof DocElement) {
+            ((DocElement) root).getChangeCallback().accept(this);
+        }
+    }
+
+    /**
      * Get the local scope for this object.
      *
      * @return my Bindings.
@@ -420,14 +432,40 @@ public class VisualElement extends Element implements Scriptable {
         return this.getClass().getName();
     }
 
-    /**
-     * Element has changed/updated. Notify the engine.
-     */
-    protected final void hasUpdated() {
-        var root = this.getDocument().getRootElement();
-        if (root instanceof DocElement) {
-            ((DocElement) root).getChangeCallback().accept(this);
+    @Override
+    public void addScriptFile(Path path, String language) throws IOException {
+        if (!path.getFileSystem().provider().getScheme().contains("jar") && !path.getFileSystem().provider().getScheme().contains("zip")) {
+            throw new IOException("External files not supported. Add the file to the project.");
         }
+        ScriptElement scEl = new ScriptElement("ext:script", VisualElement.EXT_URI, path.toString(), language);
+        var chEls = this.getChildElements();
+        //Remove other scripts.
+        for (var ch : chEls) {
+            if (ch instanceof ScriptElement) {
+                this.removeChild(ch);
+            }
+        }
+        this.appendChild(scEl);
+    }
+
+    /**
+     * Should I be re-evaluated?
+     *
+     * @return To eval.
+     */
+    @Override
+    public Boolean getEvalRequired() {
+        return evalRequired;
+    }
+
+    /**
+     * Set if I should be re-evaluated.
+     *
+     * @param req Re-eval?
+     */
+    @Override
+    public void setEvalRequired(final Boolean req) {
+        evalRequired = req;
     }
 
 }

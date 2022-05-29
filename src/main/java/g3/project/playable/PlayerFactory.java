@@ -29,6 +29,7 @@
 package g3.project.playable;
 
 import java.util.HashMap;
+import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 
 /**
  *
@@ -37,9 +38,13 @@ import java.util.HashMap;
 public final class PlayerFactory {
 
     /**
-     * Players.
+     * Created Players.
      */
-    private HashMap<Integer, Player> playerMap = new HashMap<>();
+    HashMap<Integer, Player> playerMap = new HashMap<>();
+    /**
+     * Player Factory.
+     */
+    MediaPlayerFactory factory = new MediaPlayerFactory();
 
     /**
      * Constructor.
@@ -49,7 +54,7 @@ public final class PlayerFactory {
     }
 
     /**
-     * @TODO javadoc
+     * Make a new player.
      */
     public Player newPlayer() {
         return newPlayer(0d, 0d);
@@ -62,7 +67,7 @@ public final class PlayerFactory {
      * @return player.
      */
     public Player newPlayer(final Double width, final Double height) {
-        var player = new Player(width, height);
+        var player = new Player(width, height, factory);
         playerMap.put(player.hashCode(), player);
         return player;
     }
@@ -72,6 +77,7 @@ public final class PlayerFactory {
      */
     public void freeAll() {
         playerMap.forEach((hashCode, pl) -> pl.free());
+        factory.release();
     }
 
     /**

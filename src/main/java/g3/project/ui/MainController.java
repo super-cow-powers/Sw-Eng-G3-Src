@@ -41,15 +41,17 @@ import g3.project.graphics.ExtPolygon;
 import g3.project.graphics.ExtShape;
 import g3.project.graphics.ExtShapeFactory;
 import g3.project.graphics.FontProps;
+import g3.project.graphics.Props;
 import g3.project.graphics.StrokeProps;
 import g3.project.graphics.StyledTextSeg;
 import g3.project.graphics.VisualProps;
 import g3.project.playable.Player;
 import g3.project.playable.PlayerFactory;
-import g3.project.xmlIO.Io;
+import g3.project.xmlIO.DocIO;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -73,7 +75,7 @@ import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Scale;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.util.Duration;    
+import javafx.util.Duration;
 
 /**
  *
@@ -154,6 +156,9 @@ public final class MainController {
 
     @FXML
     private SplitPane splitPane;
+
+    @FXML
+    private VBox propPane;
 
     @FXML
     private FlowPane toolPane;
@@ -481,7 +486,7 @@ public final class MainController {
     public void setElVisualProps(final String id, final VisualProps props) {
         var el = drawnElements.get(id);
         if (el instanceof Visual) {
-            ((Visual) el).setProps(props);
+            ((Visual) el).setVisualProps(props);
         }
     }
 
@@ -566,7 +571,7 @@ public final class MainController {
         //Some elements require cleanup - ffs.
         drawnElements.forEach((elid, node) -> {
             if (node instanceof Player) {
-                ((Player) node).free();
+                playerFact.free((Player) node);
             }
             drawnElements.remove(elid);
         });
@@ -607,17 +612,31 @@ public final class MainController {
      *
      * @param toolname Name of tool.
      * @param toolID Tool ID.
+     * @param iconPath Path to tool icon.
      */
-    public void addTool(final String toolname, final String toolID) {
-        Button toolButton = new Button(toolname);
+    public void addTool(final String toolname, final String toolID, final String iconPath) {
+        final Double iconX = 50d;
+        final Double iconY = 50d;
+        
+        final Button toolButton = new Button();
+        Optional<byte[]> maybeImage = engine.getToolIO().getResource(iconPath);
+        maybeImage.map(imB -> new Image(new ByteArrayInputStream(imB)))
+                .map(im -> {
+                    var imv = new ImageView(im);
+                    imv.setFitWidth(iconX);
+                    imv.setFitHeight(iconY);
+                    return imv;
+                })
+                .ifPresentOrElse(imv -> toolButton.setGraphic(imv),
+                        () -> toolButton.setText(toolname));
         //CHECKSTYLE:OFF
         toolButton.setMaxSize(75, 75);
-        toolButton.setMinSize(50, 50);
+        toolButton.setMinSize(iconX, iconY);
         //CHECKSTYLE:ON
         toolButton.setId(toolID);
         toolButton.setWrapText(false);
-        toolButton.setOnAction(event -> {
-            engine.offerEvent(event);
+        toolButton.setOnMouseClicked(event -> {
+            engine.activateTool(toolButton.getId());
         });
         toolPane.getChildren().add(toolButton);
     }
@@ -639,7 +658,7 @@ public final class MainController {
             drawnElements.put(id, newplayer);
             String loadPath = path;
             //Get a resource from the archive. This is typically slower, as the resource system will copy the resource out.
-            if (Io.isUriInternal(path)) {
+            if (DocIO.isUriInternal(path)) {
                 var resMaybe = engine.getDocIO().getResourceTempPath(path);
                 if (resMaybe.isPresent()) {
                     loadPath = resMaybe.get();
@@ -790,6 +809,10 @@ public final class MainController {
         console.putMessage(message);
     }
 
+    public void showProperties(final HashMap<String, Props> props) {
+
+    }
+
     /**
      * Clear non-blocking message area.
      *
@@ -901,7 +924,7 @@ public final class MainController {
             pagePane.addEventHandler(MouseEvent.ANY, handleInput);
             pagePane.addEventHandler(KeyEvent.ANY, handleInput);
             pagePane.setFocusTraversable(true);
-            console = new Console((Stage) pagePane.getScene().getWindow(), (s -> engine.evalPyStr(s)));
+            console = new Console((Stage) pagePane.getScene().getWindow(), (s -> engine.consoleLineCallback(s)));
             pagePane.addEventFilter(KeyEvent.ANY, event -> {
                 if (event.getCode() == KeyCode.DOWN || event.getCode() == KeyCode.UP || event.getCode() == KeyCode.LEFT || event.getCode() == KeyCode.RIGHT) {
                     handleEvent(event);
