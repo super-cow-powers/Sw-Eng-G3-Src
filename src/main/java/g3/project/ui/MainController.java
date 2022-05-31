@@ -618,7 +618,7 @@ public final class MainController {
     public void addTool(final String toolname, final String toolID, final String iconPath) {
         final Double iconX = 50d;
         final Double iconY = 50d;
-        
+        Tooltip buttonTip = new Tooltip(toolname);
         final Button toolButton = new Button();
         Optional<byte[]> maybeImage = engine.getToolIO().getResource(iconPath);
         maybeImage.map(imB -> new Image(new ByteArrayInputStream(imB)))
@@ -630,6 +630,7 @@ public final class MainController {
                 })
                 .ifPresentOrElse(imv -> toolButton.setGraphic(imv),
                         () -> toolButton.setText(toolname));
+        Tooltip.install(toolButton, buttonTip);
         //CHECKSTYLE:OFF
         toolButton.setMaxSize(75, 75);
         toolButton.setMinSize(iconX, iconY);
@@ -925,8 +926,31 @@ public final class MainController {
                     event.consume();
                 }
             });
-
             engine.start();
+        });
+        pageVBox.widthProperty().addListener((obs, oldWidth, newWidth) -> {
+            var pageWidth = pagePane.getWidth();
+            var pageHeight = pagePane.getHeight();
+            var boxWidth = newWidth.doubleValue();
+            var boxHeight = pageVBox.getHeight();
+            var wScale = boxHeight / (pageHeight + 10d);
+            var hScale = boxWidth / (pageWidth + 10d);
+            var newScale = Math.min(wScale, hScale);
+            pagePane.setScaleX(newScale);
+            pagePane.setScaleY(newScale);
+            System.out.println(newScale);
+        });
+        pageVBox.heightProperty().addListener((obs, oldHeight, newHeight) -> {
+            var pageWidth = pagePane.getWidth();
+            var pageHeight = pagePane.getHeight();
+            var boxWidth = pageVBox.getWidth();
+            var boxHeight = newHeight.doubleValue();
+            var wScale = boxHeight / (pageHeight + 10d);
+            var hScale = boxWidth / (pageWidth + 10d);
+            var newScale = Math.min(wScale, hScale);
+            pagePane.setScaleX(newScale);
+            pagePane.setScaleY(newScale);
+            System.out.println(newScale);
         });
 
         //Set handlers for shapes and text.

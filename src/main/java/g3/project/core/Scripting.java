@@ -156,6 +156,7 @@ public final class Scripting {
      */
     public void evalElement(final Scriptable element) throws ScriptException, IOException {
         IO elIo;
+
         if (element instanceof Tool) { //Tools have their own IO stuff.
             elIo = engine.getToolIO();
         } else {
@@ -167,25 +168,23 @@ public final class Scripting {
         bindings.put("this", element);
         element.getParentElementScriptingBindings().ifPresent(p -> bindings.setParent(p));
 
-        if (scrElOpt.isPresent()) {
-            var scrEl = scrElOpt.get();
-
+        scrElOpt.flatMap(scrEl -> { //Get file location
             var locOpt = scrEl.getSourceLoc();
             if (locOpt.isEmpty()) {
-                throw new IOException("No script file specified");
+                System.err.println("No script file specified");
             }
-            var loc = locOpt.get();
+            return locOpt;
+        }).flatMap(loc -> { //Get Bytes
             var bytesOpt = elIo.getResource(loc);
-            if (bytesOpt.isPresent()) {
-                var b = bytesOpt.get();
-                var str = new String(b, StandardCharsets.UTF_8);
-                this.evalString(str, scrEl.getScriptLang(), bindings);
-            } else {
-                throw new IOException("Couldn't open script file");
+            return bytesOpt;
+        }).ifPresentOrElse(bytes -> { //Eval
+            var str = new String(bytes, StandardCharsets.UTF_8);
+            try {
+                this.evalString(str, scrElOpt.get().getScriptLang(), bindings);
+            } catch (ScriptException ex) {
+                Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } else {
-
-        }
+        }, () -> System.err.println("Couldn't load Script for " + element.getClass()));
     }
 
     /**
