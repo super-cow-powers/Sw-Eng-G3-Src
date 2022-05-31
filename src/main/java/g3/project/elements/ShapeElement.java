@@ -29,10 +29,13 @@
 package g3.project.elements;
 
 import g3.project.graphics.LocObj;
+import g3.project.graphics.StrokeProps;
 import g3.project.graphics.StyledTextSeg;
 import java.util.ArrayList;
 import java.util.Optional;
+import javafx.application.Platform;
 import javafx.geometry.Point2D;
+import javafx.scene.paint.Color;
 import nu.xom.*;
 
 /**
@@ -55,6 +58,7 @@ public class ShapeElement extends VisualElement {
 
     /**
      * Constructor
+     *
      * @param name
      */
     public ShapeElement(final String name) {
@@ -63,6 +67,7 @@ public class ShapeElement extends VisualElement {
 
     /**
      * Constructor
+     *
      * @param name
      * @param uri
      */
@@ -72,6 +77,7 @@ public class ShapeElement extends VisualElement {
 
     /**
      * Constructor
+     *
      * @param element
      */
     public ShapeElement(final Element element) {
@@ -86,6 +92,26 @@ public class ShapeElement extends VisualElement {
     public String setType(String type) {
         this.addAttribute(new Attribute("type", type));
         return this.getType();
+    }
+
+    /**
+     * Set a shape's stroke.
+     *
+     * @param colour Colour to set.
+     * @param style Stroke Style.
+     * @param width Stroke Width.
+     */
+    public void setStroke(final String colour, final String style, final Double width) {
+        for (Element el : this.getChildElements()) {
+            if (el instanceof StrokeElement) {
+                this.removeChild(el);
+            }
+        }
+        var stroke = new StrokeElement("base:stroke", BASE_URI);
+        stroke.setWidth(width);
+        stroke.setStyle(style);
+        stroke.setColour(colour);
+        this.appendChild(stroke);
     }
 
     /**
@@ -122,11 +148,11 @@ public class ShapeElement extends VisualElement {
             var origin = this.getOrigin();
             origin.ifPresentOrElse(o -> {
                 var newOrig = new LocObj(new Point2D(points.get(0), points.get(1)), o.getZ());
-                this.setOrigin(newOrig);
+                this.setOriginXY(newOrig);
             },
                     () -> {
                         var newOrig = new LocObj(new Point2D(points.get(0), points.get(1)), 1d);
-                        this.setOrigin(newOrig);
+                        this.setOriginXY(newOrig);
                     });
         }
 
@@ -169,6 +195,7 @@ public class ShapeElement extends VisualElement {
 
     /**
      * Gets text for shape element - optional as wont necessarily exist
+     *
      * @return arraylist of text in the object
      */
     public Optional<ArrayList<StyledTextSeg>> getText() {
@@ -183,6 +210,7 @@ public class ShapeElement extends VisualElement {
 
     /**
      * Sets text of the shape element
+     *
      * @param text
      */
     public final void setText(ArrayList<StyledTextSeg> text) {

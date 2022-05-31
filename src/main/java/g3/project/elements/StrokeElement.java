@@ -80,8 +80,6 @@ public class StrokeElement extends Element {
      * @return Optional colour.
      */
     public final Optional<Color> getColour() {
-        final int lenRGB = 6;
-        final int lenRGBA = 8;
         var col = Optional.ofNullable(this.getAttribute(StrokeProps.COLOUR));
         // @todo: Find a nicer looking way of making this work Probably
         // containing more streams.
@@ -89,26 +87,6 @@ public class StrokeElement extends Element {
             //var colStr = col.get().getValue().replace("#", "");
             var colStr = col.get().getValue();
             return Optional.ofNullable(Color.web(colStr));
-            /*
-            switch (colStr.length()) {
-                case lenRGB:
-                    //CHECKSTYLE:OFF
-                    return Optional.of(new Color(
-                            (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
-                            1.0d));
-                //CHECKSTYLE:ON
-                case lenRGBA:
-                    //CHECKSTYLE:OFF
-                    return Optional.of(new Color(
-                            (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(6, 8), 16) / 255));
-                //CHECKSTYLE:ON
-                default:
-            }*/
         }
 
         return Optional.empty();
@@ -165,7 +143,7 @@ public class StrokeElement extends Element {
      *
      * @param style Style.
      */
-    public final void setWidth(final String style) {
+    public final void setStyle(final String style) {
         var styleAttr = new Attribute(StrokeProps.DASH_STYLE, style);
         this.addAttribute(styleAttr);
     }

@@ -92,10 +92,6 @@ public final class MainController {
      * App's Engine.
      */
     private Engine engine;
-    /**
-     * Scale for zooming page.
-     */
-    private Scale viewportScale = new Scale(1, 1);
 
     /**
      * Media player factory.
@@ -142,6 +138,10 @@ public final class MainController {
      */
     private Point2D dragDelta;
 
+    /**
+     * Bubble events or consume at source.
+     */
+    private final AtomicBoolean bubbleEvents = new AtomicBoolean(false);
     /**
      * IO Console.
      */
@@ -228,32 +228,20 @@ public final class MainController {
     private final EventHandler<InputEvent> handleInput = evt -> handleEvent(evt);
 
     /**
-     * Handle scroll event on page.
-     *
-     * @param event scroll event
-     */
-    private void pageScrollEventHandler(final ScrollEvent event) {
-        final double deltaMult = 0.01;
-        //Check that ctrl is pressed, and there is a delta
-        if (event.isControlDown() && (event.getDeltaY() != 0)) {
-            System.out.println("Delta:" + event.getDeltaY());
-            var scaleValue = pagePane.getScaleX() + (event.getDeltaY() * deltaMult);
-            setViewScale(scaleValue);
-        }
-        engine.offerEvent(event);
-    }
-
-    /**
      * Set the scale-factor of the page/card.
      *
      * @param scaleValue Scale-factor to apply.
      */
-    public void setViewScale(final Double scaleValue) {
-        pagePane.setScaleX(scaleValue);
-        pagePane.setScaleY(scaleValue);
-        pageVBox.setMinHeight(pageVBox.getHeight() * scaleValue);
-        pageVBox.setMinWidth(pageVBox.getWidth() * scaleValue);
-        System.out.println("Scale: " + pageVBox.getScaleX());
+    private void scaleCard() {
+        var pageWidth = pagePane.getWidth();
+        var pageHeight = pagePane.getHeight();
+        var boxWidth = pageVBox.getWidth();
+        var boxHeight = pageVBox.getHeight();
+        var wScale = boxHeight / (pageHeight + 10d);
+        var hScale = boxWidth / (pageWidth + 10d);
+        var newScale = Math.min(wScale, hScale);
+        pagePane.setScaleX(newScale);
+        pagePane.setScaleY(newScale);
     }
 
     /**
@@ -379,9 +367,7 @@ public final class MainController {
      */
     public void updateShape(final String id, final String shapeType, final StrokeProps stroke,
             final ArrayList<StyledTextSeg> text, final ArrayList<Double> segments) {
-
         final var drawnShape = drawnElements.get(id);
-
 //Get the shape. Either a new or existing one.
         Optional<ExtShape> maybeShape = (drawnShape == null)
                 ? extShapeFactory.makeShape(ExtShapeFactory.ShapeType.valueOf(shapeType.toLowerCase())) : Optional.of((ExtShape) drawnShape);
@@ -521,8 +507,8 @@ public final class MainController {
      * @param id ID of element to remove.
      */
     public void remove(final String id) {
-        if (this.drawnElements.contains(id)) {
-            var obj = this.drawnElements.get(id);
+        if (this.drawnElements.containsKey(id)) {
+            var obj = this.drawnElements.remove(id);
             pagePane.getChildren().remove(obj);
         }
     }
@@ -557,6 +543,7 @@ public final class MainController {
         });
         //CHECKSTYLE:ON
         pagePane.setId(id);
+        scaleCard();
     }
 
     /**
@@ -810,10 +797,6 @@ public final class MainController {
         console.putMessage(message);
     }
 
-    public void showProperties(final HashMap<String, Props> props) {
-
-    }
-
     /**
      * Clear non-blocking message area.
      *
@@ -850,6 +833,15 @@ public final class MainController {
         if (!editable) {
             setCursorType(Cursor.DEFAULT);
         }
+    }
+
+    /**
+     * Toggle if events are consumed at the source.
+     *
+     * @param bubble Bubble events?
+     */
+    public void toggleBubble(final Boolean bubble) {
+        bubbleEvents.set(bubble);
     }
 
     /**
@@ -902,7 +894,9 @@ public final class MainController {
                                         }
                                     }
                                     handleEvent(e);
-                                    e.consume();
+                                    if (!bubbleEvents.get()) { //Not bubbling events.
+                                        e.consume();
+                                    }
                                 });
 
                                 addedNode.addEventHandler(KeyEvent.ANY, (e) -> {
@@ -934,30 +928,12 @@ public final class MainController {
                 }
             });
             engine.start();
-        });
-        pageVBox.widthProperty().addListener((obs, oldWidth, newWidth) -> {
-            var pageWidth = pagePane.getWidth();
-            var pageHeight = pagePane.getHeight();
-            var boxWidth = newWidth.doubleValue();
-            var boxHeight = pageVBox.getHeight();
-            var wScale = boxHeight / (pageHeight + 10d);
-            var hScale = boxWidth / (pageWidth + 10d);
-            var newScale = Math.min(wScale, hScale);
-            pagePane.setScaleX(newScale);
-            pagePane.setScaleY(newScale);
-            System.out.println(newScale);
-        });
-        pageVBox.heightProperty().addListener((obs, oldHeight, newHeight) -> {
-            var pageWidth = pagePane.getWidth();
-            var pageHeight = pagePane.getHeight();
-            var boxWidth = pageVBox.getWidth();
-            var boxHeight = newHeight.doubleValue();
-            var wScale = boxHeight / (pageHeight + 10d);
-            var hScale = boxWidth / (pageWidth + 10d);
-            var newScale = Math.min(wScale, hScale);
-            pagePane.setScaleX(newScale);
-            pagePane.setScaleY(newScale);
-            System.out.println(newScale);
+            pageVBox.widthProperty().addListener((obs, oldWidth, newWidth) -> {
+                scaleCard();
+            });
+            pageVBox.heightProperty().addListener((obs, oldHeight, newHeight) -> {
+                scaleCard();
+            });
         });
 
         //Set handlers for shapes and text.
@@ -971,7 +947,7 @@ public final class MainController {
             handleEvent(ev);
         });
         cardSelPane.setFocusTraversable(false);
-
+        pagePane.setFocusTraversable(true);
         var ds = new DropShadow();
         pagePane.setEffect(ds);
     }

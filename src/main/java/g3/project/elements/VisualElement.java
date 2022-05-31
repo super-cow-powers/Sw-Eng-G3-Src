@@ -140,12 +140,21 @@ public class VisualElement extends Element implements Scriptable {
      *
      * @param loc Location to set
      */
-    public final void setOrigin(final LocObj loc) {
+    public final void setOriginXY(final LocObj loc) {
         var point = loc.getLoc();
-
         this.addAttribute(new Attribute("x_orig", Double.toString(point.getX())));
         this.addAttribute(new Attribute("y_orig", Double.toString(point.getY())));
-        hasUpdated();
+    }
+    
+    /**
+     * Set the object's X/Y location.
+     *
+     * @param x X location.
+     * @param y Y location.
+     */
+    public final void setOriginXY(final Double x, final Double y) {
+        this.addAttribute(new Attribute("x_orig", Double.toString(x)));
+        this.addAttribute(new Attribute("y_orig", Double.toString(y)));
     }
 
     /**
@@ -170,7 +179,6 @@ public class VisualElement extends Element implements Scriptable {
      */
     public final String setID(final String id) {
         this.addAttribute(new Attribute("ID", id));
-        hasUpdated();
         return this.getID();
     }
 
@@ -192,7 +200,6 @@ public class VisualElement extends Element implements Scriptable {
      */
     public final Double setZInd(final Double z) {
         this.addAttribute(new Attribute("z_ind", Double.toString(z)));
-        hasUpdated();
         return this.getZInd();
     }
 
@@ -237,7 +244,20 @@ public class VisualElement extends Element implements Scriptable {
         this.addAttribute(xAttr);
         this.addAttribute(yAttr);
         this.addAttribute(rotAttr);
-        hasUpdated();
+    }
+    /**
+     * Set element size.
+     * @param x X size.
+     * @param y Y size.
+     * @param rot Rotation.
+     */
+    public final void setSize(final Double x, final Double y, final Double rot) {
+        Attribute xAttr = new Attribute("x_size_px", x.toString());
+        Attribute yAttr = new Attribute("y_size_px", y.toString());
+        Attribute rotAttr = new Attribute("rot_angle", rot.toString());
+        this.addAttribute(xAttr);
+        this.addAttribute(yAttr);
+        this.addAttribute(rotAttr);
     }
 
     /**
@@ -271,12 +291,12 @@ public class VisualElement extends Element implements Scriptable {
      * @throws Exception Bad colour string.
      */
     public final void setFillColour(final String colourString) throws Exception {
-        if (!colourString.startsWith("#")) {
+        var col = Color.valueOf(colourString);
+        if (col == null) {
             throw new Exception("Bad Colour String");
         }
         var colAttr = new Attribute("fill", colourString);
         this.addAttribute(colAttr);
-        hasUpdated();
     }
 
     /**
@@ -375,7 +395,7 @@ public class VisualElement extends Element implements Scriptable {
     /**
      * Element has changed/updated. Notify the engine.
      */
-    protected final void hasUpdated() {
+    public final void hasUpdated() {
         var root = this.getDocument().getRootElement();
         if (root instanceof DocElement) {
             ((DocElement) root).getChangeCallback().accept(this);

@@ -65,6 +65,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javax.script.ScriptException;
 import nu.xom.Element;
@@ -157,11 +158,6 @@ public final class Engine extends Threaded {
      * Filename for a new empty project
      */
     private final String emptyFileName = "empty.spres";
-
-    /**
-     * Get current thread
-     */
-    private Thread myThread = getThread();
 
     /**
      * Get running
@@ -301,14 +297,18 @@ public final class Engine extends Threaded {
                 } else if (!eventQueue.isEmpty()) { //New event?
                     handleEvent(eventQueue.take());
                 } else if (!callQueue.isEmpty()) { //Out-of-thread call request
-                    callQueue.take().run();
+                    var callee = callQueue.take();
+                    callee.run();
                 } else { //Nothing to do. Suspend
                     suspended.set(true);
                 }
 
-                while (suspended.get() && running.get()) { // Suspend
+                while (suspended.get() && running.get() && eventQueue.isEmpty()
+                        && callQueue.isEmpty() && docQueue.isEmpty()) { // Suspend
                     synchronized (this) {
-                        wait();
+                        //CHECKSTYLE:OFF
+                        wait(100, 0);
+                        //CHECKSTYLE:ON
                     }
                 }
             } catch (Exception ex) {
@@ -566,7 +566,6 @@ public final class Engine extends Threaded {
                 () -> {
                     controller.clearCardButtons();
                     controller.clearCard("");
-                    controller.setViewScale(1d);
                     controller.setCursorType(javafx.scene.Cursor.DEFAULT);
                 });
 
@@ -575,15 +574,16 @@ public final class Engine extends Threaded {
             currentDoc = (DocElement) child;
             currentDoc.setTopLevelBindings(scriptingEngine.getTopLevelBindings()); //Attach the globals.
             scriptingEngine.setGlobal("doc", currentDoc); //Expose the doc to the scripting engine.
-            //Check for and show any validation errors.
+            //Check for and print any validation errors. Don't really care though.
             var valErrs = currentDoc.getValidationErrors();
             if (valErrs.size() > 0) {
                 var errStr = String.join("\n", valErrs);
-                putMessage("Validation Errors Found:\n" + errStr, true);
+                System.err.println("Validation Errors Found:\n" + errStr);
             }
             //When the doc changes, redraw the element that has changed.
             currentDoc.setChangeCallback(
-                    el -> this.redrawEl(el));
+                    el -> this.redrawEl(el)
+            );
             //Add buttons for each page/card
             var it = currentDoc.getPages().listIterator();
             while (it.hasNext()) {
@@ -623,7 +623,7 @@ public final class Engine extends Threaded {
         /*
         Enforce thread boundary!
          */
-        if (Thread.currentThread() != myThread) {
+        if (Thread.currentThread() != getThread()) {
             runFunction(() -> drawImageEl(img));
             return;
         }
@@ -649,7 +649,7 @@ public final class Engine extends Threaded {
     public void putImage(final String id, final Double xSize, final Double ySize, final Double rot, final Double xLoc,
             final Double yLoc, final Double zInd, final String source) {
         //CHECKSTYLE:ON
-        if (Thread.currentThread() != myThread) {
+        if (Thread.currentThread() != getThread()) {
             runFunction(() -> putImage(id, xSize, ySize, rot, xLoc, yLoc, zInd, source));
             return;
         }
@@ -668,7 +668,7 @@ public final class Engine extends Threaded {
      * @param shape Shape to draw.
      */
     private void drawShapeEl(final ShapeElement shape) {
-        if (Thread.currentThread() != myThread) {
+        if (Thread.currentThread() != getThread()) {
             runFunction(() -> drawShapeEl(shape));
             return;
         }
@@ -803,6 +803,25 @@ public final class Engine extends Threaded {
     }
 
     /**
+     * Set a drawn element's on-screen visibility. Does not modify data.
+     *
+     * @param id Element ID.
+     * @param vis Visibility.
+     */
+    public void setElementVisibility(final String id, final Boolean vis) {
+        Platform.runLater(() -> controller.setElementVisible(id, vis));
+    }
+
+    /**
+     * Remove an element from the screen. Does not modify data.
+     *
+     * @param id Element.
+     */
+    public void removeElementFromScreen(final String id) {
+        Platform.runLater(() -> controller.remove(id));
+    }
+
+    /**
      * Move an element.
      *
      * @param id Element ID.
@@ -853,7 +872,7 @@ public final class Engine extends Threaded {
         /*
         Enforce thread boundary!
          */
-        if (Thread.currentThread() != myThread) {
+        if (Thread.currentThread() != getThread()) {
             runFunction(() -> drawPlayableEl(playable));
             return;
         }
@@ -876,7 +895,7 @@ public final class Engine extends Threaded {
      * Go to next sequential page.
      */
     public void gotoNextPage() {
-        if (Thread.currentThread() != myThread) {
+        if (Thread.currentThread() != getThread()) {
             runFunction(() -> gotoNextPage());
             return;
         }
@@ -892,7 +911,7 @@ public final class Engine extends Threaded {
      * Go to last visited page.
      */
     public void gotoPrevPage() {
-        if (Thread.currentThread() != myThread) {
+        if (Thread.currentThread() != getThread()) {
             runFunction(() -> gotoPrevPage());
             return;
         }
@@ -906,7 +925,7 @@ public final class Engine extends Threaded {
      * @param storeHistory Should I record it in history?
      */
     public void gotoPage(final Integer pageNum, final Boolean storeHistory) {
-        if (Thread.currentThread() != myThread) {
+        if (Thread.currentThread() != getThread()) {
             runFunction(() -> gotoPage(pageNum, storeHistory));
             return;
         }
@@ -921,7 +940,7 @@ public final class Engine extends Threaded {
      * @param storeHistory Should I record it in history?
      */
     public void gotoPage(final String pageID, final Boolean storeHistory) {
-        if (Thread.currentThread() != myThread) {
+        if (Thread.currentThread() != getThread()) {
             runFunction(() -> gotoPage(pageID, storeHistory));
             Optional<PageElement> page = currentDoc.getPage(pageID);
             page.ifPresent(f -> gotoPage(f, storeHistory));
@@ -936,7 +955,7 @@ public final class Engine extends Threaded {
      * @param storeHistory Should I record it in history?
      */
     public void gotoPage(final PageElement page, final Boolean storeHistory) {
-        if (Thread.currentThread() != myThread) {
+        if (Thread.currentThread() != getThread()) {
             runFunction(() -> gotoPage(page, storeHistory));
             return;
         }
@@ -988,7 +1007,7 @@ public final class Engine extends Threaded {
      * @param el Element
      */
     public void processEls(final VisualElement el) {
-        if (Thread.currentThread() != myThread) {
+        if (Thread.currentThread() != getThread()) {
             runFunction(() -> processEls(el));
             return;
         }
@@ -1017,7 +1036,7 @@ public final class Engine extends Threaded {
      * @param el Visual Element.
      */
     public void redrawEl(final VisualElement el) {
-        if (Thread.currentThread() != myThread) {
+        if (Thread.currentThread() != getThread()) {
             runFunction(() -> redrawEl(el));
             return;
         }
@@ -1048,7 +1067,7 @@ public final class Engine extends Threaded {
      * @param code Code string.
      */
     public void evalPyStr(final String code) {
-        if (Thread.currentThread() != myThread) {
+        if (Thread.currentThread() != getThread()) {
             runFunction(() -> evalPyStr(code));
             return;
         }
@@ -1084,7 +1103,7 @@ public final class Engine extends Threaded {
         var root = parsedDoc
                 .filter(d -> d.getRootElement() instanceof Tools)
                 .map(d -> (Tools) d.getRootElement());
-        this.putMessage("Tools Loaded", false);
+        //this.putMessage("Tools Loaded", false);
         return root;
     }
 
@@ -1094,7 +1113,20 @@ public final class Engine extends Threaded {
      * @param toolID Tool to activate.
      */
     public void activateTool(final String toolID) {
-        currentToolID = toolID;
+        if (Thread.currentThread() != getThread()) {
+            runFunction(() -> activateTool(toolID));
+            return;
+        }
+        var maybeCurrentTool = currentTools.getTool(currentToolID);
+        //Invoke the close/cleanup function
+        maybeCurrentTool.ifPresent(t -> {
+            try {
+                scriptingEngine.invokeOnElement(t, Scripting.TOOL_CLOSE_FUNCTION);
+            } catch (ScriptException | IOException ex) {
+                Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+        currentToolID = toolID; //Set current tool
         var maybeTool = currentTools.getTool(toolID);
         maybeTool.ifPresent(t -> {
             try {
@@ -1102,6 +1134,7 @@ public final class Engine extends Threaded {
             } catch (ScriptException | IOException ex) {
                 Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
             }
+            controller.toggleBubble(t.sinkEvents()); //If the tool stops events reaching elements, we want to try to capture events from the page.
         });
     }
 
@@ -1115,8 +1148,10 @@ public final class Engine extends Threaded {
         //This is all kind of yucky, but nvm.
         var maybeTool = currentTools.getTool(currentToolID);
         Optional<Event> ret = Optional.of(ev);
-        if (ev instanceof MouseEvent) { //Only giving tools mousevents right now.
-            maybeTool.ifPresent(t -> routeMouseEvent((MouseEvent) ev, t));
+        if (ev.getSource().getClass().equals(Pane.class)) {
+            if (ev instanceof MouseEvent) { //Only giving tools mousevents right now.
+                maybeTool.ifPresent(t -> routeMouseEvent((MouseEvent) ev, t));
+            }
         }
         if ((maybeTool.isPresent()) && (ev instanceof MouseEvent)) {
             var tool = maybeTool.get();
@@ -1133,12 +1168,12 @@ public final class Engine extends Threaded {
      * @param newLoc New location.
      */
     public void elementRelocated(final String elID, final LocObj newLoc) {
-        if (Thread.currentThread() != myThread) {
+        if (Thread.currentThread() != getThread()) {
             runFunction(() -> elementRelocated(elID, newLoc));
             return;
         }
         var elOpt = currentDoc.getElementByID(elID);
-        elOpt.ifPresent(el -> el.setOrigin(newLoc));
+        elOpt.ifPresent(el -> el.setOriginXY(newLoc));
     }
 
     /**
@@ -1160,7 +1195,7 @@ public final class Engine extends Threaded {
      * @param blocking Should I block the User?
      */
     public void putMessage(final String message, final Boolean blocking) {
-        if (Thread.currentThread() != myThread) {
+        if (Thread.currentThread() != getThread()) {
             runFunction(() -> putMessage(message, blocking));
             return;
         }
@@ -1179,7 +1214,7 @@ public final class Engine extends Threaded {
      */
     public void consoleLineCallback(final String line) {
         //Don't execute on this thread
-        if (Thread.currentThread() == myThread) {
+        if (Thread.currentThread() == getThread()) {
             return;
         }
 
@@ -1217,7 +1252,7 @@ public final class Engine extends Threaded {
      * Request the UI to show a doc chooser.
      */
     public void showDocChooser() {
-        if (Thread.currentThread() != myThread) {
+        if (Thread.currentThread() != getThread()) {
             runFunction(() -> showDocChooser());
             return;
         }
@@ -1262,7 +1297,7 @@ public final class Engine extends Threaded {
      * Loads the start screen.
      */
     public void showStartScreen() {
-        if (Thread.currentThread() != myThread) {
+        if (Thread.currentThread() != getThread()) {
             runFunction(() -> showStartScreen());
             return;
         }

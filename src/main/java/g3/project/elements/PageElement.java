@@ -85,6 +85,13 @@ public class PageElement extends VisualElement {
         var title = this.getAttribute("title");
         return (title != null) ? Optional.of(title.getValue()) : Optional.empty();
     }
+    /**
+     * Insert a Visual element.
+     * @param el element.
+     */
+    public void insertVisual(final VisualElement el){
+        this.appendChild(el);
+    }
 
     /**
      * @TODO fill out javadoc

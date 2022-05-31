@@ -30,16 +30,19 @@ POSSIBILITY OF SUCH DAMAGE.
 
 
 <tools>
-    <tool name="Cursor" ID="tool-cursor" is_sink="false">
-        <image include_source="/images/cursor.jpg"/>
-    </tool>
-    
-    <tool name="Test" ID="tool-test" is_sink="true">
-        <image/>
-    </tool>
-    
-    <tool name="Square" ID="tool-square" is_sink="true">
-        <image include_source="/images/square.jpg"/>
-        <script include_source="/scripts/square.py"/>
-    </tool>
+	<tool name="Cursor" ID="tool-cursor" is_sink="false">
+		<image include_source="/images/cursor.jpg" />
+	</tool>
+	<tool name="Edit" ID="tool-edit" is_sink="true">
+		<image include_source="/images/cross.jpg" />
+		<script include_source="/scripts/edit.py" />
+	</tool>
+	<tool name="Test" ID="tool-test" is_sink="true">
+		<image />
+	</tool>
+
+	<tool name="Square" ID="tool-square" is_sink="true">
+		<image include_source="/images/square.jpg" />
+		<script include_source="/scripts/square.py" />
+	</tool>
 </tools>

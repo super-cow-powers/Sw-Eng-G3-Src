@@ -57,6 +57,7 @@ public final class Scripting {
     public static final String MOUSE_EXIT_FN = "onMouseExit";
     public static final String DRAG_FUNCTION = "onDrag";
     public static final String LOAD_FUNCTION = "onLoad";
+    public static final String TOOL_CLOSE_FUNCTION = "onClose";
 
     /**
      * Factory/manager for all script engines.
@@ -244,49 +245,18 @@ public final class Scripting {
             this.evalElement(element);
             element.setEvalRequired(false);
         }
-        var scEng = getDefaultScriptEngine();
-        scEng.setBindings(element.getScriptingBindings(), ScriptContext.ENGINE_SCOPE);
-        try {
-            ((Invocable) scEng).invokeFunction(function, args);
-        } catch (ScriptException ex) {
-            Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (NoSuchMethodException ex) {
-            //Ignore nosuchmethod.
-        }
-    }
-
-    /**
-     * Execute element's onClick function.
-     *
-     * @param element Element to use.
-     * @param button_name Mouse button name.
-     * @param x_loc x location.
-     * @param y_loc y location.
-     * @param down Boolean, for whether item was placed down
-     */
-    public void execElementClick(final Scriptable element, final String button_name, final Double x_loc, final Double y_loc, final Boolean down) {
-
-    }
-
-    /**
-     *
-     * @param element Element to use.
-     * @param keyName Key name.
-     * @param ctrlDown Is ctrl down.
-     * @param altDown Is alt down.
-     * @param metaDown Is meta down.
-     * @param keyDown Is the key down.
-     */
-    public void execElementKeyPress(final Scriptable element, final String keyName, final Boolean ctrlDown, final Boolean altDown, final Boolean metaDown, final Boolean keyDown) {
-        var scEng = getDefaultScriptEngine();
-        scEng.setBindings(element.getScriptingBindings(), ScriptContext.ENGINE_SCOPE);
-        try {
-            ((Invocable) scEng).invokeFunction(KEY_PRESS_FN, keyName, ctrlDown, altDown, metaDown, keyDown);
-        } catch (ScriptException ex) {
-            Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (NoSuchMethodException ex) {
-            //Ignore nosuchmethod.
-        }
+        element.getScriptEl().ifPresent(scEl -> {
+            var scEng = getScriptEngine(scEl.getScriptLang());
+            scEng.setBindings(element.getScriptingBindings(), ScriptContext.ENGINE_SCOPE);
+            try {
+                ((Invocable) scEng).invokeFunction(function, args);
+            } catch (ScriptException ex) {
+                Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (NoSuchMethodException ex) {
+                //Ignore nosuchmethod.
+            }
+        });
+        
     }
 
     /**

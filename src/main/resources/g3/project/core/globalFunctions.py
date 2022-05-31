@@ -11,12 +11,12 @@ def onKeyPress(keyName, ctrlDown, altDown, metaDown, keyDown):
             engine.gotoPrevPage()
         elif (lowkey == "right"):
             engine.gotoNextPage()
-        #else:
-        print("Key " + lowkey + " Pressed.")
+        else:
+            print("Key " + lowkey + " Pressed.")
 
 def setCursorType(cType):
-    engine.setCursorType(cType)
-
+    engine.setCursorType(cType)    
+    
 def quit():
     engine.exit()
 

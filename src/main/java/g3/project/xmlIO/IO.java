@@ -206,7 +206,7 @@ public abstract class IO {
             try {
                 arr = Files.readAllBytes(fPath);
             } catch (IOException ex) {
-                Logger.getLogger(IO.class.getName()).log(Level.SEVERE, null, ex);
+                
             }
         } else { //Get an external resource
             try {
@@ -214,7 +214,6 @@ public abstract class IO {
                 var is = uri.toURL().openStream();
                 arr = is.readAllBytes();
             } catch (URISyntaxException | MalformedURIException | IOException ex) {
-                Logger.getLogger(IO.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         return Optional.ofNullable(arr);
