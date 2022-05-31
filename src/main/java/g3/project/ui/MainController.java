@@ -50,7 +50,6 @@ import g3.project.playable.PlayerFactory;
 import g3.project.xmlIO.DocIO;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
@@ -71,9 +70,7 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Scale;
 import javafx.stage.FileChooser;
@@ -149,6 +146,8 @@ public final class MainController {
      * IO Console.
      */
     private Console console;
+
+    private static final Double MIN_POS_VAL = 0.15;
 
 //CHECKSTYLE:OFF
     //FXML bound objects
@@ -623,7 +622,7 @@ public final class MainController {
         Optional<byte[]> maybeImage = engine.getToolIO().getResource(iconPath);
         maybeImage.map(imB -> new Image(new ByteArrayInputStream(imB)))
                 .map(im -> {
-                    var imv = new ImageView(im);
+                    var imv = new VisImageView(im);
                     imv.setFitWidth(iconX);
                     imv.setFitHeight(iconY);
                     return imv;
@@ -833,12 +832,20 @@ public final class MainController {
         ft.play();
     }
 
+    /**
+     * Allows editing elements - FXML
+     */
     @FXML
     public void handleTogEdit() {
         toggleEditable(!amEditable.get());
     }
 
-    public void toggleEditable(Boolean editable) {
+    /**
+     * Allows editing elements
+     *
+     * @param editable
+     */
+    public void toggleEditable(final Boolean editable) {
         this.amEditable.set(editable);
         if (!editable) {
             setCursorType(Cursor.DEFAULT);
@@ -911,8 +918,8 @@ public final class MainController {
         splitPane.getDividers().get(0)
                 .positionProperty()
                 .addListener((obs, oldPos, newPos) -> {
-                    if (newPos.doubleValue() > 0.15) {
-                        splitPane.getDividers().get(0).setPosition(0.15);
+                    if (newPos.doubleValue() > MIN_POS_VAL) {
+                        splitPane.getDividers().get(0).setPosition(MIN_POS_VAL);
                     }
                 });
         Platform.runLater(() -> { //Run when initialised

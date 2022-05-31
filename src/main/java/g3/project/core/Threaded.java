@@ -28,11 +28,6 @@
  */
 package g3.project.core;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -44,17 +39,17 @@ public abstract class Threaded implements Runnable {
     /**
      * Thread I'm to run on.
      */
-    protected Thread myThread;
+    private Thread myThread;
 
     /**
      * Am I running?
      */
-    protected final AtomicBoolean running = new AtomicBoolean(false);
+    private final AtomicBoolean running = new AtomicBoolean(false);
 
     /**
      * Am I suspended?
      */
-    protected final AtomicBoolean suspended = new AtomicBoolean(false);
+    private final AtomicBoolean suspended = new AtomicBoolean(false);
 
     /**
      * Request start thread activity.
@@ -83,6 +78,30 @@ public abstract class Threaded implements Runnable {
             notify();
         }
     }
+
+    /**
+     * Getter for myThread
+     * @return myThread
+     */
+    public Thread getThread() {
+        return(myThread);
+    }
+
+    /**
+     * Getter for running
+     * @return running
+     */
+    public AtomicBoolean getRunning() {
+        return(running);
+    }
+
+    /**
+     * Getter for suspended
+     * @return suspended
+     */
+    public AtomicBoolean getSuspended() {
+        return(suspended);
+    } 
 
     /**
      * Run stuff.

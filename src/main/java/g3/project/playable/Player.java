@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -31,7 +31,6 @@ package g3.project.playable;
 import g3.project.graphics.SizeObj;
 import g3.project.graphics.VisualProps;
 import g3.project.ui.Visual;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
@@ -49,7 +48,6 @@ import javafx.scene.Group;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelBuffer;
 import javafx.scene.image.PixelFormat;
@@ -60,12 +58,6 @@ import javafx.scene.layout.VBox;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 import uk.co.caprica.vlcj.media.Media;
 import uk.co.caprica.vlcj.media.MediaEventAdapter;
-import uk.co.caprica.vlcj.media.MediaEventListener;
-import uk.co.caprica.vlcj.media.MediaParsedStatus;
-import uk.co.caprica.vlcj.media.MediaRef;
-import uk.co.caprica.vlcj.media.Meta;
-import uk.co.caprica.vlcj.media.Picture;
-import uk.co.caprica.vlcj.media.TrackType;
 import uk.co.caprica.vlcj.player.base.MediaPlayer;
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;
 import uk.co.caprica.vlcj.player.base.State;
@@ -86,6 +78,7 @@ import uk.co.caprica.vlcj.player.embedded.videosurface.callback.format.RV32Buffe
  */
 public final class Player extends Group implements Visual {
 
+    private static final int MAX_VOL = 100;
     private static final double CTRL_MAX_HEIGHT = 50d;
     private final MediaPlayerFactory mediaPlayerFactory;
 
@@ -110,7 +103,7 @@ public final class Player extends Group implements Visual {
     private final DoubleProperty targetHeight = new SimpleDoubleProperty(0);
 
     private Slider controlSlider = new Slider();
-    private Slider volSlider = new Slider(0, 100, 0);
+    private Slider volSlider = new Slider(0, MAX_VOL, 0);
     private Label volLabel = new Label(" 🔊");
     private Label timeLabel = new Label();
     private Button playPauseButton = new Button();

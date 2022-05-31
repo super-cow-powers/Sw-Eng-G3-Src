@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -38,10 +38,12 @@ import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 public final class PlayerFactory {
 
     /**
-     * Players.
+     * Created Players.
      */
     HashMap<Integer, Player> playerMap = new HashMap<>();
-    
+    /**
+     * Player Factory.
+     */
     MediaPlayerFactory factory = new MediaPlayerFactory();
 
     /**
@@ -51,8 +53,11 @@ public final class PlayerFactory {
 
     }
 
-    public Player newPlayer(){
-        return newPlayer(0d,0d);
+    /**
+     * Make a new player.
+     */
+    public Player newPlayer() {
+        return newPlayer(0d, 0d);
     }
     /**
      * Get a new player.
@@ -81,7 +86,7 @@ public final class PlayerFactory {
      * @param pl player to free.
      * @throws IllegalStateException Couldn't find player in my map.
      */
-    public void free(Player pl) throws IllegalStateException {
+    public void free(final Player pl) throws IllegalStateException {
         var intPl = playerMap.remove(pl.hashCode());
         if (intPl != null) {
             intPl.free();

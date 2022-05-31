@@ -36,9 +36,14 @@ import nu.xom.*;
  * @author David Miall <dm1306@york.ac.uk>
  */
 public class PageElement extends VisualElement {
-
+    /**
+     * My Index.
+     */
     private Integer index = 0;
-    
+
+    /**
+     * Creates builder thread for the element
+     */
     private static ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
@@ -47,24 +52,46 @@ public class PageElement extends VisualElement {
 
     };
 
-    public PageElement(String name) {
+    /**
+     * Constructor
+     * @param name
+     */
+    public PageElement(final String name) {
         super(name);
     }
 
-    public PageElement(String name, String uri) {
+    /**
+     * Constructor
+     * @param name
+     * @param uri
+     */
+    public PageElement(final String name, final String uri) {
         super(name, uri);
     }
 
-    public PageElement(Element element) {
+    /**
+     * Constructor
+     * @param element
+     */
+    public PageElement(final Element element) {
         super(element);
     }
 
+    /**
+     * @TODO fill out javadoc
+     * @return
+     */
     public Optional<String> getTitle() {
         var title = this.getAttribute("title");
         return (title != null) ? Optional.of(title.getValue()) : Optional.empty();
     }
 
-    public Optional<String> setTitle(String name) {
+    /**
+     * @TODO fill out javadoc
+     * @param name
+     * @return
+     */
+    public Optional<String> setTitle(final String name) {
         this.addAttribute(new Attribute("title", name));
         return getTitle();
     }

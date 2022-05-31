@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -44,7 +44,14 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public final class RecursiveBindingsTest {
 
+    /**
+     * Number of iterations to do
+     */
     private static Integer TEST_ITERATIONS = 1000;
+
+    /**
+     * Maximum length of array during testing
+     */
     private static Integer MAX_ARR_LEN = 10000;
 
     //CHECKSTYLE:OFF
@@ -61,7 +68,6 @@ public final class RecursiveBindingsTest {
 
     @BeforeEach
     public void setUp() {
-
     }
 
     @AfterEach

@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -37,7 +37,7 @@ import javafx.scene.input.MouseEvent;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public final class ExtShapeFactory {
-    
+
     /**
      * text click handler.
      */
@@ -45,7 +45,7 @@ public final class ExtShapeFactory {
     private Consumer<MouseEvent> textClickHandlerConsumer = (evt) -> {
         ;
     };
-    
+
     /**
      * href click handler.
      */
@@ -84,6 +84,9 @@ public final class ExtShapeFactory {
     };
     //CHECKSTYLE:ON//CHECKSTYLE:ON
 
+    /**
+     * Constructor
+     */
     public ExtShapeFactory() {
 
     }
@@ -135,7 +138,7 @@ public final class ExtShapeFactory {
     public void setTextClickHandler(final Consumer<MouseEvent> handler) {
         this.textClickHandlerConsumer = handler;
     }
-    
+
     /**
      * Set the href click handler.
      *

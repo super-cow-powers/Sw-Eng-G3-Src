@@ -46,6 +46,9 @@ public final class PlayableElement extends VisualElement implements Includable {
     private static final String OFFSET = "seek_offset";
     private static final String DISP_PLAYER = "display_player";
 //CHECKSTYLE:ON
+    /**
+     * Creates builder thread for the element
+     */
     private static ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
@@ -54,15 +57,28 @@ public final class PlayableElement extends VisualElement implements Includable {
 
     };
 
-    public PlayableElement(String name) {
+    /**
+     * Constructor
+     * @param name
+     */
+    public PlayableElement(final String name) {
         super(name);
     }
 
-    public PlayableElement(String name, String uri) {
+    /**
+     * Constructor
+     * @param name
+     * @param uri
+     */
+    public PlayableElement(final String name, final String uri) {
         super(name, uri);
     }
 
-    public PlayableElement(Element element) {
+    /**
+     * Constructor
+     * @param element
+     */
+    public PlayableElement(final Element element) {
         super(element);
     }
 

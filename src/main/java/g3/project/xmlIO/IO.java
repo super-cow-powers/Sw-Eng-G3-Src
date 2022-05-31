@@ -50,7 +50,7 @@ import nu.xom.*;
  * @author david
  */
 public abstract class IO {
-
+    //CHECKSTYLE:OFF
     protected final static String mediaDirString = "/media";
 
     protected final static String imagesDirString = "/images";
@@ -76,6 +76,8 @@ public abstract class IO {
     protected Path tempPath;
 
     protected Boolean allowSave = false;
+    //CHECKSTYLE:ON
+
     /**
      * Temporary files requiring cleanup.
      */

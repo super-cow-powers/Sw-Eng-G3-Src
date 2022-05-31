@@ -28,10 +28,7 @@
  */
 package g3.project.elements;
 
-import g3.project.graphics.StyledTextSeg;
 import g3.project.graphics.StyledTextSeg.REF_TYPE;
-import java.util.ArrayList;
-import java.util.Optional;
 import nu.xom.*;
 
 /**
