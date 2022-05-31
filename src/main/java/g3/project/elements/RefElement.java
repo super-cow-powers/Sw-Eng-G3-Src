@@ -86,7 +86,7 @@ public class RefElement extends Element {
         var typeAttr = this.getAttribute("type");
         if (typeAttr != null) {
             var type = typeAttr.getValue();
-            if (type == "external") {
+            if (type.toLowerCase().equals("external")) {
                 return REF_TYPE.EXTERNAL;
             } else {
                 return REF_TYPE.INTERNAL;

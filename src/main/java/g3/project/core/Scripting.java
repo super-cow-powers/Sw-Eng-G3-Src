@@ -239,24 +239,30 @@ public final class Scripting {
      * @param element Element to start with.
      * @param function Function to try and call.
      * @param args Arguments to function.
+     * @throws javax.script.ScriptException
+     * @throws java.io.IOException
      */
     public void invokeOnElement(final Scriptable element, final String function, final Object... args) throws ScriptException, IOException {
         if (element.getEvalRequired()) {
             this.evalElement(element);
             element.setEvalRequired(false);
         }
-        element.getScriptEl().ifPresent(scEl -> {
-            var scEng = getScriptEngine(scEl.getScriptLang());
-            scEng.setBindings(element.getScriptingBindings(), ScriptContext.ENGINE_SCOPE);
-            try {
-                ((Invocable) scEng).invokeFunction(function, args);
-            } catch (ScriptException ex) {
-                Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (NoSuchMethodException ex) {
-                //Ignore nosuchmethod.
-            }
-        });
-        
+        ScriptEngine scEng;
+        var maybeScEl = element.getScriptEl();
+        if (maybeScEl.isPresent()) { //If there's a script for this element, get its' language.
+            scEng = getScriptEngine(maybeScEl.get().getScriptLang());
+        } else {
+            scEng = getDefaultScriptEngine();
+        }
+        scEng.setBindings(element.getScriptingBindings(), ScriptContext.ENGINE_SCOPE);
+        try {
+            ((Invocable) scEng).invokeFunction(function, args);
+        } catch (ScriptException ex) {
+            Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NoSuchMethodException ex) {
+            //Ignore nosuchmethod.
+        }
+
     }
 
     /**

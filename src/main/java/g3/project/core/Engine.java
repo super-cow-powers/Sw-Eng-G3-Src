@@ -104,10 +104,6 @@ public final class Engine extends Threaded {
      * Document currently open.
      */
     private DocElement currentDoc;
-    /**
-     * ID of currently open page/card.
-     */
-    private String currentPageID = "";
 
     private String currentToolID = "";
 
@@ -407,9 +403,6 @@ public final class Engine extends Threaded {
         var id = elID;
         if (evType == KeyEvent.KEY_PRESSED || evType == KeyEvent.KEY_RELEASED || evType == KeyEvent.KEY_TYPED) {
             //Key has been pressed
-            if (id.equals("pageScroll")) { //Press routed to page scroll rather than page
-                id = currentPageID;
-            }
             var elOpt = currentDoc.getElementByID(id);
             final var keyName = kev.getCode().getName();
             System.out.println(kev);
@@ -864,6 +857,16 @@ public final class Engine extends Threaded {
     }
 
     /**
+     * Make a player on screen play/pause.
+     *
+     * @param id Player ID.
+     * @param play Play/Pause.
+     */
+    public void togglePlayerPlaying(final String id, final Boolean play) {
+        Platform.runLater(() -> controller.togglePlayerPlaying(id, play));
+    }
+
+    /**
      * Instruct the UI to create a player for the element.
      *
      * @param playable Playable element.
@@ -899,12 +902,12 @@ public final class Engine extends Threaded {
             runFunction(() -> gotoNextPage());
             return;
         }
-        currentDoc.getCurrentPage().flatMap(card -> {
+        currentDoc.getCurrentPage().map(card -> {
             if (card.getIndex() < currentDoc.getPages().size() - 1) {
-                return currentDoc.getPage(card.getIndex() + 1);
+                return (Integer)( card.getIndex() + 1);
             }
             return Optional.empty();
-        }).ifPresent(next -> this.gotoPage(next, true));
+        }).ifPresent(next -> this.gotoPage((Integer)next, true));
     }
 
     /**
@@ -915,7 +918,9 @@ public final class Engine extends Threaded {
             runFunction(() -> gotoPrevPage());
             return;
         }
-        this.gotoPage(navHistory.pop(), false);
+        if (!navHistory.isEmpty()) {
+            this.gotoPage(navHistory.pop(), false);
+        }
     }
 
     /**
@@ -928,6 +933,10 @@ public final class Engine extends Threaded {
         if (Thread.currentThread() != getThread()) {
             runFunction(() -> gotoPage(pageNum, storeHistory));
             return;
+        }
+        if (storeHistory) {
+            // Push previous to stack
+            currentDoc.getCurrentPage().ifPresent(p -> navHistory.push(p.getID()));
         }
         currentDoc.getPage(pageNum)
                 .ifPresent(f -> gotoPage(f, storeHistory));
@@ -942,10 +951,14 @@ public final class Engine extends Threaded {
     public void gotoPage(final String pageID, final Boolean storeHistory) {
         if (Thread.currentThread() != getThread()) {
             runFunction(() -> gotoPage(pageID, storeHistory));
-            Optional<PageElement> page = currentDoc.getPage(pageID);
-            page.ifPresent(f -> gotoPage(f, storeHistory));
+            return;
         }
-
+        if (storeHistory) {
+            // Push previous to stack
+            currentDoc.getCurrentPage().ifPresent(p -> navHistory.push(p.getID()));
+        }
+        Optional<PageElement> page = currentDoc.getPage(pageID);
+        page.ifPresent(f -> gotoPage(f, storeHistory));
     }
 
     /**
@@ -959,12 +972,8 @@ public final class Engine extends Threaded {
             runFunction(() -> gotoPage(page, storeHistory));
             return;
         }
-        if (storeHistory) {
-            navHistory.push(currentPageID); // Push previous to stack
-        }
         processEls(page);
-        currentPageID = page.getID();
-        putMessage("Loaded New Card: " + currentPageID, false);
+        putMessage("Loaded New Card: " + currentDoc.getCurrentPage().get().getID(), false);
     }
 
     /**
@@ -975,30 +984,10 @@ public final class Engine extends Threaded {
     public void configCard(final PageElement page) {
         Platform.runLater(
                 () -> {
-                    controller.clearCard(currentPageID);
+                    controller.clearCard("");
                     controller.configCard(page.getSize(),
                             page.getFillColour(), page.getID());
                 });
-    }
-
-    /**
-     * Get the index of specified page.
-     *
-     * @param pageID page.
-     * @return Index, or -1 on failure
-     */
-    private Integer getPageIndex(final String pageID) {
-        var it = currentDoc.getPages().iterator();
-        var i = 0;
-        while (it.hasNext()) {
-            var page = it.next();
-            var itID = page.getID();
-            if (itID.equals(pageID)) {
-                return i;
-            }
-            i++;
-        }
-        return -1;
     }
 
     /**
@@ -1173,7 +1162,10 @@ public final class Engine extends Threaded {
             return;
         }
         var elOpt = currentDoc.getElementByID(elID);
-        elOpt.ifPresent(el -> el.setOriginXY(newLoc));
+        elOpt.ifPresent(el -> {
+            el.setOriginXY(newLoc);
+            el.hasUpdated();
+        });
     }
 
     /**

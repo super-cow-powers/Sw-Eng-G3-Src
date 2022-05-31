@@ -35,7 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 	</tool>
 	<tool name="Edit" ID="tool-edit" is_sink="true">
 		<image include_source="/images/cross.jpg" />
-		<script include_source="/scripts/edit.py" />
+		<script include_source="/scripts/allowEdit.py" />
 	</tool>
 	<tool name="Test" ID="tool-test" is_sink="true">
 		<image />

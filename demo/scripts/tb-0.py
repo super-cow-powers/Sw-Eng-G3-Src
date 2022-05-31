@@ -6,3 +6,5 @@ def onClick(button, x, y, mouseDown):
     else:
         this.setFillColour("#A2A2A2FF")
         print("Mouse is up")
+        gotoNextPage()
+

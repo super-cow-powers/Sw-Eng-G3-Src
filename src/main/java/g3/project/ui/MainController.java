@@ -291,15 +291,16 @@ public final class MainController {
      */
     private void handleDragEditEvent(final MouseEvent mev) {
         EventTarget target = mev.getTarget();
+        Node dragTarget = (Node) target;
+        while (!(dragTarget instanceof Visual) && (dragTarget.getParent() != null)) {
+            dragTarget = dragTarget.getParent(); //Find the first Visual Element being dragged.
+        }
         if (amEditable.get()) {
-            if (target instanceof Node) {
-                ((Node) target).relocate(mev.getSceneX() + dragDelta.getX(), mev.getSceneY() + dragDelta.getY());
-                engine.elementRelocated(((Node) target).getId(),
-                        new LocObj(new Point2D(mev.getSceneX() + dragDelta.getX(), mev.getSceneY() + dragDelta.getY()), ((Node) target).getViewOrder()));
-                System.out.println("Drag: " + mev);
-                handleEvent(mev);
-                mev.consume();
-            }
+            dragTarget.relocate(mev.getSceneX() + dragDelta.getX(), mev.getSceneY() + dragDelta.getY());
+            engine.elementRelocated(dragTarget.getId(),
+                    new LocObj(new Point2D(mev.getSceneX() + dragDelta.getX(), mev.getSceneY() + dragDelta.getY()), dragTarget.getViewOrder()));
+            handleEvent(mev);
+            mev.consume();
         }
     }
 
@@ -626,6 +627,7 @@ public final class MainController {
         toolButton.setOnMouseClicked(event -> {
             engine.activateTool(toolButton.getId());
         });
+        toolButton.setFocusTraversable(false);
         toolPane.getChildren().add(toolButton);
     }
 
@@ -702,6 +704,35 @@ public final class MainController {
             } else {
                 player.hideControls();
             }
+        }
+    }
+
+    /**
+     * Make a player play/pause.
+     *
+     * @param id Player ID.
+     * @param play Play/Pause.
+     */
+    public void togglePlayerPlaying(final String id, final Boolean play) {
+        var pl = drawnElements.get(id);
+        if (pl instanceof Player) {
+            var player = (Player) pl;
+            if (play) {
+                player.play();
+            } else {
+                player.pause();
+            }
+        }
+    }
+
+    /**
+     * Set if elements can be focussed on.
+     *
+     * @param focus Allow element focus?
+     */
+    private void setElementsFocusable(final Boolean focus) {
+        for (var ch : pagePane.getChildren()) {
+            ch.setFocusTraversable(focus);
         }
     }
 
@@ -830,6 +861,7 @@ public final class MainController {
      */
     public void toggleEditable(final Boolean editable) {
         this.amEditable.set(editable);
+        setElementsFocusable(editable);
         if (!editable) {
             setCursorType(Cursor.DEFAULT);
         }
@@ -918,15 +950,10 @@ public final class MainController {
                 });
         Platform.runLater(() -> { //Run when initialised
             pagePane.addEventHandler(MouseEvent.ANY, handleInput);
-            pagePane.addEventHandler(KeyEvent.ANY, handleInput);
+            pagePane.addEventFilter(KeyEvent.ANY, handleInput);
             pagePane.setFocusTraversable(true);
             console = new Console((Stage) pagePane.getScene().getWindow(), (s -> engine.consoleLineCallback(s)));
-            pagePane.addEventFilter(KeyEvent.ANY, event -> {
-                if (event.getCode() == KeyCode.DOWN || event.getCode() == KeyCode.UP || event.getCode() == KeyCode.LEFT || event.getCode() == KeyCode.RIGHT) {
-                    handleEvent(event);
-                    event.consume();
-                }
-            });
+            
             engine.start();
             pageVBox.widthProperty().addListener((obs, oldWidth, newWidth) -> {
                 scaleCard();
