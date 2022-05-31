@@ -59,6 +59,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.animation.FadeTransition;
@@ -632,6 +633,33 @@ public final class MainController {
     }
 
     /**
+     * Update the list of properties.
+     *
+     * @param node Node to show props for.
+     */
+    public void updatePropsList(final Node node) {
+        propPane.getChildren().clear();
+        final String nodeID = node.getId();
+        if (node instanceof Visual) { //An element.
+
+        } else if (node.getClass().equals(Pane.class)) { //A Page.
+
+        }
+        Button editScrButton = new Button("Edit Script");
+        editScrButton.setOnMouseClicked(e -> {
+            var ed = new Editor((Stage) pagePane.getScene().getWindow(),
+                    engine.getElScript(nodeID),
+                    engine.getElScriptLang(nodeID),
+                    nodeID,
+                    (String lang, String text) -> {
+                        engine.setElScript(nodeID, lang, text);
+                    });
+
+        });
+        propPane.getChildren().add(editScrButton);
+    }
+
+    /**
      * Show some playable media.
      *
      * @param id media object ID.
@@ -863,6 +891,7 @@ public final class MainController {
         this.amEditable.set(editable);
         setElementsFocusable(editable);
         if (!editable) {
+            propPane.getChildren().clear();
             setCursorType(Cursor.DEFAULT);
         }
     }
@@ -910,6 +939,8 @@ public final class MainController {
                                         if (amEditable.get()) {
                                             addedNode.setCursor(Cursor.MOVE);
                                             dragDelta = new Point2D(addedNode.getLayoutX() - e.getSceneX(), addedNode.getLayoutY() - e.getSceneY());
+                                            updatePropsList(addedNode);
+                                            e.consume();
                                         }
                                     } else if (e.getEventType() == MouseEvent.MOUSE_RELEASED) {
                                         if (amEditable.get()) {
@@ -935,6 +966,7 @@ public final class MainController {
                                     handleEvent(e);
                                     e.consume();
                                 });
+                                
                             }
                         }
                     }
@@ -953,7 +985,7 @@ public final class MainController {
             pagePane.addEventFilter(KeyEvent.ANY, handleInput);
             pagePane.setFocusTraversable(true);
             console = new Console((Stage) pagePane.getScene().getWindow(), (s -> engine.consoleLineCallback(s)));
-            
+
             engine.start();
             pageVBox.widthProperty().addListener((obs, oldWidth, newWidth) -> {
                 scaleCard();

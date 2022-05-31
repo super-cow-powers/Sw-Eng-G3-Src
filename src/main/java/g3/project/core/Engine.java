@@ -47,6 +47,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
@@ -482,7 +484,8 @@ public final class Engine extends Threaded {
                 }
             }
         } else { //Must be an internal ref.
-            var targetEl = currentDoc.getElementByID(hrefSeg.getRefTarget());
+            var maybeTargetEl = currentDoc.getElementByID(hrefSeg.getRefTarget());
+            maybeTargetEl.flatMap(e -> e.getPage()).ifPresent(p -> gotoPage(p.getID(), true));
         }
 
     }
@@ -630,13 +633,13 @@ public final class Engine extends Threaded {
     /**
      * Instruct the UI to draw an image using discrete values.
      *
-     * @param id
-     * @param xSize
-     * @param ySize
-     * @param xLoc
-     * @param yLoc
-     * @param zInd
-     * @param source
+     * @param id Image ID
+     * @param xSize Image X Size.
+     * @param ySize Image Y Size.
+     * @param xLoc X Location.
+     * @param yLoc Y Location.
+     * @param zInd Z Index.
+     * @param source Image Source.
      */
     //CHECKSTYLE:OFF
     public void putImage(final String id, final Double xSize, final Double ySize, final Double rot, final Double xLoc,
@@ -904,10 +907,10 @@ public final class Engine extends Threaded {
         }
         currentDoc.getCurrentPage().map(card -> {
             if (card.getIndex() < currentDoc.getPages().size() - 1) {
-                return (Integer)( card.getIndex() + 1);
+                return (Integer) (card.getIndex() + 1);
             }
             return Optional.empty();
-        }).ifPresent(next -> this.gotoPage((Integer)next, true));
+        }).ifPresent(next -> this.gotoPage((Integer) next, true));
     }
 
     /**
@@ -1065,6 +1068,74 @@ public final class Engine extends Threaded {
         } catch (ScriptException ex) {
             putMessage(ex.getMessage(), true);
         }
+    }
+
+    /**
+     * Get the string of an Element's script. Returns an empty string if none
+     * available.
+     *
+     * @param id Element ID.
+     * @return Script string.
+     */
+    public String getElScript(final String id) {
+        var maybeEl = currentDoc.getElementByID(id);
+        var maybeScr = maybeEl.flatMap(e -> e.getScriptEl())
+                .flatMap(s -> s.getSourceLoc())
+                .flatMap(sl -> docIO.getResource(sl))
+                .map(b -> new String(b, StandardCharsets.UTF_8));
+        if (maybeScr.isPresent()) {
+            return maybeScr.get();
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * Get an element's language.
+     *
+     * @param id Element ID.
+     * @return Language. python if not present.
+     */
+    public String getElScriptLang(final String id) {
+        var maybeEl = currentDoc.getElementByID(id);
+        var maybeLang = maybeEl.flatMap(e -> e.getScriptEl())
+                .map(s -> s.getScriptLang());
+        if (maybeLang.isPresent()) {
+            return maybeLang.get();
+        } else {
+            return "python";
+        }
+    }
+
+    /**
+     * Set an Element's script.
+     *
+     * @param id Element ID.
+     * @param lang Language.
+     * @param scr Script.
+     */
+    public void setElScript(final String id, final String lang, final String scr) {
+        if (Thread.currentThread() != getThread()) {
+            runFunction(() -> setElScript(id, lang, scr));
+            return;
+        }
+        var maybeEl = currentDoc.getElementByID(id);
+        maybeEl.flatMap(e -> e.getScriptEl()).flatMap(sel -> sel.getSourceLoc()).ifPresent(loc -> docIO.removeResource(loc)); //Remove existing
+        maybeEl.ifPresent(e -> {
+            String suffix = "";
+            if (lang.toLowerCase().equals("rhino")) {
+                suffix = ".js";
+            } else if (lang.toLowerCase().equals("python")) {
+                suffix = ".py";
+            }
+            try {
+                Path file = docIO.getEmptyFile("/scripts", id, suffix);
+                docIO.writeBytes(file.toString(), scr.getBytes());
+                e.addScriptFile(file, lang);
+            } catch (IOException ex) {
+                Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
     }
 
     /**

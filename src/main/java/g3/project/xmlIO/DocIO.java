@@ -45,7 +45,7 @@ import nu.xom.*;
  * @author david
  */
 public class DocIO extends IO {
-    
+
     protected final static String xmlFileName = "doc.xml";
 
     public DocIO(final String presFilePath) {
@@ -117,21 +117,68 @@ public class DocIO extends IO {
     }
 
     /**
-     * Get an internal class-path resource as bytes.
+     * Remove a resource from the Zip.
      *
-     * @param file File to return.
-     * @param resClass Class to look in.
-     * @return Maybe file bytes.
+     * @param loc Location.
      */
-    public static Optional<byte[]> getInternalResource(final String file, final Class resClass) {
-        byte[] arr = null;
-        var is = resClass.getResourceAsStream(file);
+    public void removeResource(final String loc) {
+        if (!isUriInternal(loc)) {
+            return; //Can't remove an external resource.
+        }
+        var internalPath = zipFs.getPath(loc);
         try {
-            arr = is.readAllBytes();
+            Files.delete(internalPath);
         } catch (IOException ex) {
             Logger.getLogger(DocIO.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return Optional.ofNullable(arr);
+    }
+
+    /**
+     * Try to get an empty file in the given location, with the given prefix and
+     * suffix.
+     *
+     * @param loc Location to create file.
+     * @param prefix File Prefix.
+     * @param suffix File Suffix.
+     * @return New File Path.
+     * @throws IOException Couldn't make file.
+     */
+    public Path getEmptyFile(final String loc, final String prefix, final String suffix) throws IOException {
+        var containingPath = zipFs.getPath(loc);
+        Files.createDirectories(containingPath);
+        var filePath = Files.createTempFile(containingPath, prefix, suffix);
+        return filePath;
+    }
+
+    /**
+     * Add a resource to the zip.
+     *
+     * @param exrPath Existing Resource path.
+     * @param newPath Path within zip.
+     * @return Optional resource bytes.
+     */
+    public synchronized Optional<byte[]> addResource(final String exrPath, final String newPath) throws IOException {
+        var internalPath = zipFs.getPath(newPath);
+        Files.createDirectories(internalPath);
+        var resPath = Paths.get(exrPath);
+        try {
+            Files.copy(resPath, internalPath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException ex) {
+            Logger.getLogger(IO.class.getName()).log(Level.SEVERE, null, ex);
+            return Optional.empty();
+        }
+        return getResource(newPath);
+    }
+
+    /**
+     * Write to a given file.
+     *
+     * @param path Path to file.
+     * @param content File Content.
+     */
+    public void writeBytes(final String path, final byte[] content) throws IOException {
+        var filePath = zipFs.getPath(path);
+        Files.write(filePath, content);
     }
 
     @Override

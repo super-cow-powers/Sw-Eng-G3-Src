@@ -265,25 +265,6 @@ public abstract class IO {
     }
 
     /**
-     * Add a resource to the zip.
-     *
-     * @param exrPath Existing Resource path.
-     * @param newPath Path within zip.
-     * @return Optional resource bytes.
-     */
-    public synchronized Optional<byte[]> addResource(final String exrPath, final String newPath) {
-        var internalPath = zipFs.getPath(newPath);
-        var resPath = Paths.get(exrPath);
-        try {
-            Files.copy(resPath, internalPath, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException ex) {
-            Logger.getLogger(IO.class.getName()).log(Level.SEVERE, null, ex);
-            return Optional.empty();
-        }
-        return getResource(newPath);
-    }
-
-    /**
      * Get an internal class-path resource as bytes.
      *
      * @param file File to return.

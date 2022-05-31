@@ -64,11 +64,6 @@ public class VisualElement extends Element implements Scriptable {
     private RecursiveBindings elementScriptBindings = new RecursiveBindings();
 
     /**
-     * Ref to the engine.
-     */
-    private Optional<Engine> engine = Optional.empty();
-
-    /**
      * Does the script need evaluating again?
      */
     private Boolean evalRequired = true;
@@ -145,7 +140,7 @@ public class VisualElement extends Element implements Scriptable {
         this.addAttribute(new Attribute("x_orig", Double.toString(point.getX())));
         this.addAttribute(new Attribute("y_orig", Double.toString(point.getY())));
     }
-    
+
     /**
      * Set the object's X/Y location.
      *
@@ -245,8 +240,10 @@ public class VisualElement extends Element implements Scriptable {
         this.addAttribute(yAttr);
         this.addAttribute(rotAttr);
     }
+
     /**
      * Set element size.
+     *
      * @param x X size.
      * @param y Y size.
      * @param rot Rotation.
@@ -258,6 +255,23 @@ public class VisualElement extends Element implements Scriptable {
         this.addAttribute(xAttr);
         this.addAttribute(yAttr);
         this.addAttribute(rotAttr);
+    }
+
+    /**
+     * Get the page this element is of.
+     *
+     * @return Maybe Page.
+     */
+    public final Optional<PageElement> getPage() {
+        if (this instanceof PageElement) {
+            return Optional.of((PageElement) this);
+        } else {
+            var par = this.getParent();
+            while (!(par instanceof PageElement) && (par.getParent() != null)) {
+                par = par.getParent();
+            }
+            return Optional.ofNullable((PageElement) par);
+        }
     }
 
     /**
@@ -452,6 +466,14 @@ public class VisualElement extends Element implements Scriptable {
         return this.getClass().getName();
     }
 
+    /**
+     * Add a new script to the element. Any old file MUST have been deleted
+     * before use!
+     *
+     * @param path Path to new file.
+     * @param language Script language.
+     * @throws IOException
+     */
     @Override
     public void addScriptFile(Path path, String language) throws IOException {
         if (!path.getFileSystem().provider().getScheme().contains("jar") && !path.getFileSystem().provider().getScheme().contains("zip")) {
@@ -465,6 +487,7 @@ public class VisualElement extends Element implements Scriptable {
                 this.removeChild(ch);
             }
         }
+        this.evalRequired = true;
         this.appendChild(scEl);
     }
 
