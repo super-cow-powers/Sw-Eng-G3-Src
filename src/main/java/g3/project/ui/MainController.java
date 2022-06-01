@@ -654,13 +654,62 @@ public final class MainController {
         final String nodeID = node.getId();
         Label itemLabel = new Label(nodeID);
         propPane.getChildren().add(itemLabel);
+        final var props = engine.getElementProperties(nodeID);
+        for (var prop : props.keySet()) {
+            Label propLabel = new Label(prop);
+            Control propEntry;
+            var propVal = props.get(prop);
+            var propClass = propVal.getClass();
+
+            if (propClass.equals(Color.class)) {
+                propEntry = new ColorPicker((Color) propVal);
+                ((ColorPicker) propEntry).setOnAction(ev -> {
+                    props.put(propEntry.getId(), ((ColorPicker) propEntry).getValue());
+                    engine.updateProperties(props, nodeID);
+                });
+            } else if (propClass.equals(Double.class)) {
+                propEntry = new Spinner(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, (Double) propVal, 1d);
+                ((Spinner) propEntry).setEditable(true);
+                ((Spinner) propEntry).valueProperty().addListener((obs, oldValue, newValue) -> {
+                    props.put(propEntry.getId(), ((Spinner) propEntry).getValue());
+                    engine.updateProperties(props, nodeID);
+                });
+            } else if (propClass.equals(Boolean.class)) {
+                propEntry = new CheckBox();
+                ((CheckBox) propEntry).setSelected((Boolean) propVal);
+                ((CheckBox) propEntry).setOnAction(ev -> {
+                    props.put(propEntry.getId(), ((CheckBox) propEntry).isSelected());
+                    engine.updateProperties(props, nodeID);
+                });
+            } else { //Probably a String.
+                propEntry = new TextField(propVal.toString());
+                ((TextField) propEntry).setOnKeyTyped(kev -> {
+                    if (kev.getCode() == KeyCode.ENTER) {
+                        props.put(propEntry.getId(), ((TextField) propEntry).getText());
+                        engine.updateProperties(props, nodeID);
+                    }
+                });
+            }
+            propEntry.setId(prop);
+            HBox propBox = new HBox(propLabel, propEntry);
+            HBox.setHgrow(propBox, Priority.ALWAYS);
+            propPane.getChildren().addAll(propLabel, propEntry);
+        }
         if (node instanceof Visual) { //An element.
 
+            if (node instanceof ExtShape) { //Shape Specifics
+
+            } else if (node instanceof VisImageView) { //Image Specifics
+
+            } else if (node instanceof Player) { //Player Specifics
+
+            }
         } else if (node.getClass().equals(Pane.class)) { //A Page.
 
         }
         Button editScrButton = new Button("Edit Script");
         editScrButton.setOnMouseClicked(e -> {
+            //Launch a new editor for the element.
             var ed = new Editor((Stage) pagePane.getScene().getWindow(),
                     engine.getElScript(nodeID),
                     engine.getElScriptLang(nodeID),
@@ -674,10 +723,11 @@ public final class MainController {
         Button deleteButton = new Button("Delete");
         deleteButton.setOnMouseClicked(e -> {
             remove(nodeID);
+            propPane.getChildren().clear(); //Clear props.
             engine.deleteElement(nodeID);
         });
 
-        propPane.getChildren().addAll(editScrButton, deleteButton);
+        propPane.getChildren().addAll(new HBox(editScrButton), new HBox(deleteButton));
     }
 
     /**
@@ -1063,7 +1113,7 @@ public final class MainController {
         newCardButton.setOnMouseClicked(e -> {
             engine.makeNewCard();
         });
-        
+
         extShapeFactory.setHrefClickHandler((ev) -> {
             handleEvent(ev);
         });

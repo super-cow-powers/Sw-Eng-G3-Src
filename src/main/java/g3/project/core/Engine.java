@@ -50,6 +50,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.BlockingQueue;
@@ -559,6 +560,24 @@ public final class Engine extends Threaded {
     }
 
     /**
+     * Update the UI page buttons.
+     *
+     * @param pages Pages to add buttons for.
+     */
+    private void updateCardButtons(final ArrayList<PageElement> pages) {
+        Platform.runLater(() -> controller.clearCardButtons());
+        for (var p : pages) {
+            Platform.runLater(
+                    () -> {
+                        var tiopt = p.getTitle();
+                        String id = p.getID();
+                        String title = tiopt.isPresent() ? tiopt.get() : id;
+                        controller.addCardButton(title, id);
+                    });
+        }
+    }
+
+    /**
      * Initialise/load doc.
      *
      * @param docio doc to init.
@@ -601,16 +620,7 @@ public final class Engine extends Threaded {
                     el -> this.redrawEl(el)
             );
             //Add buttons for each page/card
-            for (var p : currentDoc.getPages()) {
-                Platform.runLater(
-                        () -> {
-                            var tiopt = p.getTitle();
-                            String id = p.getID();
-                            String title = tiopt.isPresent() ? tiopt.get() : id;
-                            controller.addCardButton(title, id);
-                        });
-            }
-
+            updateCardButtons(currentDoc.getPages());
             try {
                 //Init Document global scripts by running onLoad function.
                 scriptingEngine.invokeOnElement(currentDoc, Scripting.LOAD_FUNCTION);
@@ -915,7 +925,24 @@ public final class Engine extends Threaded {
             runFunction(() -> deleteElement(id));
             return;
         }
-        currentDoc.deleteElement(id, docIO);
+        var maybeEl = currentDoc.getElementByID(id);
+        maybeEl.map(e -> {
+            currentDoc.deleteElement(e, docIO);
+            return e;
+        }).filter(e -> e instanceof PageElement)
+                .ifPresent(p -> {
+                    //Update page buttons.
+                    var pages = currentDoc.getPages();
+                    updateCardButtons(pages);
+                    Integer oldIndex = ((PageElement) p).getIndex();
+                    if (pages.isEmpty()) { //We removed the last page.
+                        makeNewCard(); //So add a new one.
+                        navHistory.clear();
+                        gotoPage(0, true);
+                    } else {
+                        gotoPrevPage();
+                    }
+                });
     }
 
     /**
@@ -939,9 +966,9 @@ public final class Engine extends Threaded {
                     p.detach();
                     String newID = currentDoc.getNewUniqueID("page-");
                     ((PageElement) p).setID(newID);
-                    var endIndex = Integer.max(currentDoc.getPages().size() - 1, 0);
+                    var endIndex = currentDoc.getPages().size();
                     currentDoc.insertPage(endIndex, (PageElement) p);
-                    Platform.runLater(() -> controller.addCardButton("New Card", newID));
+                    updateCardButtons(currentDoc.getPages());
                 });
     }
 
@@ -1074,7 +1101,7 @@ public final class Engine extends Threaded {
         //Check if there should be a delay.
         var maybeDelay = el.getDelaySecs();
         maybeDelay.ifPresentOrElse(del -> { //Element should be delayed
-            Double delaymS = del * 1000;
+            Double delaymS = Math.max(del * 1000, 0); //Don't delay less than 0 secs.
             Runnable delayTask = () -> {
                 redrawEl(el);
                 // Then recurse the children
@@ -1146,6 +1173,9 @@ public final class Engine extends Threaded {
         //Check if there should be a finite duration.
         var maybeDuration = el.getDurationSecs();
         maybeDuration.ifPresent(dur -> {
+            if (dur < 0) {
+                return; //If a negative duration is set, ignore.
+            }
             Double durmS = dur * 1000;
             Runnable delayTask = () -> {
                 if (el instanceof PageElement) {
@@ -1349,12 +1379,42 @@ public final class Engine extends Threaded {
      * Provide the Element's properties to the UI.
      *
      * @param elID Element ID.
+     * @return Properties Map.
      */
-    public void provideProperties(final String elID) {
+    public HashMap<String, Object> getElementProperties(final String elID) {
+        final HashMap<String, Object> retMap = new HashMap<>();
         Optional<VisualElement> maybeEl = currentDoc.getElementByID(elID);
         maybeEl.ifPresent(el -> {
-//            el.
+            //el.getStroke().ifPresent(s -> retMap.putAll(s));
+            retMap.putAll(el.getVisualProps().getDefaultProps()); //Insert Defaults
+            retMap.putAll(el.getVisualProps()); //Override Defaults
+            if (el instanceof Includable) {
+                if (((Includable) el).getSourceLoc().isPresent()) {
+                    retMap.put("include_source",((Includable) el).getSourceLoc().get());
+                } else {
+                    retMap.put("include_source",((Includable) el).getSourceLoc().get());
+                }
+            }
         });
+        return retMap;
+    }
+
+    /**
+     * Update element properties.
+     *
+     * @param props Properties map.
+     * @param elId Element ID.
+     */
+    public void updateProperties(final HashMap<String, Object> props, final String elId) {
+        if (Thread.currentThread() != getThread()) {
+            runFunction(() -> updateProperties(props, elId));
+            return;
+        }
+        currentDoc.getElementByID(elId).ifPresent(e -> {
+            e.setProps(props);
+            e.hasUpdated();
+        });
+
     }
 
     /**

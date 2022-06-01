@@ -74,6 +74,19 @@ public class VisualProps extends HashMap<String, Object> implements Props {
     protected static final Class VISIBLE_TYPE = Boolean.class;
     public static final String ID = "ID";
     protected static final Class ID_TYPE = String.class;
+    public static final String X_ORIG = "x_orig";
+    protected static final Class X_TYPE = Double.class;
+    public static final String Y_ORIG = "y_orig";
+    protected static final Class Y_TYPE = Double.class;
+    public static final String Z_IND = "z_ind";
+    protected static final Class Z_TYPE = Double.class;
+    public static final String X_SIZE = "x_size_px";
+    protected static final Class X_SZ_TYPE = Double.class;
+    public static final String Y_SIZE = "y_size_px";
+    protected static final Class Y_SZ_TYPE = Double.class;
+    public static final String ROT = "rot_angle";
+    protected static final Class ROT_TYPE = Double.class;
+    
     //CHECKSTYLE:ON
     /**
      * Contains known props and their classes.
@@ -81,14 +94,16 @@ public class VisualProps extends HashMap<String, Object> implements Props {
     protected static final Map<String, Class> PROPS_MAP = Map.ofEntries(entry(SHADE_COL, SHADE_COL_TYPE),
             entry(L_SHADE_SIZE, SHADE_SIZE_TYPE), entry(R_SHADE_SIZE, SHADE_SIZE_TYPE), entry(T_SHADE_SIZE, SHADE_SIZE_TYPE), entry(B_SHADE_SIZE, SHADE_SIZE_TYPE),
             entry(SHADE_SIZE, SHADE_SIZE_TYPE), entry(ALPHA, ALPHA_TYPE), entry(FILL, FILL_TYPE), entry(DISP_SECS, DISP_SECS_TYPE),
-            entry(DELAY_SECS, DELAY_SECS_TYPE), entry(VISIBLE, VISIBLE_TYPE), entry(ID, ID_TYPE));
+            entry(DELAY_SECS, DELAY_SECS_TYPE), entry(VISIBLE, VISIBLE_TYPE), entry(ID, ID_TYPE), entry(X_ORIG, X_TYPE), entry(Y_ORIG, Y_TYPE), entry(Z_IND, Z_TYPE),
+            entry(X_SIZE, X_SZ_TYPE), entry(Y_SIZE, Y_SZ_TYPE), entry(ROT, ROT_TYPE));
     /**
      * Contains default values for known props.
      */
     protected static final Map<String, Object> PROP_DEFAULTS = Map.ofEntries(entry(SHADE_COL, Color.BLACK),
             entry(L_SHADE_SIZE, 0d), entry(R_SHADE_SIZE, 0d), entry(T_SHADE_SIZE, 0d), entry(B_SHADE_SIZE, 0d), entry(SHADE_SIZE, 0d),
             entry(ALPHA, 1d), entry(FILL, Color.TRANSPARENT), entry(DISP_SECS, -1d), entry(DELAY_SECS, 0d), entry(VISIBLE, true),
-            entry(ID, ""));
+            entry(ID, "") , entry(X_ORIG, 0d), entry(Y_ORIG, 0d), entry(Z_IND, 0d),
+            entry(X_SIZE, 100d), entry(Y_SIZE, 100d), entry(ROT, 0d));
 
     /**
      * Constructor. Takes map of properties.
@@ -193,6 +208,11 @@ public class VisualProps extends HashMap<String, Object> implements Props {
     @Override
     public final Map<String, String> getPropsNames() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Map<String, Object> getProps() {
+        return this;
     }
 
 }

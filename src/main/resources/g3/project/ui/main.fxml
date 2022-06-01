@@ -47,16 +47,18 @@
                     <children>
                         <SplitPane dividerPositions="0.5013550135501355" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" VBox.vgrow="ALWAYS">
                             <items>
-                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+                                <AnchorPane minHeight="0.0" minWidth="75" prefHeight="100.0" prefWidth="160.0">
                                     <children>
                                         <FlowPane fx:id="toolPane" layoutX="-66.0" layoutY="-53.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                                     </children>
                                 </AnchorPane>
-                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
-                                    <children>
-                                        <VBox fx:id="propPane" layoutY="-33.0" prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                                    </children>
-                                </AnchorPane>
+                                <ScrollPane fx:id="propScroll" minHeight="0.0" minWidth="75" prefHeight="100.0" prefWidth="160.0">
+                                    <content>
+                                        <HBox HBox.hgrow="ALWAYS">
+                                        <VBox fx:id="propPane" prefHeight="200.0" minWidth="100.0"/>
+                                        </HBox>
+                                    </content>
+                                </ScrollPane>
                             </items>
                         </SplitPane>
                     </children>
@@ -86,6 +88,6 @@
                 </VBox>
             </items>
         </SplitPane>
-        <Label fx:id="messageLabel" contentDisplay="CENTER" prefHeight="20.0" text="message" />
+        <Label fx:id="messageLabel" contentDisplay="CENTER" prefHeight="20.0" text="Loading ..." />
     </children>
 </VBox>

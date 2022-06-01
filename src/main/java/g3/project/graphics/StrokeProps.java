@@ -178,4 +178,9 @@ public final class StrokeProps extends HashMap<String, Object> implements Props 
         return PROPS_NAMES;
     }
 
+    @Override
+    public Map<String, Object> getProps() {
+        return this;
+    }
+
 }

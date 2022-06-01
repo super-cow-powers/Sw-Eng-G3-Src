@@ -139,10 +139,13 @@ public final class DocElement extends Element implements Scriptable {
      */
     public ArrayList<PageElement> getPages() {
         ArrayList<PageElement> pages = new ArrayList<>();
+        Integer pageCnt = 0;
         for (int i = 0; i < this.getChildCount(); i++) {
             var node = this.getChild(i);
             if (node.getClass() == PageElement.class) {
                 pages.add((PageElement) node);
+                ((PageElement) node).setIndex(pageCnt);
+                pageCnt ++;
             }
         }
         return pages;
@@ -222,6 +225,7 @@ public final class DocElement extends Element implements Scriptable {
             if (node instanceof PageElement) {
                 if (pages == pageNum) {
                     this.insertChild(el, i);
+                    el.setIndex(pageNum);
                     return;
                 }
                 pages++;
@@ -311,8 +315,18 @@ public final class DocElement extends Element implements Scriptable {
      * @param resIO Resource IO to cleanup resources.
      */
     public void deleteElement(final String id, final DocIO resIO) {
-        var maybeEl = getElementByID(id);
-        maybeEl.ifPresent(e -> e.delete(resIO));
+        Optional<VisualElement> maybeEl = getElementByID(id);
+        maybeEl.ifPresent(e -> deleteElement(e, resIO));
+    }
+
+    /**
+     * Delete an element.
+     *
+     * @param el Element.
+     * @param resIO Resource IO to cleanup resources.
+     */
+    public void deleteElement(final VisualElement el, final DocIO resIO) {
+        el.delete(resIO);
     }
 
     @Override

@@ -30,6 +30,7 @@ package g3.project.elements;
 
 import g3.project.core.RecursiveBindings;
 import g3.project.graphics.LocObj;
+import g3.project.graphics.Props;
 import g3.project.graphics.SizeObj;
 import g3.project.graphics.StrokeProps;
 import g3.project.graphics.VisualProps;
@@ -117,6 +118,18 @@ public abstract class VisualElement extends Element implements Scriptable {
         var attr = el.getAttribute(attrName, attrNS);
         return Optional.ofNullable(attr);
     }
+    /**
+     * Make an attribute with a name-space.
+     * @param qualifiedName Full name.
+     * @param attrVal Value.
+     * @return Attribute.
+     */
+    public static Attribute makeAttrWithNS(final String qualifiedName, final String attrVal){
+        var nameSplit = qualifiedName.split(":");
+        var attrNS = (nameSplit.length > 1) ? EXT_URI : "";
+        var attr = new Attribute(qualifiedName, attrNS, attrVal);
+        return attr;
+    }
 
     /**
      * Get the object's X/Y location. Returns an Optional, which may contain
@@ -168,7 +181,7 @@ public abstract class VisualElement extends Element implements Scriptable {
         var id = Optional.ofNullable(this.getAttribute("ID"))
                 .map(f -> f.getValue());
         var myDoc = this.getDocument();
-        if (myDoc.getRootElement() instanceof DocElement) { //When using an unattached element, root is NOT a document.
+        if ((myDoc != null) && (myDoc.getRootElement() instanceof DocElement)) { //When using an unattached element, root is NOT a document.
             var myDocEl = (DocElement) myDoc.getRootElement();
             return id.isPresent() ? id.get() : myDocEl.getNewUniqueID(this.getLocalName());
         } else {
@@ -455,13 +468,24 @@ public abstract class VisualElement extends Element implements Scriptable {
     }
 
     /**
-     * Set this object's properties. This default implementation will set Visual
-     * Props. Override, call super(...), then set further props for extensions.
+     * Set this object's properties.
      *
      * @param props Properties.
      */
     public void setProps(final HashMap<String, Object> props) {
-
+        for (String prop : props.keySet()) {
+            var propVal = props.get(prop);
+            if (propVal != null) {
+                switch (prop) {
+                    //Special cases
+                    default: //Not a special case
+                        System.out.println(prop);
+                        var attr = makeAttrWithNS(prop, propVal.toString());
+                        this.addAttribute(attr);
+                        break;
+                }
+            }
+        }
     }
 
     /**

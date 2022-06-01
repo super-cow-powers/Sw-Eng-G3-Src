@@ -65,4 +65,10 @@ public interface Props {
      * @return Value, or default value. Empty if invalid property.
      */
     Optional<Object> getProp(String prop);
+    
+    /**
+     * Get all current props.
+     * @return current Props.
+     */
+    Map<String, Object> getProps();
 }
