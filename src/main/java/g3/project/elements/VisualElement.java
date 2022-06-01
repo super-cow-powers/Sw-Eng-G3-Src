@@ -479,7 +479,6 @@ public abstract class VisualElement extends Element implements Scriptable {
                 switch (prop) {
                     //Special cases
                     default: //Not a special case
-                        System.out.println(prop);
                         var attr = makeAttrWithNS(prop, propVal.toString());
                         this.addAttribute(attr);
                         break;
