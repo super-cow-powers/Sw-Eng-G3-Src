@@ -683,11 +683,9 @@ public final class MainController {
                 });
             } else { //Probably a String.
                 propEntry = new TextField(propVal.toString());
-                ((TextField) propEntry).setOnKeyTyped(kev -> {
-                    if (kev.getCode() == KeyCode.ENTER) {
-                        props.put(propEntry.getId(), ((TextField) propEntry).getText());
-                        engine.updateProperties(props, nodeID);
-                    }
+                ((TextField) propEntry).setOnAction(ev -> {
+                    props.put(propEntry.getId(), ((TextField) propEntry).getText());
+                    engine.updateProperties(props, nodeID);
                 });
             }
             propEntry.setId(prop);
