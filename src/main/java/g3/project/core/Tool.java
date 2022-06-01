@@ -135,6 +135,15 @@ public class Tool extends Element implements Scriptable {
             return Boolean.valueOf(sinkAttr.getValue());
         }
     }
+    
+    public final Boolean bubbleEvents() {
+        var sinkAttr = this.getAttribute("do_bubble");
+        if (sinkAttr == null) {
+            return false;
+        } else {
+            return Boolean.valueOf(sinkAttr.getValue());
+        }
+    }
 
     /**
      * Get the local scope for this object.

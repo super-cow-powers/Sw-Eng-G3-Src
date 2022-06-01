@@ -28,6 +28,7 @@
  */
 package g3.project.elements;
 
+import g3.project.xmlIO.DocIO;
 import java.util.Optional;
 import nu.xom.*;
 
@@ -59,6 +60,7 @@ public final class PlayableElement extends VisualElement implements Includable {
 
     /**
      * Constructor
+     *
      * @param name
      */
     public PlayableElement(final String name) {
@@ -67,6 +69,7 @@ public final class PlayableElement extends VisualElement implements Includable {
 
     /**
      * Constructor
+     *
      * @param name
      * @param uri
      */
@@ -76,10 +79,16 @@ public final class PlayableElement extends VisualElement implements Includable {
 
     /**
      * Constructor
+     *
      * @param element
      */
     public PlayableElement(final Element element) {
         super(element);
+    }
+
+    @Override
+    public void delete(final DocIO resIO) {
+        this.getSourceLoc().ifPresent(s -> resIO.removeResource(s));
     }
 
     /**

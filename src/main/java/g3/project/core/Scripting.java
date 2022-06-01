@@ -120,7 +120,6 @@ public final class Scripting {
             //Pre-init a script engine.
             getScriptEngine(defaultLanguage);
         }
-
     }
 
     /**
@@ -172,11 +171,18 @@ public final class Scripting {
         var scrElOpt = element.getScriptEl();
         //Setup bindings
         var bindings = element.getScriptingBindings();
-        bindings.put("this", element);
         element.getParentElementScriptingBindings().ifPresent(p -> bindings.setParent(p));
 
         scrElOpt.flatMap(scrEl -> { //Get file location
             var locOpt = scrEl.getSourceLoc();
+            var lang = scrEl.getScriptLang();
+            if (lang.toLowerCase().equals("python")) {
+                bindings.remove("me"); //Jython doesn't reserve 'this'
+                bindings.put("this", element);
+            } else {
+                bindings.remove("this"); //Most other things do reserve 'this'
+                bindings.put("me", element);
+            }
             if (locOpt.isEmpty()) {
                 System.err.println("No script file specified");
             }

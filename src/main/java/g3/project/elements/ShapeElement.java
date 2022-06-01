@@ -31,6 +31,7 @@ package g3.project.elements;
 import g3.project.graphics.LocObj;
 import g3.project.graphics.StrokeProps;
 import g3.project.graphics.StyledTextSeg;
+import g3.project.xmlIO.DocIO;
 import java.util.ArrayList;
 import java.util.Optional;
 import javafx.application.Platform;
@@ -92,6 +93,13 @@ public class ShapeElement extends VisualElement {
     public String setType(String type) {
         this.addAttribute(new Attribute("type", type));
         return this.getType();
+    }
+
+    @Override
+    public void delete(final DocIO resIO) {
+        for (var ch : this.getChildElements()) {
+            this.removeChild(ch);
+        }
     }
 
     /**

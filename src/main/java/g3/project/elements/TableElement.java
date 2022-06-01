@@ -28,6 +28,7 @@
  */
 package g3.project.elements;
 
+import g3.project.xmlIO.DocIO;
 import nu.xom.*;
 
 /**
@@ -35,19 +36,21 @@ import nu.xom.*;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public class TableElement extends VisualElement {
+
     /**
      * Creates builder thread for the element
      */
     private static ThreadLocal builders = new ThreadLocal() {
-        
-         protected synchronized Object initialValue() {
-             return new Builder(new ElementFactory());
-         }
-         
-     };
-    
+
+        protected synchronized Object initialValue() {
+            return new Builder(new ElementFactory());
+        }
+
+    };
+
     /**
      * Constructor
+     *
      * @param name
      */
     public TableElement(final String name) {
@@ -63,9 +66,15 @@ public class TableElement extends VisualElement {
 
     /**
      * Constructor
+     *
      * @param element
      */
     public TableElement(final Element element) {
         super(element);
+    }
+
+    @Override
+    public void delete(DocIO resIO) {
+
     }
 }

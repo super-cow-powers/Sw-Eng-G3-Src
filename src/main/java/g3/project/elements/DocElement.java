@@ -30,15 +30,12 @@ package g3.project.elements;
 
 import g3.project.core.RecursiveBindings;
 import g3.project.graphics.SizeObj;
-import g3.project.xmlIO.DocIO;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.function.Consumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import nu.xom.*;
 
 /**

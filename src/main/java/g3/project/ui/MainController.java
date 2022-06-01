@@ -64,6 +64,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener.Change;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
@@ -639,7 +641,10 @@ public final class MainController {
      */
     public void updatePropsList(final Node node) {
         propPane.getChildren().clear();
+        propPane.setAlignment(Pos.TOP_CENTER);
         final String nodeID = node.getId();
+        Label itemLabel = new Label(nodeID);
+        propPane.getChildren().add(itemLabel);
         if (node instanceof Visual) { //An element.
 
         } else if (node.getClass().equals(Pane.class)) { //A Page.
@@ -656,6 +661,12 @@ public final class MainController {
                     });
 
         });
+
+        Button deleteButton = new Button("Delete");
+        deleteButton.setOnMouseClicked(e -> {
+            //engine
+        });
+
         propPane.getChildren().add(editScrButton);
     }
 
@@ -889,7 +900,6 @@ public final class MainController {
      */
     public void toggleEditable(final Boolean editable) {
         this.amEditable.set(editable);
-        setElementsFocusable(editable);
         if (!editable) {
             propPane.getChildren().clear();
             setCursorType(Cursor.DEFAULT);
@@ -939,7 +949,11 @@ public final class MainController {
                                         if (amEditable.get()) {
                                             addedNode.setCursor(Cursor.MOVE);
                                             dragDelta = new Point2D(addedNode.getLayoutX() - e.getSceneX(), addedNode.getLayoutY() - e.getSceneY());
-                                            updatePropsList(addedNode);
+                                            addedNode.requestFocus();
+                                            e.consume();
+                                        }
+                                    } else if (e.getEventType() == MouseEvent.MOUSE_CLICKED) {
+                                        if (amEditable.get()) {
                                             e.consume();
                                         }
                                     } else if (e.getEventType() == MouseEvent.MOUSE_RELEASED) {
@@ -961,12 +975,23 @@ public final class MainController {
                                         e.consume();
                                     }
                                 });
-
+                                addedNode.setFocusTraversable(true);
+                                addedNode.focusedProperty().addListener(new ChangeListener<Boolean>() {
+                                    @Override
+                                    public void changed(ObservableValue<? extends Boolean> arg0, Boolean oldPropertyValue, Boolean newPropertyValue) {
+                                        if (newPropertyValue) {
+                                            if (amEditable.get()) {
+                                                updatePropsList(addedNode);
+                                            }
+                                        } else {
+                                        }
+                                    }
+                                });
                                 addedNode.addEventHandler(KeyEvent.ANY, (e) -> {
                                     handleEvent(e);
                                     e.consume();
                                 });
-                                
+
                             }
                         }
                     }
@@ -980,8 +1005,26 @@ public final class MainController {
                         splitPane.getDividers().get(0).setPosition(MIN_POS_VAL);
                     }
                 });
+
+        pagePane.focusedProperty().addListener(new ChangeListener<Boolean>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> arg0, Boolean oldPropertyValue, Boolean newPropertyValue) {
+                if (newPropertyValue) {
+                    if (amEditable.get()) {
+                        updatePropsList(pagePane);
+                    }
+                } else {
+                }
+            }
+        });
+
         Platform.runLater(() -> { //Run when initialised
-            pagePane.addEventHandler(MouseEvent.ANY, handleInput);
+            pagePane.addEventHandler(MouseEvent.ANY, ev -> {
+                if (ev.getEventType() == MouseEvent.MOUSE_CLICKED) {
+                    pagePane.requestFocus();
+                }
+                handleInput.handle(ev);
+            });
             pagePane.addEventFilter(KeyEvent.ANY, handleInput);
             pagePane.setFocusTraversable(true);
             console = new Console((Stage) pagePane.getScene().getWindow(), (s -> engine.consoleLineCallback(s)));
@@ -1007,6 +1050,7 @@ public final class MainController {
         });
         cardSelPane.setFocusTraversable(false);
         pagePane.setFocusTraversable(true);
+        pageVBox.setFocusTraversable(false);
         var ds = new DropShadow();
         pagePane.setEffect(ds);
     }

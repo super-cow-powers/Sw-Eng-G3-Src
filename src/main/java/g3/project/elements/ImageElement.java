@@ -28,6 +28,7 @@
  */
 package g3.project.elements;
 
+import g3.project.xmlIO.DocIO;
 import java.util.Optional;
 import nu.xom.*;
 
@@ -89,6 +90,13 @@ public class ImageElement extends VisualElement implements Includable {
         super(name, uri);
         var sourceAttr = new Attribute(INCLUDE_ATTR, sourcePath);
         this.addAttribute(sourceAttr);
+    }
+
+    @Override
+    public void delete(final DocIO resIO) {
+        this.getSourceLoc().ifPresent(s -> { //Try deleting the resource.
+            resIO.removeResource(s);
+        });
     }
 
     /**

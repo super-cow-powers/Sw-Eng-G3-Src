@@ -28,12 +28,12 @@
  */
 package g3.project.elements;
 
-import g3.project.core.Engine;
 import g3.project.core.RecursiveBindings;
 import g3.project.graphics.LocObj;
 import g3.project.graphics.SizeObj;
 import g3.project.graphics.StrokeProps;
 import g3.project.graphics.VisualProps;
+import g3.project.xmlIO.DocIO;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -47,14 +47,14 @@ import nu.xom.Element;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class VisualElement extends Element implements Scriptable {
+public abstract class VisualElement extends Element implements Scriptable {
 
     /**
-     * @TODO javadoc
+     * Base URI.
      */
     static final String BASE_URI = "http://PWS_Base";
     /**
-     * @TODO javadoc
+     * Extensions URI.
      */
     static final String EXT_URI = "http://PWS_Exts";
 
@@ -95,6 +95,13 @@ public class VisualElement extends Element implements Scriptable {
     public VisualElement(final Element element) {
         super(element);
     }
+
+    /**
+     * Delete the element and sub-elements.
+     *
+     * @param resIO Resource handler to remove resources on delete.
+     */
+    public abstract void delete(DocIO resIO);
 
     /**
      * Find qualified attribute from element.
@@ -272,6 +279,54 @@ public class VisualElement extends Element implements Scriptable {
             }
             return Optional.ofNullable((PageElement) par);
         }
+    }
+
+    /**
+     * Set delay in seconds.
+     *
+     * @param del Delay in seconds.
+     */
+    public final void setDelaySecs(final Double del) {
+        Attribute delAttr = new Attribute("show_after_s", del.toString());
+        this.addAttribute(delAttr);
+    }
+
+    /**
+     * Get delay in seconds.
+     *
+     * @return Delay in seconds.
+     */
+    public final Optional<Double> getDelaySecs() {
+        Attribute delAttr = this.getAttribute("show_after_s");
+        if (delAttr != null) {
+            var delStr = delAttr.getValue();
+            return Optional.ofNullable(Double.valueOf(delStr));
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Get display duration in seconds.
+     *
+     * @return Duration in seconds.
+     */
+    public final Optional<Double> getDurationSecs() {
+        Attribute durAttr = this.getAttribute("disp_duration_s");
+        if (durAttr != null) {
+            var durStr = durAttr.getValue();
+            return Optional.ofNullable(Double.valueOf(durStr));
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Set delay in seconds.
+     *
+     * @param dur Delay in seconds.
+     */
+    public final void setDurationSecs(final Double dur) {
+        Attribute durAttr = new Attribute("disp_duration_s", dur.toString());
+        this.addAttribute(durAttr);
     }
 
     /**

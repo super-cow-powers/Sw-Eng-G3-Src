@@ -45,7 +45,6 @@ import g3.project.xmlIO.ToolIO;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -55,7 +54,10 @@ import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -117,9 +119,18 @@ public final class Engine extends Threaded {
      * Current line from console.
      */
     private volatile String consoleLine = new String();
-
+    /**
+     * Console is taking user input?
+     */
     private final AtomicBoolean consoleOnUserInput = new AtomicBoolean(false);
+    /**
+     * Console has data?
+     */
     private CountDownLatch consoleLineReady;
+    /**
+     * Executor service for delaying events.
+     */
+    private final ScheduledExecutorService elementDelayService = Executors.newScheduledThreadPool(1);
 
     /**
      * Event queue from input sources.
@@ -319,6 +330,7 @@ public final class Engine extends Threaded {
             docIO.close(); //Cleanup resources
         }
         System.out.println("Engine is going down NOW.");
+        elementDelayService.shutdown();
         return;
     }
 
@@ -888,6 +900,11 @@ public final class Engine extends Threaded {
         drawPlayer(id, source, playable.getDisplayPlayer(), playable.getAutoplay(), playable.getLoop(), playable.getSeekOffset());
     }
 
+    public void deleteElement(final String id) {
+        Optional<VisualElement> maybeEl = currentDoc.getElementByID(id);
+        //maybeEl.ifPresent(e -> e.);
+    }
+
     /**
      * Set the cursor type.
      *
@@ -909,7 +926,7 @@ public final class Engine extends Threaded {
             if (card.getIndex() < currentDoc.getPages().size() - 1) {
                 return (Integer) (card.getIndex() + 1);
             }
-            return Optional.empty();
+            return null;
         }).ifPresent(next -> this.gotoPage((Integer) next, true));
     }
 
@@ -1003,23 +1020,34 @@ public final class Engine extends Threaded {
             runFunction(() -> processEls(el));
             return;
         }
-        // Do whatever you're going to do with this node…
-        redrawEl(el);
-        //If element is scriptable, evaluate it's load-function.
-        if (el instanceof Scriptable) {
-            try {
-                scriptingEngine.invokeOnElement(el, Scripting.LOAD_FUNCTION);
-            } catch (ScriptException | IOException ex) {
-                Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+//CHECKSTYLE:OFF
+        //Check if there should be a delay.
+        var maybeDelay = el.getDelaySecs();
+        maybeDelay.ifPresentOrElse(del -> { //Element should be delayed
+            Double delaymS = del * 1000;
+            Runnable delayTask = () -> {
+                redrawEl(el);
+                // Then recurse the children
+                for (int i = 0; i < el.getChildCount(); i++) {
+                    var ch = el.getChild(i);
+                    if (ch instanceof VisualElement) {
+                        processEls((VisualElement) ((Element) ch));
+                    }
+                }
+            };
+            elementDelayService.schedule(delayTask, delaymS.longValue(), TimeUnit.MILLISECONDS);
+        }, () -> { //No delay.
+            // Do whatever you're going to do with this node…
+            redrawEl(el);
+            // Then recurse the children
+            for (int i = 0; i < el.getChildCount(); i++) {
+                var ch = el.getChild(i);
+                if (ch instanceof VisualElement) {
+                    processEls((VisualElement) ((Element) ch));
+                }
             }
-        }
-        // Then recurse the children
-        for (int i = 0; i < el.getChildCount(); i++) {
-            var ch = el.getChild(i);
-            if (ch instanceof VisualElement) {
-                processEls((VisualElement) ((Element) ch));
-            }
-        }
+        });
+//CHECKSTYLE:ON
     }
 
     /**
@@ -1030,6 +1058,11 @@ public final class Engine extends Threaded {
     public void redrawEl(final VisualElement el) {
         if (Thread.currentThread() != getThread()) {
             runFunction(() -> redrawEl(el));
+            return;
+        }
+        //Check that the element should still be on screen.
+        var pg = el.getPage().get();
+        if (!pg.equals(currentDoc.getCurrentPage().get())) {
             return;
         }
         if (el instanceof PageElement) {
@@ -1051,6 +1084,29 @@ public final class Engine extends Threaded {
             maybeSize.ifPresent(s -> controller.resizeElement(id, s));
             maybeLoc.ifPresent(l -> controller.moveElement(id, l));
         });
+        //If element is scriptable, evaluate it's load-function.
+        if (el instanceof Scriptable) {
+            try {
+                scriptingEngine.invokeOnElement(el, Scripting.LOAD_FUNCTION);
+            } catch (ScriptException | IOException ex) {
+                Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        //CHECKSTYLE:OFF
+        //Check if there should be a finite duration.
+        var maybeDuration = el.getDurationSecs();
+        maybeDuration.ifPresent(dur -> {
+            Double durmS = dur * 1000;
+            Runnable delayTask = () -> {
+                if (el instanceof PageElement) {
+                    gotoNextPage(); //Load next page if I'm a page.
+                } else {
+                    setElementVisibility(el.getID(), false); //Else just hide the element.
+                }
+            };
+            elementDelayService.schedule(delayTask, durmS.longValue(), TimeUnit.MILLISECONDS);
+        });
+        //CHECKSTYLE:ON
     }
 
     /**
@@ -1194,7 +1250,7 @@ public final class Engine extends Threaded {
             } catch (ScriptException | IOException ex) {
                 Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
             }
-            controller.toggleBubble(t.sinkEvents()); //If the tool stops events reaching elements, we want to try to capture events from the page.
+            controller.toggleBubble(t.bubbleEvents());
         });
     }
 
@@ -1289,6 +1345,11 @@ public final class Engine extends Threaded {
         }
     }
 
+    /**
+     * Read a line from the console. Will wait until data available.
+     *
+     * @return Line.
+     */
     public String readConsoleLine() {
         consoleLineReady = new CountDownLatch(1);
         consoleOnUserInput.set(true);
