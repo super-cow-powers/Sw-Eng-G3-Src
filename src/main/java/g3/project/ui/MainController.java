@@ -87,6 +87,15 @@ import javafx.util.Duration;
 public final class MainController {
 
     /**
+     * Icon target X.
+     */
+    final Double iconX = 50d;
+    /**
+     * Icon target Y.
+     */
+    final Double iconY = 50d;
+
+    /**
      * Can the scene be edited?
      */
     private final AtomicBoolean amEditable = new AtomicBoolean(false);
@@ -186,6 +195,9 @@ public final class MainController {
 
     @FXML
     private MenuItem saveAsMenuItem;
+
+    @FXML
+    private Button newCardButton;
 //CHECKSTYLE:ON
     /**
      * Duration for to show a non-blocking message.
@@ -573,9 +585,8 @@ public final class MainController {
      *
      * @param friendlyName Card human name.
      * @param id Card ID.
-     * @param number Card sequence number.
      */
-    public void addCardButton(final String friendlyName, final String id, final Integer number) {
+    public void addCardButton(final String friendlyName, final String id) {
         Button cardButton = new Button(friendlyName);
         cardButton.setFocusTraversable(false);
         //CHECKSTYLE:OFF
@@ -606,8 +617,6 @@ public final class MainController {
      * @param iconPath Path to tool icon.
      */
     public void addTool(final String toolname, final String toolID, final String iconPath) {
-        final Double iconX = 50d;
-        final Double iconY = 50d;
         Tooltip buttonTip = new Tooltip(toolname);
         final Button toolButton = new Button();
         Optional<byte[]> maybeImage = engine.getToolIO().getResource(iconPath);
@@ -664,10 +673,11 @@ public final class MainController {
 
         Button deleteButton = new Button("Delete");
         deleteButton.setOnMouseClicked(e -> {
-            //engine
+            remove(nodeID);
+            engine.deleteElement(nodeID);
         });
 
-        propPane.getChildren().add(editScrButton);
+        propPane.getChildren().addAll(editScrButton, deleteButton);
     }
 
     /**
@@ -997,7 +1007,6 @@ public final class MainController {
                     }
                 });
 
-        //containerPane.getStyleClass().add(JMetroStyleClass.BACKGROUND);
         splitPane.getDividers().get(0)
                 .positionProperty()
                 .addListener((obs, oldPos, newPos) -> {
@@ -1017,6 +1026,17 @@ public final class MainController {
                 }
             }
         });
+//Add a new card button
+        newCardButton.maxHeightProperty().bind(cardSelPane.heightProperty());
+        newCardButton.maxWidthProperty().bind(cardSelPane.heightProperty());
+        newCardButton.setMinSize(iconX, iconY);
+        newCardButton.setPrefSize(iconX, iconY);
+        var plusImageStr = MainController.class
+                .getResourceAsStream("plus.jpg");
+        var plusImageView = new VisImageView(new Image(plusImageStr));
+        plusImageView.setFitWidth(iconX);
+        plusImageView.setFitHeight(iconY);
+        newCardButton.setGraphic(plusImageView);
 
         Platform.runLater(() -> { //Run when initialised
             pagePane.addEventHandler(MouseEvent.ANY, ev -> {
@@ -1036,9 +1056,14 @@ public final class MainController {
             pageVBox.heightProperty().addListener((obs, oldHeight, newHeight) -> {
                 scaleCard();
             });
+
         });
 
-        //Set handlers for shapes and text.
+        //Set handlers for stuff.
+        newCardButton.setOnMouseClicked(e -> {
+            engine.makeNewCard();
+        });
+        
         extShapeFactory.setHrefClickHandler((ev) -> {
             handleEvent(ev);
         });
@@ -1049,6 +1074,7 @@ public final class MainController {
             handleEvent(ev);
         });
         cardSelPane.setFocusTraversable(false);
+
         pagePane.setFocusTraversable(true);
         pageVBox.setFocusTraversable(false);
         var ds = new DropShadow();

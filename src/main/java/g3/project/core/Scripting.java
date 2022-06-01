@@ -36,6 +36,9 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.script.Invocable;
@@ -113,12 +116,12 @@ public final class Scripting {
                 throw new IOException("Couldn't get functions file");
             }
             var fnStr = new String(fns.get(), StandardCharsets.UTF_8);
-            this.evalString(fnStr, defaultLanguage, TOP_LEVEL_BINDINGS);
+            this.evalString(fnStr, defaultLang, TOP_LEVEL_BINDINGS);
         } catch (IOException | NullPointerException | ScriptException ex) {
             //Default function loading failed.
             Logger.getLogger(DocIO.class.getName()).log(Level.SEVERE, null, ex);
             //Pre-init a script engine.
-            getScriptEngine(defaultLanguage);
+            getScriptEngine(defaultLang);
         }
     }
 
@@ -162,7 +165,6 @@ public final class Scripting {
      */
     public void evalElement(final Scriptable element) throws ScriptException, IOException {
         IO elIo;
-
         if (element instanceof Tool) { //Tools have their own IO stuff.
             elIo = engine.getToolIO();
         } else {

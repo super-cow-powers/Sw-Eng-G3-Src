@@ -97,6 +97,7 @@ public class ImageElement extends VisualElement implements Includable {
         this.getSourceLoc().ifPresent(s -> { //Try deleting the resource.
             resIO.removeResource(s);
         });
+        this.detach();
     }
 
     /**

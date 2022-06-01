@@ -57,10 +57,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -108,7 +110,9 @@ public final class Engine extends Threaded {
      * Document currently open.
      */
     private DocElement currentDoc;
-
+    /**
+     * Active Tool ID.
+     */
     private String currentToolID = "";
 
     /**
@@ -130,7 +134,7 @@ public final class Engine extends Threaded {
     /**
      * Executor service for delaying events.
      */
-    private final ScheduledExecutorService elementDelayService = Executors.newScheduledThreadPool(1);
+    private final ScheduledThreadPoolExecutor elementDelayService = new ScheduledThreadPoolExecutor(1);
 
     /**
      * Event queue from input sources.
@@ -329,8 +333,12 @@ public final class Engine extends Threaded {
         if (docIO != null) {
             docIO.close(); //Cleanup resources
         }
+        //Kill the delay pool.
+        for (var r : elementDelayService.getQueue()) {
+            elementDelayService.remove(r);
+        }
+        elementDelayService.shutdownNow();
         System.out.println("Engine is going down NOW.");
-        elementDelayService.shutdown();
         return;
     }
 
@@ -559,6 +567,7 @@ public final class Engine extends Threaded {
         if (docIO != null) {
             docIO.close(); //Close the previous
         }
+        putMessage("Loading...", false);
         docIO = docio;
         eventQueue.clear();
         callQueue.clear();
@@ -580,7 +589,6 @@ public final class Engine extends Threaded {
         var child = doc.getRootElement();
         if (child instanceof DocElement) { //Make sure that doc is sane.
             currentDoc = (DocElement) child;
-            currentDoc.setTopLevelBindings(scriptingEngine.getTopLevelBindings()); //Attach the globals.
             scriptingEngine.setGlobal("doc", currentDoc); //Expose the doc to the scripting engine.
             //Check for and print any validation errors. Don't really care though.
             var valErrs = currentDoc.getValidationErrors();
@@ -593,16 +601,13 @@ public final class Engine extends Threaded {
                     el -> this.redrawEl(el)
             );
             //Add buttons for each page/card
-            var it = currentDoc.getPages().listIterator();
-            while (it.hasNext()) {
-                var ind = it.nextIndex();
-                var page = it.next();
+            for (var p : currentDoc.getPages()) {
                 Platform.runLater(
                         () -> {
-                            var tiopt = page.getTitle();
-                            String id = page.getID();
+                            var tiopt = p.getTitle();
+                            String id = p.getID();
                             String title = tiopt.isPresent() ? tiopt.get() : id;
-                            controller.addCardButton(title, id, ind);
+                            controller.addCardButton(title, id);
                         });
             }
 
@@ -900,9 +905,54 @@ public final class Engine extends Threaded {
         drawPlayer(id, source, playable.getDisplayPlayer(), playable.getAutoplay(), playable.getLoop(), playable.getSeekOffset());
     }
 
+    /**
+     * Delete an element.
+     *
+     * @param id Element ID.
+     */
     public void deleteElement(final String id) {
-        Optional<VisualElement> maybeEl = currentDoc.getElementByID(id);
-        //maybeEl.ifPresent(e -> e.);
+        if (Thread.currentThread() != getThread()) {
+            runFunction(() -> deleteElement(id));
+            return;
+        }
+        currentDoc.deleteElement(id, docIO);
+    }
+
+    /**
+     * Append a new card.
+     */
+    public void makeNewCard() {
+        var basicPageStream = MainController.class
+                .getResourceAsStream("empty_page_stub.xml");
+        var newPageDoc = g3.project.xmlIO.Parse.parseDocXML(basicPageStream);
+        //Load the template. The first element is a "stub" containing the page.
+        newPageDoc.map(d -> d.getRootElement())
+                .map(r -> {
+                    for (var ch : r.getChildElements()) {
+                        if (ch instanceof PageElement) {
+                            return ch;
+                        }
+                    }
+                    return null;
+                })
+                .ifPresent(p -> {
+                    p.detach();
+                    String newID = currentDoc.getNewUniqueID("page-");
+                    ((PageElement) p).setID(newID);
+                    var endIndex = Integer.max(currentDoc.getPages().size() - 1, 0);
+                    currentDoc.insertPage(endIndex, (PageElement) p);
+                    Platform.runLater(() -> controller.addCardButton("New Card", newID));
+                });
+    }
+
+    /**
+     * Move card to new index.
+     *
+     * @param id Card ID.
+     * @param newIndex Position to move to.
+     */
+    public void moveCard(final String id, final Integer newIndex) {
+
     }
 
     /**

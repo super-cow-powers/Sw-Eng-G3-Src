@@ -29,7 +29,9 @@
 package g3.project.elements;
 
 import g3.project.core.RecursiveBindings;
+import g3.project.core.Scripting;
 import g3.project.graphics.SizeObj;
+import g3.project.xmlIO.DocIO;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -173,7 +175,7 @@ public final class DocElement extends Element implements Scriptable {
                 page.setIndex(ind);
                 return Optional.of(page);
             }
-            ind ++;
+            ind++;
         }
         return Optional.empty();
     }
@@ -197,18 +199,36 @@ public final class DocElement extends Element implements Scriptable {
     }
 
     /**
+     * Move a page.
+     *
+     * @param page Page to move.
+     * @param to New location.
+     */
+    public void movePage(final PageElement page, final Integer to) {
+        this.removeChild(page);
+        insertPage(to, page);
+    }
+
+    /**
      * Add a new page.
      *
      * @param pageNum Page number.
      * @param el Page.
      */
-    public void addPage(final Integer pageNum, final PageElement el) {
+    public void insertPage(final Integer pageNum, final PageElement el) {
+        Integer pages = 0;
         for (int i = 0; i < this.getChildCount(); i++) {
             var node = this.getChild(i);
             if (node instanceof PageElement) {
-                this.insertChild(el, i + pageNum);
+                if (pages == pageNum) {
+                    this.insertChild(el, i);
+                    return;
+                }
+                pages++;
             }
         }
+        //Not enough pages in doc.
+        this.insertChild(el, this.getChildCount() - 1);
     }
 
     /**
@@ -220,11 +240,11 @@ public final class DocElement extends Element implements Scriptable {
      * @param ySize Y Size in PX.
      * @return New Page's ID.
      */
-    public String addPage(final Integer pageNum, final String pageTitle, final Double xSize, final Double ySize) {
+    public String insertPage(final Integer pageNum, final String pageTitle, final Double xSize, final Double ySize) {
         String id = getNewUniqueID("page");
         PageElement el = new PageElement("base:page", VisualElement.BASE_URI);
         el.setID(id);
-        addPage(pageNum, el);
+        insertPage(pageNum, el);
         el.setTitle(pageTitle);
         el.setSize(new SizeObj(xSize, ySize, 0d));
         return id;
@@ -284,9 +304,20 @@ public final class DocElement extends Element implements Scriptable {
         return Optional.empty();
     }
 
+    /**
+     * Delete an element.
+     *
+     * @param id Element ID.
+     * @param resIO Resource IO to cleanup resources.
+     */
+    public void deleteElement(final String id, final DocIO resIO) {
+        var maybeEl = getElementByID(id);
+        maybeEl.ifPresent(e -> e.delete(resIO));
+    }
+
     @Override
     public RecursiveBindings getScriptingBindings() {
-        elementScriptBindings.setParent(this.getParentElementScriptingBindings().get());
+        elementScriptBindings.setParent(Scripting.getTopLevelBindings());
         return elementScriptBindings;
     }
 
@@ -297,16 +328,7 @@ public final class DocElement extends Element implements Scriptable {
      */
     @Override
     public Optional<RecursiveBindings> getParentElementScriptingBindings() {
-        return Optional.of(topLevelBindings);
-    }
-
-    /**
-     * Set the global/top-level bindings for scripting.
-     *
-     * @param bin Bindings.
-     */
-    public void setTopLevelBindings(final RecursiveBindings bin) {
-        topLevelBindings = bin;
+        return Optional.of(Scripting.getTopLevelBindings());
     }
 
     /**

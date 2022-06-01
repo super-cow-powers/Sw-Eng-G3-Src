@@ -17,4 +17,3 @@ def setCursorType(cType):
     
 def quit():
     engine.exit()
-

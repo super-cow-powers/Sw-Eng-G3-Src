@@ -89,6 +89,7 @@ public final class PlayableElement extends VisualElement implements Includable {
     @Override
     public void delete(final DocIO resIO) {
         this.getSourceLoc().ifPresent(s -> resIO.removeResource(s));
+        this.detach();
     }
 
     /**

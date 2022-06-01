@@ -100,6 +100,7 @@ public class ShapeElement extends VisualElement {
         for (var ch : this.getChildElements()) {
             this.removeChild(ch);
         }
+        this.detach();
     }
 
     /**

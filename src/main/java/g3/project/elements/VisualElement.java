@@ -168,9 +168,12 @@ public abstract class VisualElement extends Element implements Scriptable {
         var id = Optional.ofNullable(this.getAttribute("ID"))
                 .map(f -> f.getValue());
         var myDoc = this.getDocument();
-        var myDocEl = (DocElement) (myDoc.getRootElement());
-
-        return id.isPresent() ? id.get() : myDocEl.getNewUniqueID(this.getLocalName());
+        if (myDoc.getRootElement() instanceof DocElement) { //When using an unattached element, root is NOT a document.
+            var myDocEl = (DocElement) myDoc.getRootElement();
+            return id.isPresent() ? id.get() : myDocEl.getNewUniqueID(this.getLocalName());
+        } else {
+            return id.isPresent() ? id.get() : "";
+        }
     }
 
     /**
@@ -181,7 +184,7 @@ public abstract class VisualElement extends Element implements Scriptable {
      */
     public final String setID(final String id) {
         this.addAttribute(new Attribute("ID", id));
-        return this.getID();
+        return id;
     }
 
     /**

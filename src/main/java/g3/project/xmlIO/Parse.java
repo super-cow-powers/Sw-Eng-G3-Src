@@ -55,7 +55,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-final class Parse {
+public final class Parse {
 
     /**
      * PWS file name
