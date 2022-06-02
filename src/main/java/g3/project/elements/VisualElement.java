@@ -115,7 +115,8 @@ public abstract class VisualElement extends Element implements Scriptable {
      * @return Thing or Null.
      */
     public Object getStateVariable(final String name) {
-        return ((Bindings) elementScriptBindings).get(name);
+        var obj = ((Bindings) elementScriptBindings).get(name);
+        return obj;
     }
 
     /**
@@ -405,6 +406,28 @@ public abstract class VisualElement extends Element implements Scriptable {
         }
         var colAttr = new Attribute("fill", colourString);
         this.addAttribute(colAttr);
+    }
+    /**
+     * Set my visibility.
+     * @param vis Visible or not.
+     */
+    public void setVisibility(final Boolean vis) {
+        var visAttr = new Attribute(VisualProps.VISIBLE, vis.toString());
+        this.addAttribute(visAttr);
+    }
+    
+    /**
+     * Get if the node is supposed to be visible.
+     * @return Is Visible?
+     */
+    public Boolean getVisibility() {
+        var visAttr = this.getAttribute(VisualProps.VISIBLE);
+        Boolean vis = true;
+        if (visAttr != null) {
+            //var colStr = colAttr.get().getValue().replace("#", "");
+            vis = Boolean.valueOf(visAttr.getValue());
+        }
+        return vis;
     }
 
     /**
