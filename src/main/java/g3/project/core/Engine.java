@@ -1134,6 +1134,7 @@ public final class Engine extends Threaded {
             runFunction(() -> gotoPage(page, storeHistory));
             return;
         }
+        scriptingEngine.setGlobal("currentPage", page);
         processEls(page);
         putMessage("Loaded New Card: " + currentDoc.getCurrentPage().get().getID(), false);
     }

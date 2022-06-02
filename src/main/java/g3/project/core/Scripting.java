@@ -266,7 +266,7 @@ public final class Scripting {
         try {
             ((Invocable) scEng).invokeFunction(function, args);
         } catch (ScriptException ex) {
-            Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
+            engine.putMessage(ex.getMessage(), true);
         } catch (NoSuchMethodException ex) {
             //Ignore nosuchmethod.
         }
