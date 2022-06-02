@@ -17,3 +17,10 @@ def setCursorType(cType):
     
 def quit():
     engine.exit()
+
+def findElement(elID):
+    el = doc.getElementByID(elID)
+    if el.isPresent():
+        return el.get()
+    else:
+        return None
