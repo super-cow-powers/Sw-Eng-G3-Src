@@ -41,6 +41,7 @@ import java.util.HashMap;
 import java.util.Optional;
 import javafx.geometry.Point2D;
 import javafx.scene.paint.Color;
+import javax.script.Bindings;
 import nu.xom.Attribute;
 import nu.xom.Element;
 
@@ -98,6 +99,26 @@ public abstract class VisualElement extends Element implements Scriptable {
     }
 
     /**
+     * Put something into this element's state/scope.
+     *
+     * @param name Name of thing.
+     * @param state Thing.
+     */
+    public void putStateVariable(final String name, final Object state) {
+        elementScriptBindings.put(name, state);
+    }
+
+    /**
+     * Get something from this element's state/scope.
+     *
+     * @param name Name of thing.
+     * @return Thing or Null.
+     */
+    public Object getStateVariable(final String name) {
+        return ((Bindings) elementScriptBindings).get(name);
+    }
+
+    /**
      * Delete the element and sub-elements.
      *
      * @param resIO Resource handler to remove resources on delete.
@@ -118,13 +139,15 @@ public abstract class VisualElement extends Element implements Scriptable {
         var attr = el.getAttribute(attrName, attrNS);
         return Optional.ofNullable(attr);
     }
+
     /**
      * Make an attribute with a name-space.
+     *
      * @param qualifiedName Full name.
      * @param attrVal Value.
      * @return Attribute.
      */
-    public static Attribute makeAttrWithNS(final String qualifiedName, final String attrVal){
+    public static Attribute makeAttrWithNS(final String qualifiedName, final String attrVal) {
         var nameSplit = qualifiedName.split(":");
         var attrNS = (nameSplit.length > 1) ? EXT_URI : "";
         var attr = new Attribute(qualifiedName, attrNS, attrVal);
@@ -391,7 +414,7 @@ public abstract class VisualElement extends Element implements Scriptable {
      * @return Optional referred element.
      */
     public final Optional<VisualElement> getByID(final String id) {
-        if (this.getID() == id) {
+        if (this.getID().equals(id)) {
             return Optional.of(this);
         } else {
             for (Element el : this.getChildElements()) {

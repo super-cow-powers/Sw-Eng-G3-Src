@@ -1030,6 +1030,7 @@ public final class MainController {
                                             addedNode.setCursor(Cursor.MOVE);
                                             dragDelta = new Point2D(addedNode.getLayoutX() - e.getSceneX(), addedNode.getLayoutY() - e.getSceneY());
                                             addedNode.requestFocus();
+                                            updatePropsList(addedNode);
                                             e.consume();
                                         }
                                     } else if (e.getEventType() == MouseEvent.MOUSE_CLICKED) {
@@ -1061,7 +1062,7 @@ public final class MainController {
                                     public void changed(ObservableValue<? extends Boolean> arg0, Boolean oldPropertyValue, Boolean newPropertyValue) {
                                         if (newPropertyValue) {
                                             if (amEditable.get()) {
-                                                updatePropsList(addedNode);
+                                                
                                             }
                                         } else {
                                         }

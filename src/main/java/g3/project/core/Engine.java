@@ -342,6 +342,14 @@ public final class Engine extends Threaded {
         System.out.println("Engine is going down NOW.");
         return;
     }
+    /**
+     * Put a global into the scripting engine.
+     * @param name Global Name.
+     * @param obj Global.
+     */
+    public void setScriptGlobal(final String name, final Object obj) {
+        scriptingEngine.setGlobal(name, obj);
+    }
 
     /**
      * Handle an incoming event.
@@ -832,7 +840,7 @@ public final class Engine extends Threaded {
         maybeEl.filter(el -> el instanceof ShapeElement).ifPresent(s -> {
             ShapeElement sel = (ShapeElement) s;
             retmap.putAll(FontProps.PROP_DEFAULTS);
-            sel.getText().map(ts -> ts.get(0)).ifPresent(t -> retmap.putAll(t.getStyle()));
+            sel.getText().filter(ts ->!ts.isEmpty()).map(ts -> ts.get(0)).ifPresent(t -> retmap.putAll(t.getStyle()));
         });
         return retmap.isEmpty() == true? Optional.empty() : Optional.of(retmap);
     }
