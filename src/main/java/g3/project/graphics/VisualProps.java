@@ -177,6 +177,7 @@ public class VisualProps extends HashMap<String, Object> implements Props {
         var t = (Double) this.getProp(T_SHADE_SIZE).get();
         var b = (Double) this.getProp(B_SHADE_SIZE).get();
         var gen = (Double) this.getProp(SHADE_SIZE).get();
+        var col = (Color) this.getProp(SHADE_COL).get();
         var ds = new DropShadow();
         var width = l + r;
         var height = t + b;
@@ -192,6 +193,7 @@ public class VisualProps extends HashMap<String, Object> implements Props {
         } else {
             ds.setRadius(gen);
         }
+        ds.setColor(col);
         return Optional.of(ds);
     }
 

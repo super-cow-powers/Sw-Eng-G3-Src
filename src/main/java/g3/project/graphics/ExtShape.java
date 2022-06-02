@@ -42,6 +42,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Shape;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.shape.StrokeType;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
@@ -272,6 +273,7 @@ public abstract class ExtShape extends Group implements Visual {
                 textEl = new Text(seg.getString());
             }
             textEl.setStyle(seg.getStyle().toCSS());
+            ((Text)textEl).setFont(Font.font(seg.getStyle().get(FontProps.FONT).toString(), (Double)seg.getStyle().get(FontProps.SIZE)));
             textFlow.getChildren().add(textEl);
         }
 

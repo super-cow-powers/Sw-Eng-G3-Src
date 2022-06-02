@@ -342,8 +342,10 @@ public final class Engine extends Threaded {
         System.out.println("Engine is going down NOW.");
         return;
     }
+
     /**
      * Put a global into the scripting engine.
+     *
      * @param name Global Name.
      * @param obj Global.
      */
@@ -496,27 +498,44 @@ public final class Engine extends Threaded {
         System.out.println("We got it: " + hrefSeg);
         if (hrefSeg.getRefType() == StyledTextSeg.REF_TYPE.EXTERNAL) {
             if (mev.getEventType() == MouseEvent.MOUSE_CLICKED) {
-                var os = System.getProperty("os.name").toLowerCase();
-                try {
-                    if (os.contains("win")) { //Windows apparently works like this:
-                        Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + hrefSeg.getRefTarget());
-                    } else if (os.contains("mac")) {
-                        //MacOS has the open command
-                        Runtime.getRuntime().exec("open " + hrefSeg.getRefTarget());
-                    } else if (os.contains("lin")) { //Most Linuxen have xdg-open
-                        Runtime.getRuntime().exec("xdg-open " + hrefSeg.getRefTarget());
-                    } else if (os.contains("nix")) { //Might be a BSD - firefox is the best bet.
-                        Runtime.getRuntime().exec("firefox " + hrefSeg.getRefTarget());
-                    }
-                } catch (IOException ex) {
-                    Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                openExternalLink(hrefSeg.getRefTarget());
             }
         } else { //Must be an internal ref.
-            var maybeTargetEl = currentDoc.getElementByID(hrefSeg.getRefTarget());
-            maybeTargetEl.flatMap(e -> e.getPage()).ifPresent(p -> gotoPage(p.getID(), true));
+            openInternalLink(hrefSeg.getRefTarget());
         }
+    }
 
+    /**
+     * Open an external link.
+     *
+     * @param link Link to open.
+     */
+    public void openExternalLink(final String link) {
+        var os = System.getProperty("os.name").toLowerCase();
+        try {
+            if (os.contains("win")) { //Windows apparently works like this:
+                Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + link);
+            } else if (os.contains("mac")) {
+                //MacOS has the open command
+                Runtime.getRuntime().exec("open " + link);
+            } else if (os.contains("lin")) { //Most Linuxen have xdg-open
+                Runtime.getRuntime().exec("xdg-open " + link);
+            } else if (os.contains("nix")) { //Might be a BSD - firefox is the best bet.
+                Runtime.getRuntime().exec("firefox " + link);
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    /**
+     * Open an internal link.
+     *
+     * @param link Link to item.
+     */
+    public void openInternalLink(final String link) {
+        var maybeTargetEl = currentDoc.getElementByID(link);
+        maybeTargetEl.flatMap(e -> e.getPage()).ifPresent(p -> gotoPage(p.getID(), true));
     }
 
     /**
@@ -840,9 +859,9 @@ public final class Engine extends Threaded {
         maybeEl.filter(el -> el instanceof ShapeElement).ifPresent(s -> {
             ShapeElement sel = (ShapeElement) s;
             retmap.putAll(FontProps.PROP_DEFAULTS);
-            sel.getText().filter(ts ->!ts.isEmpty()).map(ts -> ts.get(0)).ifPresent(t -> retmap.putAll(t.getStyle()));
+            sel.getText().filter(ts -> !ts.isEmpty()).map(ts -> ts.get(0)).ifPresent(t -> retmap.putAll(t.getStyle()));
         });
-        return retmap.isEmpty() == true? Optional.empty() : Optional.of(retmap);
+        return retmap.isEmpty() == true ? Optional.empty() : Optional.of(retmap);
     }
 
     /**
