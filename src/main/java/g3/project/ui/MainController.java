@@ -315,6 +315,7 @@ public final class MainController {
             engine.elementRelocated(dragTarget.getId(),
                     new LocObj(new Point2D(mev.getSceneX() + dragDelta.getX(), mev.getSceneY() + dragDelta.getY()), dragTarget.getViewOrder()));
             handleEvent(mev);
+            //updatePropsList(dragTarget);
             mev.consume();
         }
     }
@@ -644,17 +645,14 @@ public final class MainController {
     }
 
     /**
-     * Update the list of properties.
+     * Generate props list for given props and node.
      *
-     * @param node Node to show props for.
+     * @param props Properties.
+     * @param node Node/Element.
+     * @param setterCallback Callback when props need to be set.
      */
-    public void updatePropsList(final Node node) {
-        propPane.getChildren().clear();
-        propPane.setAlignment(Pos.TOP_CENTER);
+    private void makeProgramaticPropsList(final HashMap<String, Object> props, final Node node, final BiConsumer<HashMap<String, Object>, String> setterCallback) {
         final String nodeID = node.getId();
-        Label itemLabel = new Label(nodeID);
-        propPane.getChildren().add(itemLabel);
-        final var props = engine.getElementProperties(nodeID);
         for (var prop : props.keySet()) {
             Label propLabel = new Label(prop);
             Control propEntry;
@@ -665,46 +663,70 @@ public final class MainController {
                 propEntry = new ColorPicker((Color) propVal);
                 ((ColorPicker) propEntry).setOnAction(ev -> {
                     props.put(propEntry.getId(), ((ColorPicker) propEntry).getValue());
-                    engine.updateProperties(props, nodeID);
+                    setterCallback.accept(props, nodeID);
                 });
             } else if (propClass.equals(Double.class)) {
-                propEntry = new Spinner(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, (Double) propVal, 1d);
+                propEntry = new Spinner(-Double.MAX_VALUE, Double.MAX_VALUE, (Double) propVal, 1d);
                 ((Spinner) propEntry).setEditable(true);
                 ((Spinner) propEntry).valueProperty().addListener((obs, oldValue, newValue) -> {
                     props.put(propEntry.getId(), ((Spinner) propEntry).getValue());
-                    engine.updateProperties(props, nodeID);
+                    setterCallback.accept(props, nodeID);
                 });
             } else if (propClass.equals(Boolean.class)) {
                 propEntry = new CheckBox();
                 ((CheckBox) propEntry).setSelected((Boolean) propVal);
                 ((CheckBox) propEntry).setOnAction(ev -> {
                     props.put(propEntry.getId(), ((CheckBox) propEntry).isSelected());
-                    engine.updateProperties(props, nodeID);
+                    setterCallback.accept(props, nodeID);
                 });
             } else { //Probably a String.
                 propEntry = new TextField(propVal.toString());
+                //CHECKSTYLE:OFF
+                propEntry.setMaxWidth(200d);
+                //CHECKSTYLE:ON
                 ((TextField) propEntry).setOnAction(ev -> {
                     props.put(propEntry.getId(), ((TextField) propEntry).getText());
-                    engine.updateProperties(props, nodeID);
+                    setterCallback.accept(props, nodeID);
                 });
             }
             propEntry.setId(prop);
             HBox propBox = new HBox(propLabel, propEntry);
-            HBox.setHgrow(propBox, Priority.ALWAYS);
+            //HBox.setHgrow(propBox, Priority.ALWAYS);
             propPane.getChildren().addAll(propLabel, propEntry);
         }
-        if (node instanceof Visual) { //An element.
+    }
 
-            if (node instanceof ExtShape) { //Shape Specifics
+    /**
+     * Update the list of properties.
+     *
+     * @param node Node to show props for.
+     */
+    public void updatePropsList(final Node node) {
+        propPane.getChildren().clear();
+        propPane.setAlignment(Pos.TOP_CENTER);
+        final String nodeID = node.getId();
+        Label itemLabel = new Label(nodeID);
+        propPane.getChildren().add(itemLabel);
+        final HashMap<String, Object> props = engine.getElementProperties(nodeID);
+        makeProgramaticPropsList(props, node, (p, nID) -> engine.updateProperties(p, nID));
 
-            } else if (node instanceof VisImageView) { //Image Specifics
+        final Optional<HashMap<String, Object>> maybeTextProps = engine.getShapeTextProps(nodeID);
+        final Optional<String> maybeText = engine.getShapeTextString(nodeID);
+        maybeTextProps.ifPresent(tp -> {
+            Label textSepLabel = new Label("Text");
+            propPane.getChildren().add(textSepLabel);
+            makeProgramaticPropsList(tp, node, (p, nID) -> engine.setShapeTextProps(nID, p));
+            final TextArea textBox = new TextArea();
+            //CHECKSTYLE:OFF
+            textBox.setMaxWidth(200d);
+            //CHECKSTYLE:ON
+            propPane.getChildren().add(textBox);
+            maybeText.ifPresent(t -> textBox.setText(t));
+            Button setTextButton = new Button("Set Text");
+            setTextButton.setOnAction(ev -> engine.setShapeTextString(nodeID, textBox.getText()));
+            propPane.getChildren().add(setTextButton);
+        });
 
-            } else if (node instanceof Player) { //Player Specifics
-
-            }
-        } else if (node.getClass().equals(Pane.class)) { //A Page.
-
-        }
         Button editScrButton = new Button("Edit Script");
         editScrButton.setOnMouseClicked(e -> {
             //Launch a new editor for the element.

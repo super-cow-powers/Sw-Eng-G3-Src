@@ -28,8 +28,10 @@
  */
 package g3.project.elements;
 
+import static g3.project.elements.VisualElement.derefAttribute;
 import g3.project.graphics.FontProps;
 import g3.project.graphics.StyledTextSeg;
+import java.util.HashMap;
 import java.util.Optional;
 import javafx.scene.paint.Color;
 import nu.xom.*;
@@ -75,38 +77,57 @@ public final class FontElement extends Element {
      * @return FontProps properties.
      */
     public FontProps getProperties() {
-        FontProps myProps = new FontProps();
-        //Find all extant valid props.
-        for (String propKey : FontProps.PROPS_MAP.keySet()) {
-            Class propClass = FontProps.PROPS_MAP.get(propKey);
-            var maybeAttr = VisualElement.derefAttribute(this, propKey);
-            if (maybeAttr.isPresent()) { //Does the attr exist?
-                var attr = maybeAttr.get();
-                Object attrVal;
-                String attrStr = attr.getValue();
-                //Get props as right type.
-                if (propClass == Boolean.class) {
-                    attrVal = Boolean.parseBoolean(attrStr);
-                } else if (propClass == Double.class) {
-                    attrVal = Double.valueOf(attrStr);
-                } else {
-                    attrVal = attrStr;
-                }
-                myProps.put(propKey, attrVal);
+        FontProps propsMap = new FontProps();
+        for (String prop : FontProps.PROPS_MAP.keySet()) {
+            switch (prop) {
+                //Special cases
+                case (FontProps.ALIGNMENT):
+                    break;
+                case (FontProps.VALIGNMENT):
+                    break;
+                default: //Not a special case
+                    var attrMaybe = derefAttribute(this, prop);
+                    //this.getAttribute(prop, prop)
+                    if (attrMaybe.isPresent()) {
+                        var attr = attrMaybe.get();
+                        var attrVal = attr.getValue();
+                        Class attrType = FontProps.PROPS_MAP.get(prop);
+                        Object propVal;
+                        //Cast to correct type
+                        if (attrType == Double.class) {
+                            propVal = Double.valueOf(attrVal);
+                        } else if (attrType == Boolean.class) {
+                            propVal = Boolean.valueOf(attrVal);
+                        } else if (attrType == Color.class) {
+                            propVal = Color.web(attrVal);
+                        } else {
+                            propVal = attrVal; //Probably a string.
+                        }
+                        propsMap.put(prop, propVal);
+                    }
+                    break;
             }
         }
-        return myProps;
+        return propsMap;
     }
 
     /**
-     * Set the font properties.
+     * Set this object's properties.
      *
-     * @param props Properties to set.
+     * @param props Properties.
      */
-    private void setProperties(final FontProps props) {
-        for (String propKey : props.keySet()) {
-            var attr = new Attribute(propKey, props.get(propKey).toString());
-            this.addAttribute(attr);
+    public void setProperties(final HashMap<String, Object> props) {
+        for (String prop : props.keySet()) {
+            var propVal = props.get(prop);
+            if (propVal != null) {
+                switch (prop) {
+                    //Special cases
+                    default: //Not a special case
+                        var attr = VisualElement.makeAttrWithNS(prop, propVal.toString());
+                        this.addAttribute(attr);
+                        break;
+                }
+            }
         }
     }
 

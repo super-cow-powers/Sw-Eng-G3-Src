@@ -28,11 +28,13 @@
  */
 package g3.project.elements;
 
+import g3.project.graphics.FontProps;
 import g3.project.graphics.LocObj;
 import g3.project.graphics.StrokeProps;
 import g3.project.graphics.StyledTextSeg;
 import g3.project.xmlIO.DocIO;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Optional;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
@@ -218,11 +220,32 @@ public class ShapeElement extends VisualElement {
     }
 
     /**
-     * Sets text of the shape element
+     * Get my text string.
      *
-     * @param text
+     * @return String of text contained.
      */
-    public final void setText(ArrayList<StyledTextSeg> text) {
+    public String getTextString() {
+        String retString = "";
+        ArrayList<StyledTextSeg> text = null;
+        for (var ch : this.getChildElements()) {
+            if (ch instanceof TextElement) {
+                text = ((TextElement) ch).getText();
+            }
+        }
+        if (text != null) {
+            for (var s : text) {
+                retString = retString.concat(s.getString());
+            }
+        }
+        return retString;
+    }
+
+    /**
+     * Sets text of the shape element.
+     *
+     * @param text Text segments to set.
+     */
+    public final void setText(final ArrayList<StyledTextSeg> text) {
         for (var ch : this.getChildElements()) {
             if (ch instanceof TextElement) {
                 this.removeChild(ch);
@@ -231,7 +254,99 @@ public class ShapeElement extends VisualElement {
         }
         var textEl = new TextElement("base:text", BASE_URI, text);
         this.appendChild(textEl);
-        hasUpdated();
+    }
+
+    /**
+     * Set a text string, preserving properties of the first segment.
+     *
+     * @param text Text string to set.
+     */
+    public void setText(final String text) {
+        var maybeText = this.getText();
+        var maybeStyle = maybeText.map(t -> t.get(0)).map(s -> s.getStyle());
+        FontProps props;
+        if (maybeStyle.isPresent()) {
+            props = maybeStyle.get();
+        } else {
+            props = new FontProps();
+        }
+        var segArr = new ArrayList<StyledTextSeg>();
+        var seg = new StyledTextSeg(props, text);
+        segArr.add(seg);
+        this.setText(segArr);
+        this.setTextProperties(props);
+    }
+
+    /**
+     * Set my text properties via map.
+     *
+     * @param props Properties to set.
+     */
+    public void setTextProperties(final HashMap<String, Object> props) {
+        Optional<TextElement> text = Optional.empty();
+        for (var ch : this.getChildElements()) {
+            if (ch instanceof TextElement) {
+                text = Optional.of(((TextElement) ch));
+            }
+        }
+        text.map(te -> {
+            var myAlign = props.get(FontProps.ALIGNMENT);
+            var myVAlign = props.get(FontProps.VALIGNMENT);
+            setAlignment(myAlign != null? myAlign.toString() : "", myVAlign != null? myVAlign.toString() : "");
+            
+            for (var ce : te.getChildElements()) {
+                if (ce instanceof FontElement) {
+                    return ce;
+                }
+            }
+            return null;
+        }).ifPresent(fe -> ((FontElement) fe).setProperties(props));
+    }
+
+    /**
+     * Set text alignment.
+     *
+     * @param hAlign Horizontal.
+     * @param vAlign Vertical.
+     */
+    public void setAlignment(final String hAlign, final String vAlign) {
+        Optional<TextElement> text = Optional.empty();
+        for (var ch : this.getChildElements()) {
+            if (ch instanceof TextElement) {
+                text = Optional.of(((TextElement) ch));
+            }
+        }
+        text.ifPresent(t -> {
+            if (!hAlign.isBlank()){
+                t.addAttribute(VisualElement.makeAttrWithNS(FontProps.ALIGNMENT, hAlign));
+            }
+            if (!vAlign.isBlank()){
+                t.addAttribute(VisualElement.makeAttrWithNS(FontProps.VALIGNMENT, vAlign));
+            }
+        });
+    }
+
+    /**
+     * Set my font.
+     *
+     * @param font Font Name.
+     * @param colour Font Colour.
+     * @param size Font Size.
+     * @param underscore Underscore?
+     * @param italic Italicise?
+     * @param bold Bold?
+     */
+    public void setFont(final String font, final String colour, final Double size, final Boolean underscore, final Boolean italic, final Boolean bold) {
+        var maybeText = this.getText();
+        maybeText.map(t -> t.get(0)).ifPresent(s -> {
+            var props = s.getStyle();
+            props.put(FontProps.COLOUR, Color.valueOf(colour));
+            props.put(FontProps.FONT, font);
+            props.put(FontProps.SIZE, size);
+            props.put(FontProps.US, underscore);
+            props.put(FontProps.IT, italic);
+            props.put(FontProps.BOLD, bold);
+        });
     }
 
 }

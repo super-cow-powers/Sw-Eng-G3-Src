@@ -97,6 +97,7 @@ public abstract class IO {
         var fsOpt = zipFile.flatMap(file -> {
             docName = file.getName();
             origZip = file;
+            allowSave = true;
             try {
                 tempPath = Files.createTempFile(tempFilePrefix, "");
                 Files.copy(file.toPath(), tempPath, StandardCopyOption.REPLACE_EXISTING);
@@ -109,7 +110,7 @@ public abstract class IO {
         }); //Get the zip file-system. Maybe.
 
         myDoc = fsOpt.flatMap(fs -> {
-            zipFs = fs;
+            zipFs = fs;            
             return retrieveDoc(fs);
         }); //Maybe get the doc.
     }

@@ -62,7 +62,7 @@ public class DocIO extends IO {
      * @throws IOException bad file.
      */
     public void save() throws IOException {
-        if (allowSave == true | origZip != null) {
+        if (allowSave == true && origZip != null) {
             saveAs(origZip.getAbsolutePath());
         } else {
             throw new IOException("Can't save.");
@@ -92,6 +92,7 @@ public class DocIO extends IO {
         zipFs.close();
         makeFs(tempPath).ifPresent(fs -> zipFs = fs);
         var newPathPath = Paths.get(newPath);
+        Files.deleteIfExists(newPathPath);
         //Copy the temp file to the expected place
         Files.copy(tempPath,
                 newPathPath,

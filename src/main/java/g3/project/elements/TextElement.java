@@ -31,6 +31,7 @@ package g3.project.elements;
 import g3.project.graphics.FontProps;
 import g3.project.graphics.StyledTextSeg;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Optional;
 import nu.xom.*;
 
@@ -103,6 +104,21 @@ public class TextElement extends Element implements Includable {
             }
         }
         return list;
+    }
+
+    /**
+     * Get my alignment properties.
+     *
+     * @return Alignment properties.
+     */
+    public final HashMap<String, Object> getAlignmentProps() {
+        HashMap<String, Object> retMap = new HashMap<>();
+        var maybeAlignment = VisualElement.derefAttribute(this, FontProps.ALIGNMENT);
+        var maybeVAlignment = VisualElement.derefAttribute(this, FontProps.VALIGNMENT);
+
+        retMap.put(FontProps.ALIGNMENT, (maybeAlignment.isEmpty()) ? FontProps.PROP_DEFAULTS.get(FontProps.ALIGNMENT) : maybeAlignment.get().getValue());
+        retMap.put(FontProps.VALIGNMENT, (maybeVAlignment.isEmpty()) ? FontProps.PROP_DEFAULTS.get(FontProps.VALIGNMENT) : maybeVAlignment.get().getValue());
+        return retMap;
     }
 
     @Override

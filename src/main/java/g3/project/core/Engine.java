@@ -757,7 +757,7 @@ public final class Engine extends Threaded {
     }
 
     /**
-     * Set text on a shape. Sets properties for all text in the shape.
+     * Set text on a shape on screen. Sets properties for all text in the shape.
      *
      * @TODO for linting - reduce the amount of parameters called to 7 if
      * possible
@@ -772,7 +772,7 @@ public final class Engine extends Threaded {
      * @param italic Italicise text.
      * @param bold Bold text.
      */
-    public void setShapeText(final String shapeID, final String text, final String hAlign, final String vAlign, final String font, final String colour,
+    public void drawShapeText(final String shapeID, final String text, final String hAlign, final String vAlign, final String font, final String colour,
             final Double size, final Boolean underscore, final Boolean italic, final Boolean bold) {
         var props = new FontProps();
         props.put(FontProps.ALIGNMENT, hAlign);
@@ -794,6 +794,63 @@ public final class Engine extends Threaded {
     }
 
     /**
+     * Get shape Text String.
+     *
+     * @param shapeID Shape.
+     * @return Maybe text string.
+     */
+    public Optional<String> getShapeTextString(final String shapeID) {
+        var maybeEl = currentDoc.getElementByID(shapeID);
+        return maybeEl.filter(el -> el instanceof ShapeElement).map(s -> {
+            return ((ShapeElement) s).getTextString();
+        });
+    }
+
+    /**
+     * Set Shape Text String.
+     *
+     * @param shapeID Shape.
+     * @param text Text.
+     */
+    public void setShapeTextString(final String shapeID, final String text) {
+        var maybeEl = currentDoc.getElementByID(shapeID);
+        maybeEl.filter(el -> el instanceof ShapeElement).ifPresent(s -> {
+            ((ShapeElement) s).setText(text);
+            s.hasUpdated();
+        });
+    }
+
+    /**
+     * Get Shape's text properties.
+     *
+     * @param shapeID Shape.
+     * @return Maybe Properties.
+     */
+    public Optional<HashMap<String, Object>> getShapeTextProps(final String shapeID) {
+        HashMap<String, Object> retmap = new HashMap<>();
+        var maybeEl = currentDoc.getElementByID(shapeID);
+        maybeEl.filter(el -> el instanceof ShapeElement).ifPresent(s -> {
+            ShapeElement sel = (ShapeElement) s;
+            retmap.putAll(FontProps.PROP_DEFAULTS);
+            sel.getText().map(ts -> ts.get(0)).ifPresent(t -> retmap.putAll(t.getStyle()));
+        });
+        return retmap.isEmpty() == true? Optional.empty() : Optional.of(retmap);
+    }
+
+    /**
+     * Set shape element text properties.
+     *
+     * @param shapeID Shape.
+     * @param props Text props.
+     */
+    public void setShapeTextProps(final String shapeID, final HashMap<String, Object> props) {
+        currentDoc.getElementByID(shapeID).filter(el -> el instanceof ShapeElement).ifPresent(e -> {
+            ((ShapeElement) e).setTextProperties(props);
+            e.hasUpdated();
+        });
+    }
+
+    /**
      * Set a shape's stroke.
      *
      * @param shapeID Target Shape ID.
@@ -801,7 +858,7 @@ public final class Engine extends Threaded {
      * @param style Stroke Style.
      * @param width Stroke Width.
      */
-    public void setShapeStroke(final String shapeID, final String colour, final String style, final Double width) {
+    public void drawShapeStroke(final String shapeID, final String colour, final String style, final Double width) {
         final StrokeProps props = new StrokeProps();
         props.put(StrokeProps.COLOUR, Color.valueOf(colour));
         props.put(StrokeProps.LINE_STYLE, style);
@@ -1390,9 +1447,9 @@ public final class Engine extends Threaded {
             retMap.putAll(el.getVisualProps()); //Override Defaults
             if (el instanceof Includable) {
                 if (((Includable) el).getSourceLoc().isPresent()) {
-                    retMap.put("include_source",((Includable) el).getSourceLoc().get());
+                    retMap.put("include_source", ((Includable) el).getSourceLoc().get());
                 } else {
-                    retMap.put("include_source",((Includable) el).getSourceLoc().get());
+                    retMap.put("include_source", ((Includable) el).getSourceLoc().get());
                 }
             }
         });
@@ -1406,15 +1463,10 @@ public final class Engine extends Threaded {
      * @param elId Element ID.
      */
     public void updateProperties(final HashMap<String, Object> props, final String elId) {
-        if (Thread.currentThread() != getThread()) {
-            runFunction(() -> updateProperties(props, elId));
-            return;
-        }
         currentDoc.getElementByID(elId).ifPresent(e -> {
             e.setProps(props);
             e.hasUpdated();
         });
-
     }
 
     /**

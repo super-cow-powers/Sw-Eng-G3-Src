@@ -271,7 +271,6 @@ public abstract class ExtShape extends Group implements Visual {
             } else {
                 textEl = new Text(seg.getString());
             }
-            System.out.println(seg.getStyle().toCSS());
             textEl.setStyle(seg.getStyle().toCSS());
             textFlow.getChildren().add(textEl);
         }
