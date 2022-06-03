@@ -44,6 +44,11 @@ import nu.xom.Element;
 public class Tool extends Element implements Scriptable {
 
     /**
+     * Is Eval Required.
+     */
+    Boolean evalRequired = true;
+
+    /**
      * My script bindings.
      */
     RecursiveBindings elementScriptBindings = new RecursiveBindings();
@@ -207,7 +212,7 @@ public class Tool extends Element implements Scriptable {
      */
     @Override
     public Boolean getEvalRequired() {
-        return false;
+        return evalRequired;
     }
 
     /**
@@ -217,5 +222,11 @@ public class Tool extends Element implements Scriptable {
      */
     @Override
     public void setEvalRequired(final Boolean req) {
+        evalRequired = req;
+    }
+
+    @Override
+    public Optional<Scriptable> getParentScriptable() {
+        return Optional.empty();
     }
 }

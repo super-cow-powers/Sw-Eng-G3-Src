@@ -164,42 +164,54 @@ public final class Scripting {
      * @throws IOException Couldn't get script.
      */
     public void evalElement(final Scriptable element) throws ScriptException, IOException {
-        IO elIo;
-        if (element instanceof Tool) { //Tools have their own IO stuff.
-            elIo = engine.getToolIO();
-        } else {
-            elIo = engine.getDocIO();
-        }
-        var scrElOpt = element.getScriptEl();
-        //Setup bindings
-        var bindings = element.getScriptingBindings();
-        element.getParentElementScriptingBindings().ifPresent(p -> bindings.setParent(p));
-
-        scrElOpt.flatMap(scrEl -> { //Get file location
-            var locOpt = scrEl.getSourceLoc();
-            var lang = scrEl.getScriptLang();
-            if (lang.toLowerCase().equals("python")) {
-                bindings.remove("me"); //Jython doesn't reserve 'this'
-                bindings.put("this", element);
+        if (element.getEvalRequired()) {
+            IO elIo;
+            if (element instanceof Tool) { //Tools have their own IO stuff.
+                elIo = engine.getToolIO();
             } else {
-                bindings.remove("this"); //Most other things do reserve 'this'
-                bindings.put("me", element);
+                elIo = engine.getDocIO();
             }
-            if (locOpt.isEmpty()) {
-                System.err.println("No script file specified");
-            }
-            return locOpt;
-        }).flatMap(loc -> { //Get Bytes
-            var bytesOpt = elIo.getResource(loc);
-            return bytesOpt;
-        }).ifPresentOrElse(bytes -> { //Eval
-            var str = new String(bytes, StandardCharsets.UTF_8);
+            var scrElOpt = element.getScriptEl();
+            //Setup bindings
+            var bindings = element.getScriptingBindings();
+            element.getParentElementScriptingBindings().ifPresent(p -> bindings.setParent(p));
+
+            scrElOpt.flatMap(scrEl -> { //Get file location
+                var locOpt = scrEl.getSourceLoc();
+                var lang = scrEl.getScriptLang();
+                if (lang.toLowerCase().equals("python")) {
+                    bindings.remove("me"); //Jython doesn't reserve 'this'
+                    bindings.put("this", element);
+                } else {
+                    bindings.remove("this"); //Most other things do reserve 'this'
+                    bindings.put("me", element);
+                }
+                if (locOpt.isEmpty()) {
+                    System.err.println("No script file specified");
+                }
+                return locOpt;
+            }).flatMap(loc -> { //Get Bytes
+                var bytesOpt = elIo.getResource(loc);
+                return bytesOpt;
+            }).ifPresentOrElse(bytes -> { //Eval
+                var str = new String(bytes, StandardCharsets.UTF_8);
+                try {
+                    this.evalString(str, scrElOpt.get().getScriptLang(), bindings);
+                } catch (ScriptException ex) {
+                    engine.putMessage(ex.getMessage(), true);
+                }
+            }, () -> System.err.println("Couldn't load Script for " + element.getClass()));
+            element.setEvalRequired(false);
+        }
+        element.getParentScriptable().ifPresent(p -> { //Eval up.
             try {
-                this.evalString(str, scrElOpt.get().getScriptLang(), bindings);
+                evalElement(p);
             } catch (ScriptException ex) {
                 Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }, () -> System.err.println("Couldn't load Script for " + element.getClass()));
+        });
     }
 
     /**
@@ -251,10 +263,7 @@ public final class Scripting {
      * @throws java.io.IOException
      */
     public void invokeOnElement(final Scriptable element, final String function, final Object... args) throws ScriptException, IOException {
-        if (element.getEvalRequired()) {
-            this.evalElement(element);
-            element.setEvalRequired(false);
-        }
+        this.evalElement(element);
         ScriptEngine scEng;
         var maybeScEl = element.getScriptEl();
         if (maybeScEl.isPresent()) { //If there's a script for this element, get its' language.

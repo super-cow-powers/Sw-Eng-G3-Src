@@ -207,7 +207,12 @@ public abstract class VisualElement extends Element implements Scriptable {
         var myDoc = this.getDocument();
         if ((myDoc != null) && (myDoc.getRootElement() instanceof DocElement)) { //When using an unattached element, root is NOT a document.
             var myDocEl = (DocElement) myDoc.getRootElement();
-            return id.isPresent() ? id.get() : myDocEl.getNewUniqueID(this.getLocalName());
+            if (!id.isPresent()) {
+                var nID = myDocEl.getNewUniqueID(this.getLocalName());
+                this.setID(nID);
+                return nID;
+            }
+            return id.get();
         } else {
             return id.isPresent() ? id.get() : "";
         }
@@ -407,17 +412,20 @@ public abstract class VisualElement extends Element implements Scriptable {
         var colAttr = new Attribute("fill", colourString);
         this.addAttribute(colAttr);
     }
+
     /**
      * Set my visibility.
+     *
      * @param vis Visible or not.
      */
     public void setVisibility(final Boolean vis) {
         var visAttr = new Attribute(VisualProps.VISIBLE, vis.toString());
         this.addAttribute(visAttr);
     }
-    
+
     /**
      * Get if the node is supposed to be visible.
+     *
      * @return Is Visible?
      */
     public Boolean getVisibility() {
@@ -636,6 +644,16 @@ public abstract class VisualElement extends Element implements Scriptable {
     @Override
     public void setEvalRequired(final Boolean req) {
         evalRequired = req;
+    }
+
+    @Override
+    public Optional<Scriptable> getParentScriptable() {
+        var parent = this.getParent();
+        if (parent instanceof Scriptable) {
+            return Optional.of((Scriptable) parent);
+        } else {
+            return Optional.empty();
+        }
     }
 
 }

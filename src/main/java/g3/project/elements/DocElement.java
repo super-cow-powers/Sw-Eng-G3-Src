@@ -398,4 +398,9 @@ public final class DocElement extends Element implements Scriptable {
     public void setEvalRequired(Boolean req) {
         evalRequired = req;
     }
+
+    @Override
+    public Optional<Scriptable> getParentScriptable() {
+        return Optional.empty();
+    }
 }

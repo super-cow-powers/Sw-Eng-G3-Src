@@ -53,6 +53,12 @@ public interface Scriptable {
      * @return Optional Bindings
      */
     Optional<RecursiveBindings> getParentElementScriptingBindings();
+    
+    /**
+     * Get the parent of this Scriptable element.
+     * @return Maybe parent.
+     */
+    Optional<Scriptable> getParentScriptable();
 
     /**
      * Get the ScriptElement attached to this object. There should only be one

@@ -193,6 +193,7 @@ public class VisualProps extends HashMap<String, Object> implements Props {
         } else {
             ds.setRadius(gen);
         }
+        
         ds.setColor(col);
         return Optional.of(ds);
     }
