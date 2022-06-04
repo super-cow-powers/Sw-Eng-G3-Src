@@ -31,6 +31,7 @@ package g3.project.ui;
 import java.util.function.Consumer;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -44,25 +45,23 @@ import javafx.stage.Stage;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public final class Console {
+public final class Console extends Stage {
+//CHECKSTYLE:OFF
 
     private static final Double MAX_WIDTH = 40.0;
     private static final Double SCENE_WIDTH = 300.0;
     private static final Double SCENE_HEIGHT = 200.0;
-    /**
-     * Setting up area for text input
-     */
-    private final Stage dialog = new Stage();
+//CHECKSTYLE:ON
     /**
      * Text input field
      */
-    private final TextField inputField = new TextField();
+    protected final TextField inputField = new TextField();
     /**
      * Text history
      */
-    private final TextArea historyArea = new TextArea();
+    protected final TextArea historyArea = new TextArea();
     /**
-     * Look back at last line
+     * Callback on line entered.
      */
     private final Consumer<String> lineCallback;
 
@@ -70,11 +69,13 @@ public final class Console {
      * Create a new Console.
      *
      * @param ownerWindow Window that owns this.
-     * @param lineEnterConsumer
+     * @param lineEnterConsumer Callback on line entered.
      */
     public Console(final Stage ownerWindow, final Consumer<String> lineEnterConsumer) {
-        dialog.initModality(Modality.NONE);
-        dialog.initOwner(ownerWindow);
+        this.initModality(Modality.NONE);
+        if (ownerWindow != null) {
+            this.initOwner(ownerWindow);
+        }
         VBox dialogVbox = new VBox();
         Separator separator = new Separator();
         separator.setMaxWidth(MAX_WIDTH);
@@ -84,7 +85,7 @@ public final class Console {
         historyArea.setEditable(false);
         historyArea.setFocusTraversable(false);
         Scene dialogScene = new Scene(dialogVbox, SCENE_WIDTH, SCENE_HEIGHT);
-        dialog.setScene(dialogScene);
+        this.setScene(dialogScene);
         this.lineCallback = lineEnterConsumer;
 
         inputField.setOnKeyPressed(ke -> {
@@ -95,13 +96,6 @@ public final class Console {
                 inputField.clear();
             }
         });
-    }
-
-    /**
-     * Show the console.
-     */
-    public void show() {
-        dialog.show();
     }
 
     /**

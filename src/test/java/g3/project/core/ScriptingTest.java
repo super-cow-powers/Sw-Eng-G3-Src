@@ -28,13 +28,20 @@
  */
 package g3.project.core;
 
+import g3.project.elements.ScriptElement;
+import g3.project.elements.Scriptable;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.nio.file.Path;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.apache.tools.ant.taskdefs.MacroInstance.Element;
 import org.mozilla.javascript.engine.RhinoScriptEngine;
 
 /**
@@ -43,10 +50,12 @@ import org.mozilla.javascript.engine.RhinoScriptEngine;
  */
 public class ScriptingTest {
 
+//CHECKSTYLE:OFF    
+    Scripting instance;
+
     public ScriptingTest() {
     }
 
-//CHECKSTYLE:OFF    
     @BeforeAll
     public static void setUpClass() {
     }
@@ -57,6 +66,7 @@ public class ScriptingTest {
 
     @BeforeEach
     public void setUp() {
+        instance = new Scripting("python", null, new OutputStreamWriter(System.out));
     }
 
     @AfterEach
@@ -66,10 +76,11 @@ public class ScriptingTest {
 
     /**
      * Test of evalString method, of class Scripting.
+     *
+     * @throws Exception
      */
     @Test
     public void testEvalString() throws Exception {
-        System.out.println(RhinoScriptEngine.ENGINE_VERSION);
         System.out.println("evalString");
         String pyCode = "va = 3+2"
                 + "\nprint(\"Python Test va = \" + str(va))";
@@ -79,8 +90,6 @@ public class ScriptingTest {
         String rhinoLang = "rhino";
         RecursiveBindings pyBindings = new RecursiveBindings();
         RecursiveBindings rhinoBindings = new RecursiveBindings();
-
-        Scripting instance = new Scripting("python", null, new OutputStreamWriter(System.out));
         //Test Jython/python
         instance.evalString(pyCode, pyLang, pyBindings);
         //Test Rhino/JS
@@ -90,4 +99,87 @@ public class ScriptingTest {
         assertEquals(rhinoBindings.get("va"), 5);
         //CHECKSTYLE:ON
     }
+
+    /**
+     * Test of setGlobal method, of class Scripting.
+     */
+    @Test
+    public void testSetGlobal() {
+        System.out.println("setGlobal");
+        String name = "test";
+        Boolean glob = true;
+        instance.setGlobal(name, glob);
+        assertEquals(instance.getGlobal(name).get(), glob);
+    }
+
+    /**
+     * Test of getGlobal method, of class Scripting.
+     */
+    @Test
+    public void testGetGlobal() {
+        System.out.println("getGlobal");
+        String name = "test";
+        Boolean glob = true;
+        instance.setGlobal(name, glob);
+        assertEquals(instance.getGlobal(name).get(), glob);
+    }
+
+    /**
+     * Test of getTopLevelBindings method, of class Scripting.
+     */
+    @Test
+    public void testGetTopLevelBindings() {
+        System.out.println("getTopLevelBindings");
+        RecursiveBindings result = Scripting.getTopLevelBindings();
+        assertTrue(result instanceof RecursiveBindings);
+    }
+
+//CHECKSTYLE:OFF
+    class ScriptableTest implements Scriptable {
+
+        RecursiveBindings bin = new RecursiveBindings();
+
+        @Override
+        public RecursiveBindings getScriptingBindings() {
+            return bin;
+        }
+
+        @Override
+        public Optional<RecursiveBindings> getParentElementScriptingBindings() {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<Scriptable> getParentScriptable() {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<ScriptElement> getScriptEl() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public void addScriptFile(Path path, String language) throws IOException {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public String getRealType() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public Boolean getEvalRequired() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public void setEvalRequired(Boolean req) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+    }
+    //CHECKSTYLE:ON
+
 }

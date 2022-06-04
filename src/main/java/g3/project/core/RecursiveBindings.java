@@ -104,7 +104,7 @@ public final class RecursiveBindings extends SimpleBindings {
         return false;
     }
 
-    @Override
+    //@Override
     public Object get​(final Object key) {
         if (localGet(key).isPresent()) { //Do I have it?
             return localGet(key).get();

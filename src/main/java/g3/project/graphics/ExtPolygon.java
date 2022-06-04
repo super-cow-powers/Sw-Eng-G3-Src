@@ -37,14 +37,13 @@ import javafx.scene.shape.Shape;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public final class ExtPolygon extends ExtShape {
-
-    private Shape shape = getShape();
-
     /**
-     * Constructor
+     * Constructor.
+     *
+     * @param myType Shape type.
      */
-    public ExtPolygon() {
-        super(new Polygon());
+    public ExtPolygon(final ExtShapeFactory.ShapeType myType) {
+        super(new Polygon(), myType);
     }
 
     @Override
@@ -54,11 +53,12 @@ public final class ExtPolygon extends ExtShape {
     }
 
     /**
-     * Sets points for the shape
+     * Sets points for the shape.
+     *
      * @param points
      * @throws Exception
      */
-    public void setPoints(ArrayList<Double> points) throws Exception {
+    public void setPoints(final ArrayList<Double> points) throws Exception {
         if (points.size() % 2 != 0) {
             throw new Exception("Points array should be even length!");
         }

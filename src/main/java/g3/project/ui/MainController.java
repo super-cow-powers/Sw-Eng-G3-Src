@@ -1151,4 +1151,12 @@ public final class MainController {
         var ds = new DropShadow();
         pagePane.setEffect(ds);
     }
+
+    /**
+     * Return the Pane pagePane
+     * For testing
+     */
+    public Pane getPagePane() {
+        return pagePane;
+    }
 }

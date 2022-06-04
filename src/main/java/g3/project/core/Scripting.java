@@ -164,6 +164,15 @@ public final class Scripting {
      * @throws IOException Couldn't get script.
      */
     public void evalElement(final Scriptable element) throws ScriptException, IOException {
+        element.getParentScriptable().ifPresent(p -> { //Eval up.
+            try {
+                evalElement(p);
+            } catch (ScriptException ex) {
+                Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
         if (element.getEvalRequired()) {
             IO elIo;
             if (element instanceof Tool) { //Tools have their own IO stuff.
@@ -203,15 +212,6 @@ public final class Scripting {
             }, () -> System.err.println("Couldn't load Script for " + element.getClass()));
             element.setEvalRequired(false);
         }
-        element.getParentScriptable().ifPresent(p -> { //Eval up.
-            try {
-                evalElement(p);
-            } catch (ScriptException ex) {
-                Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IOException ex) {
-                Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        });
     }
 
     /**
@@ -259,8 +259,8 @@ public final class Scripting {
      * @param element Element to start with.
      * @param function Function to try and call.
      * @param args Arguments to function.
-     * @throws javax.script.ScriptException
-     * @throws java.io.IOException
+     * @throws ScriptException
+     * @throws IOException
      */
     public void invokeOnElement(final Scriptable element, final String function, final Object... args) throws ScriptException, IOException {
         this.evalElement(element);

@@ -46,12 +46,12 @@ public class Tool extends Element implements Scriptable {
     /**
      * Is Eval Required.
      */
-    Boolean evalRequired = true;
+    protected Boolean evalRequired = true;
 
     /**
      * My script bindings.
      */
-    RecursiveBindings elementScriptBindings = new RecursiveBindings();
+    protected RecursiveBindings elementScriptBindings = new RecursiveBindings();
 
     /**
      * Create a builder.
@@ -140,7 +140,12 @@ public class Tool extends Element implements Scriptable {
             return Boolean.valueOf(sinkAttr.getValue());
         }
     }
-    
+
+    /**
+     * Get if events are allowed to bubble up.
+     *
+     * @return Bubble?
+     */
     public final Boolean bubbleEvents() {
         var sinkAttr = this.getAttribute("do_bubble");
         if (sinkAttr == null) {

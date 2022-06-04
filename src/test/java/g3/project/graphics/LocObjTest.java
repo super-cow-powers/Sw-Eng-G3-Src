@@ -28,36 +28,73 @@
  */
 package g3.project.graphics;
 
-import javafx.scene.layout.VBox;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Shape;
+import java.util.Random;
+import javafx.geometry.Point2D;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public final class ExtRect extends ExtShape {
+public class LocObjTest {
+
+    //CHECKSTYLE:OFF
+    static final Integer TEST_ITERATIONS = 1000;
+
+    public LocObjTest() {
+    }
+
+    @BeforeAll
+    public static void setUpClass() {
+    }
+
+    @AfterAll
+    public static void tearDownClass() {
+    }
+
+    @BeforeEach
+    public void setUp() {
+    }
+
+    @AfterEach
+    public void tearDown() {
+    }
+//CHECKSTYLE:ON
+
     /**
-     * Constructor.
-     *
-     * @param myType shape type.
+     * Test of getLoc method, of class LocObj.
      */
-    public ExtRect(final ExtShapeFactory.ShapeType myType) {
-        super(new Rectangle(), myType);
-    }
-
-    @Override
-    public void setSize(final SizeObj size) {
-        this.width = size.getX();
-        this.height = size.getY();
-        this.rot = size.getRot();
-
-        if (textVbox != null) {
-            textVbox.setPrefWidth(this.width);
+    @Test
+    public void testGetLoc() {
+        System.out.println("getLoc");
+        Random rand = new Random();
+        for (int i = 0; i < TEST_ITERATIONS; i++) {
+            Point2D expResult = new Point2D(rand.nextDouble(), rand.nextDouble());
+            var instance = new LocObj(expResult, 0d);
+            Point2D result = instance.getLoc();
+            assertEquals(expResult, result);
         }
-        this.setRotate(rot);
-        ((Rectangle) shape).setWidth(width);
-        ((Rectangle) shape).setHeight(height);
-
     }
+
+    /**
+     * Test of getZ method, of class LocObj.
+     */
+    @Test
+    public void testGetZ() {
+        System.out.println("getZ");
+        Random rand = new Random();
+        for (int i = 0; i < TEST_ITERATIONS; i++) {
+            Point2D point = new Point2D(0d, 0d);
+            Double z = rand.nextDouble();
+            var instance = new LocObj(point, z);
+            Double result = instance.getZ();
+            assertEquals(z, result);
+        }
+    }
+
 }
