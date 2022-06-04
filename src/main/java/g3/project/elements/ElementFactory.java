@@ -57,6 +57,8 @@ public final class ElementFactory extends NodeFactory {
                 return new StrokeElement(name, namespaceURI);
             case "base:font":
                 return new FontElement(name, namespaceURI);
+            case "base:href":
+                return new RefElement(name, namespaceURI);
             case "ext:script":
                 return new ScriptElement(name, namespaceURI);
             case "script":

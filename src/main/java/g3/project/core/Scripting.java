@@ -29,10 +29,16 @@
 package g3.project.core;
 
 import g3.project.elements.Scriptable;
-import g3.project.xmlIO.Io;
+import g3.project.xmlIO.DocIO;
+import g3.project.xmlIO.IO;
 import java.io.IOException;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.script.Invocable;
@@ -47,7 +53,14 @@ import javax.script.ScriptException;
  */
 public final class Scripting {
 
-    private static final String CLICK_FN = "onClick";
+    public static final String CLICK_FN = "onClick";
+    public static final String KEY_PRESS_FN = "onKeyPress";
+    public static final String MOUSE_MOVED_FN = "onMouseMoved";
+    public static final String MOUSE_ENTER_FN = "onMouseEnter";
+    public static final String MOUSE_EXIT_FN = "onMouseExit";
+    public static final String DRAG_FUNCTION = "onDrag";
+    public static final String LOAD_FUNCTION = "onLoad";
+    public static final String TOOL_CLOSE_FUNCTION = "onClose";
 
     /**
      * Factory/manager for all script engines.
@@ -60,6 +73,21 @@ public final class Scripting {
     private HashMap<String, ScriptEngine> knownScriptEngines = new HashMap<>();
 
     /**
+     * Top-level bindings to put base functions into. Kind of gross to be
+     * static, but NVM.
+     */
+    private final static RecursiveBindings TOP_LEVEL_BINDINGS = new RecursiveBindings();
+
+    /**
+     * Default language string for the scripting
+     */
+    private final String defaultLang;
+
+    /**
+     * Default writer object for the scripting
+     */
+    private final Writer defaultWriter;
+    /**
      * Ref to engine object.
      */
     private final Engine engine;
@@ -69,16 +97,62 @@ public final class Scripting {
      *
      * @todo: Handle case of unknown language.
      *
-     * @param defaultLang Default scripting language.
+     * @param defaultLanguage Default scripting language.
      * @param globalEngine Ref to the engine.
+     * @param writer Default Output writer.
      */
-    public Scripting(final String defaultLang, final Engine globalEngine) {
+    public Scripting(final String defaultLanguage, final Engine globalEngine, final Writer writer) {
         // Init script engine manager
         scriptingEngineManager = new ScriptEngineManager();
         var globals = scriptingEngineManager.getBindings();
         globals.put("engine", globalEngine);
         engine = globalEngine;
-        getScriptEngine(defaultLang); //pre-init a script engijne.
+        defaultLang = defaultLanguage;
+        defaultWriter = writer;
+        //Load in the custom global functions
+        var fns = DocIO.getInternalResource("globalFunctions.py", Scripting.class);
+        try {
+            if (fns.isEmpty()) {
+                throw new IOException("Couldn't get functions file");
+            }
+            var fnStr = new String(fns.get(), StandardCharsets.UTF_8);
+            this.evalString(fnStr, defaultLang, TOP_LEVEL_BINDINGS);
+        } catch (IOException | NullPointerException | ScriptException ex) {
+            //Default function loading failed.
+            Logger.getLogger(DocIO.class.getName()).log(Level.SEVERE, null, ex);
+            //Pre-init a script engine.
+            getScriptEngine(defaultLang);
+        }
+    }
+
+    /**
+     * Add an object to global bindings.
+     *
+     * @param name Object name.
+     * @param glob Object.
+     */
+    public void setGlobal(final String name, final Object glob) {
+        scriptingEngineManager.getBindings().put(name, glob);
+    }
+
+    /**
+     * Get a global variable.
+     *
+     * @param name Variable name.
+     * @return Maybe variable.
+     */
+    public Optional<Object> getGlobal(final String name) {
+        var globalVar = scriptingEngineManager.getBindings().get(name);
+        return Optional.ofNullable(globalVar);
+    }
+
+    /**
+     * Get Scripting global/top-level bindings.
+     *
+     * @return RecursiveBindings
+     */
+    public static RecursiveBindings getTopLevelBindings() {
+        return TOP_LEVEL_BINDINGS;
     }
 
     /**
@@ -90,64 +164,122 @@ public final class Scripting {
      * @throws IOException Couldn't get script.
      */
     public void evalElement(final Scriptable element) throws ScriptException, IOException {
-        Io docIo = engine.getDocIO();
-        var scrElOpt = element.getScriptEl();
-        if (scrElOpt.isPresent()) {
-            var scrEl = scrElOpt.get();
+        if (element.getEvalRequired()) {
+            IO elIo;
+            if (element instanceof Tool) { //Tools have their own IO stuff.
+                elIo = engine.getToolIO();
+            } else {
+                elIo = engine.getDocIO();
+            }
+            var scrElOpt = element.getScriptEl();
             //Setup bindings
             var bindings = element.getScriptingBindings();
-            bindings.put("this", element);
             element.getParentElementScriptingBindings().ifPresent(p -> bindings.setParent(p));
 
-            var locOpt = scrEl.getSourceLoc();
-            if (locOpt.isEmpty()) {
-                throw new IOException("No script file specified");
-            }
-            var loc = locOpt.get();
-            var bytesOpt = docIo.getResource(loc);
-            if (bytesOpt.isPresent()) {
-                var b = bytesOpt.get();
-                var str = new String(b, StandardCharsets.UTF_8);
-                this.evalString(str, scrEl.getScriptLang(), bindings);
-            } else {
-                throw new IOException("Couldn't open script file");
-            }
+            scrElOpt.flatMap(scrEl -> { //Get file location
+                var locOpt = scrEl.getSourceLoc();
+                var lang = scrEl.getScriptLang();
+                if (lang.toLowerCase().equals("python")) {
+                    bindings.remove("me"); //Jython doesn't reserve 'this'
+                    bindings.put("this", element);
+                } else {
+                    bindings.remove("this"); //Most other things do reserve 'this'
+                    bindings.put("me", element);
+                }
+                if (locOpt.isEmpty()) {
+                    System.err.println("No script file specified");
+                }
+                return locOpt;
+            }).flatMap(loc -> { //Get Bytes
+                var bytesOpt = elIo.getResource(loc);
+                return bytesOpt;
+            }).ifPresentOrElse(bytes -> { //Eval
+                var str = new String(bytes, StandardCharsets.UTF_8);
+                try {
+                    this.evalString(str, scrElOpt.get().getScriptLang(), bindings);
+                } catch (ScriptException ex) {
+                    engine.putMessage(ex.getMessage(), true);
+                }
+            }, () -> System.err.println("Couldn't load Script for " + element.getClass()));
+            element.setEvalRequired(false);
         }
+        element.getParentScriptable().ifPresent(p -> { //Eval up.
+            try {
+                evalElement(p);
+            } catch (ScriptException ex) {
+                Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
     }
+
     /**
      * Evaluate a string of code. Provided for testing.
+     *
      * @param code Code to eval.
      * @param lang Language.
      * @param bindings Bindings to use.
      * @throws ScriptException Bad script.
      */
     protected void evalString(final String code, final String lang, final RecursiveBindings bindings) throws ScriptException {
+        evalString(code, lang, bindings, defaultWriter);
+    }
+
+    /**
+     * Evaluate a string in the top-level context.
+     *
+     * @param code Code to evaluate.
+     * @param lang Language code is.
+     * @throws ScriptException Bad code.
+     */
+    public void evalString(final String code, final String lang) throws ScriptException {
+        evalString(code, lang, TOP_LEVEL_BINDINGS);
+    }
+
+    /**
+     * Evaluate a string in the given bindings, with the specified output.
+     *
+     * @param code Code to evaluate.
+     * @param lang Language code is.
+     * @param bindings Bindings to use.
+     * @param outWriter Output Writer.
+     * @throws ScriptException Bad code.
+     */
+    private void evalString(final String code, final String lang, final RecursiveBindings bindings, final Writer outWriter) throws ScriptException {
         var scrEngine = getScriptEngine(lang);
         scrEngine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+        scrEngine.getContext().setWriter(outWriter);
         scrEngine.eval(code);
     }
 
     /**
-     * Execute element's onClick function.
+     * Invoke function on element.
      *
-     * @param element Element to use.
-     * @param button_name Mouse button name.
-     * @param x_loc x location.
-     * @param y_loc y location.
+     * @param element Element to start with.
+     * @param function Function to try and call.
+     * @param args Arguments to function.
+     * @throws javax.script.ScriptException
+     * @throws java.io.IOException
      */
-    public void execElementClick(final Scriptable element, final String button_name, final Double x_loc, final Double y_loc) {
-        var scrElOpt = element.getScriptEl();
-        if (scrElOpt.isPresent()) {
-            var scrEl = scrElOpt.get();
-            var lang = scrEl.getScriptLang();
-            var engine = getScriptEngine(lang);
-            engine.setBindings(element.getScriptingBindings(), ScriptContext.ENGINE_SCOPE);
-            try {
-                ((Invocable) engine).invokeFunction(CLICK_FN, button_name, x_loc, y_loc);
-            } catch (ScriptException | NoSuchMethodException ex) {
-                Logger.getLogger(Scripting.class.getName()).log(Level.SEVERE, null, ex);
-            }
+    public void invokeOnElement(final Scriptable element, final String function, final Object... args) throws ScriptException, IOException {
+        this.evalElement(element);
+        ScriptEngine scEng;
+        var maybeScEl = element.getScriptEl();
+        if (maybeScEl.isPresent()) { //If there's a script for this element, get its' language.
+            scEng = getScriptEngine(maybeScEl.get().getScriptLang());
+        } else {
+            scEng = getDefaultScriptEngine();
         }
+        scEng.setBindings(element.getScriptingBindings(), ScriptContext.ENGINE_SCOPE);
+        try {
+            ((Invocable) scEng).invokeFunction(function, args);
+        } catch (ScriptException ex) {
+            engine.putMessage(ex.getMessage(), true);
+        } catch (NoSuchMethodException ex) {
+            //Ignore nosuchmethod.
+        }
+
     }
 
     /**
@@ -166,5 +298,9 @@ public final class Scripting {
             knownScriptEngines.put(lang, scrEngine);
         }
         return scrEngine;
+    }
+
+    private ScriptEngine getDefaultScriptEngine() {
+        return getScriptEngine(defaultLang);
     }
 }

@@ -28,7 +28,10 @@
  */
 package g3.project.elements;
 
+import static g3.project.elements.VisualElement.derefAttribute;
 import g3.project.graphics.FontProps;
+import g3.project.graphics.StyledTextSeg;
+import java.util.HashMap;
 import java.util.Optional;
 import javafx.scene.paint.Color;
 import nu.xom.*;
@@ -59,10 +62,12 @@ public final class FontElement extends Element {
     public FontElement(final Element element) {
         super(element);
     }
-    
-    public FontElement(final String name, String uri, String textString) {
+
+    public FontElement(final String name, String uri, StyledTextSeg textSeg) {
         super(name, uri);
-        this.insertChild(textString, 0); //Add text
+        this.insertChild(textSeg.getString(), 0); //Add text
+        this.setProperties(textSeg.getStyle()); //Set the style props.
+
     }
 //CHECKSTYLE:ON
 
@@ -72,80 +77,92 @@ public final class FontElement extends Element {
      * @return FontProps properties.
      */
     public FontProps getProperties() {
-        final double defSize = 10d;
-        var usA = this.getAttribute("underscore");
-        var bldA = this.getAttribute("bold");
-        var itA = this.getAttribute("italic");
-        var sizeA = this.getAttribute("size");
-        var nameA = this.getAttribute("name");
-        var colOpt = this.getCol();
-        Color col = Color.BLACK;
-        boolean us = false;
-        boolean bld = false;
-        boolean it = false;
-        var size = defSize;
-        String name = "";
+        FontProps propsMap = new FontProps();
+        for (String prop : FontProps.PROPS_MAP.keySet()) {
+            switch (prop) {
+                //Special cases
+                case (FontProps.ALIGNMENT):
+                    break;
+                case (FontProps.VALIGNMENT):
+                    break;
+                default: //Not a special case
+                    var attrMaybe = derefAttribute(this, prop);
+                    //this.getAttribute(prop, prop)
+                    if (attrMaybe.isPresent()) {
+                        var attr = attrMaybe.get();
+                        var attrVal = attr.getValue();
+                        Class attrType = FontProps.PROPS_MAP.get(prop);
+                        Object propVal;
+                        //Cast to correct type
+                        if (attrType == Double.class) {
+                            propVal = Double.valueOf(attrVal);
+                        } else if (attrType == Boolean.class) {
+                            propVal = Boolean.valueOf(attrVal);
+                        } else if (attrType == Color.class) {
+                            propVal = Color.web(attrVal);
+                        } else {
+                            propVal = attrVal; //Probably a string.
+                        }
+                        propsMap.put(prop, propVal);
+                    }
+                    break;
+            }
+        }
+        return propsMap;
+    }
 
-        if (usA != null) {
-            us = Boolean.parseBoolean(usA.getValue());
+    /**
+     * Set this object's properties.
+     *
+     * @param props Properties.
+     */
+    public void setProperties(final HashMap<String, Object> props) {
+        for (String prop : props.keySet()) {
+            var propVal = props.get(prop);
+            if (propVal != null) {
+                switch (prop) {
+                    //Special cases
+                    default: //Not a special case
+                        var attr = VisualElement.makeAttrWithNS(prop, propVal.toString());
+                        this.addAttribute(attr);
+                        break;
+                }
+            }
         }
-        if (bldA != null) {
-            bld = Boolean.getBoolean(bldA.getValue());
-        }
-        if (itA != null) {
-            it = Boolean.getBoolean(itA.getValue());
-        }
-        if (sizeA != null) {
-            size = Double.valueOf(sizeA.getValue());
-        }
-        if (nameA != null) {
-            name = nameA.getValue();
-        }
-        if (colOpt.isPresent()) {
-            col = colOpt.get();
-        }
-        return new FontProps(us, it, bld, size, name, col);
     }
 
     /**
      * Get font colour.
      *
+     * @param colString Colour string to convert.
      * @return Optional font colour.
      */
-    private Optional<Color> getCol() {
+    public static Optional<Color> convCol(final String colString) {
         final int lenRGB = 6;
         final int lenRGBA = 8;
-        var colA = Optional.ofNullable(this.getAttribute("colour"));
-        /**
-         * @todo: Find a nicer looking way of making this work Probably
-         * containing more streams
-         */
-        if (colA.isPresent()) {
-            var colStr = colA.get().getValue().replace("#", "");
 
-            switch (colStr.length()) {
-                case lenRGB:
-                    //CHECKSTYLE:OFF
-                    return Optional.of(new Color(
-                            (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
-                            1.0d));
-                    //CHECKSTYLE:ON
-                case lenRGBA:
-                    //CHECKSTYLE:OFF
-                    return Optional.of(new Color(
-                            (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(6, 8), 16) / 255));
-                    //CHECKSTYLE:ON
-                default:
-                    return Optional.empty();
+        var colStr = colString.replace("#", "");
+        switch (colStr.length()) {
+            case lenRGB:
+                //CHECKSTYLE:OFF
+                return Optional.of(new Color(
+                        (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
+                        (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
+                        (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
+                        1.0d));
+            //CHECKSTYLE:ON
+            case lenRGBA:
+                //CHECKSTYLE:OFF
+                return Optional.of(new Color(
+                        (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
+                        (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
+                        (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
+                        (double) Integer.valueOf(colStr.substring(6, 8), 16) / 255));
+            //CHECKSTYLE:ON
+            default:
+                return Optional.empty();
 
-            }
-        } else { //No colour specified
-            return Optional.empty();
         }
+
     }
 }

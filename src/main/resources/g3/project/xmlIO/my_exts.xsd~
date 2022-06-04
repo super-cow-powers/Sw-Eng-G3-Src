@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This is an example of a specific extension schema -->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" xml:lang="EN" xmlns:target="http://PWS_Exts" targetNamespace="http://PWS_Exts">
+	<xsd:element name="script" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>
+        Script Element
+      </xsd:documentation>
+		</xsd:annotation>
+                <xsd:attribute name="alignment" type="xsd:string" use="optional"/>
+                <xsd:attribute name="alignment" type="xsd:string"/>
+	</xsd:element>
+        
+        <xsd:attribute name="alignment" type="xsd:string"/>
+</xsd:schema>

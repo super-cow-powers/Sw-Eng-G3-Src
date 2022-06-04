@@ -28,8 +28,12 @@
  */
 package g3.project.elements;
 
-import g3.project.core.Engine;
 import g3.project.core.RecursiveBindings;
+import g3.project.core.Scripting;
+import g3.project.graphics.SizeObj;
+import g3.project.xmlIO.DocIO;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.ArrayList;
 import java.util.Random;
@@ -43,20 +47,28 @@ import nu.xom.*;
 public final class DocElement extends Element implements Scriptable {
 
     /**
-     * Directory containing this document (String).
+     * My script bindings.
      */
-    private String containingDirStr = null;
-    
+    private RecursiveBindings topLevelBindings = null;
+    /**
+     * My currently open page.
+     */
+    private PageElement currentPage = null;
     /**
      * Doc validation errors.
      */
     private ArrayList<String> validationErrors = new ArrayList<>();
-    
+
     /**
      * Change callback.
      */
     private Consumer<VisualElement> updateCallback = (f) -> {
     };
+
+    /**
+     * Does the script need evaluating again?
+     */
+    private Boolean evalRequired = true;
 
     /**
      * Script bindings for the element.
@@ -86,15 +98,6 @@ public final class DocElement extends Element implements Scriptable {
 
 //CHECKSTYLE:ON
     /**
-     * Set document base directory.
-     *
-     * @param dir Directory string.
-     */
-    public void setBaseDir(final String dir) {
-        containingDirStr = dir;
-    }
-
-    /**
      * Set change callback.
      *
      * @param func Notifier Function.
@@ -113,43 +116,142 @@ public final class DocElement extends Element implements Scriptable {
     }
 
     /**
-     * Get document base directory.
+     * Set doc validation errors.
      *
-     * @return Directory string.
+     * @param errors validation errors.
      */
-    public Optional<String> getBaseDir() {
-        return Optional.ofNullable(containingDirStr);
+    public void setValidationErrors(final ArrayList<String> errors) {
+        validationErrors = errors;
     }
 
     /**
-     * Set doc validation errors.
-     * @param errors validation errors.
+     * Get any validation errors in the document.
+     *
+     * @return Array of validation errors.
      */
-    public void setValidationErrors(final ArrayList<String> errors){
-        validationErrors = errors;
-    }
-    
-    public ArrayList<String> getValidationErrors(){
+    public ArrayList<String> getValidationErrors() {
         return validationErrors;
     }
-    
+
     /**
      *
      * @return ArrayList containing the Doc's pages
      */
-    public Optional<ArrayList<PageElement>> getPages() {
-        ArrayList<PageElement> pages = null;
+    public ArrayList<PageElement> getPages() {
+        ArrayList<PageElement> pages = new ArrayList<>();
+        Integer pageCnt = 0;
         for (int i = 0; i < this.getChildCount(); i++) {
             var node = this.getChild(i);
             if (node.getClass() == PageElement.class) {
-                if (pages == null) {
-                    pages = new ArrayList<PageElement>();
-                }
-
                 pages.add((PageElement) node);
+                ((PageElement) node).setIndex(pageCnt);
+                pageCnt ++;
             }
         }
-        return Optional.ofNullable(pages);
+        return pages;
+    }
+
+    /**
+     * Get the currently open page.
+     *
+     * @return Maybe Page (if open).
+     */
+    public Optional<PageElement> getCurrentPage() {
+        return Optional.ofNullable(currentPage);
+    }
+
+    /**
+     * Maybe get target page.
+     *
+     * @param pageID Target page ID.
+     * @return Maybe page.
+     */
+    public Optional<PageElement> getPage(final String pageID) {
+        var pages = this.getPages();
+        var it = pages.iterator();
+        Integer ind = 0;
+        while (it.hasNext()) {
+            var page = it.next();
+            var pgID = page.getID();
+            if (pgID.equals(pageID)) {
+                currentPage = page;
+                page.setIndex(ind);
+                return Optional.of(page);
+            }
+            ind++;
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Maybe get a target page.
+     *
+     * @param pageNum Target page number.
+     * @return Maybe page.
+     */
+    public Optional<PageElement> getPage(final Integer pageNum) {
+        var pages = this.getPages();
+        try {
+            PageElement page = pages.get(pageNum);
+            page.setIndex(pageNum);
+            currentPage = page;
+            return Optional.of(page);
+        } catch (IndexOutOfBoundsException ex) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Move a page.
+     *
+     * @param page Page to move.
+     * @param to New location.
+     */
+    public void movePage(final PageElement page, final Integer to) {
+        this.removeChild(page);
+        insertPage(to, page);
+    }
+
+    /**
+     * Add a new page.
+     *
+     * @param pageNum Page number.
+     * @param el Page.
+     */
+    public void insertPage(final Integer pageNum, final PageElement el) {
+        Integer pages = 0;
+        for (int i = 0; i < this.getChildCount(); i++) {
+            var node = this.getChild(i);
+            if (node instanceof PageElement) {
+                if (pages == pageNum) {
+                    this.insertChild(el, i);
+                    el.setIndex(pageNum);
+                    return;
+                }
+                pages++;
+            }
+        }
+        //Not enough pages in doc.
+        this.insertChild(el, this.getChildCount() - 1);
+    }
+
+    /**
+     * Add a page with the specified requirements.
+     *
+     * @param pageNum Page Number.
+     * @param pageTitle Page Title/Friendly Name.
+     * @param xSize X Size in PX.
+     * @param ySize Y Size in PX.
+     * @return New Page's ID.
+     */
+    public String insertPage(final Integer pageNum, final String pageTitle, final Double xSize, final Double ySize) {
+        String id = getNewUniqueID("page");
+        PageElement el = new PageElement("base:page", VisualElement.BASE_URI);
+        el.setID(id);
+        insertPage(pageNum, el);
+        el.setTitle(pageTitle);
+        el.setSize(new SizeObj(xSize, ySize, 0d));
+        return id;
     }
 
     /**
@@ -206,25 +308,41 @@ public final class DocElement extends Element implements Scriptable {
         return Optional.empty();
     }
 
+    /**
+     * Delete an element.
+     *
+     * @param id Element ID.
+     * @param resIO Resource IO to cleanup resources.
+     */
+    public void deleteElement(final String id, final DocIO resIO) {
+        Optional<VisualElement> maybeEl = getElementByID(id);
+        maybeEl.ifPresent(e -> deleteElement(e, resIO));
+    }
+
+    /**
+     * Delete an element.
+     *
+     * @param el Element.
+     * @param resIO Resource IO to cleanup resources.
+     */
+    public void deleteElement(final VisualElement el, final DocIO resIO) {
+        el.delete(resIO);
+    }
+
     @Override
     public RecursiveBindings getScriptingBindings() {
+        elementScriptBindings.setParent(Scripting.getTopLevelBindings());
         return elementScriptBindings;
     }
 
     /**
-     * Get Local Script Bindings of parent node, if parent node is another
-     * Scriptable element.
+     * Get the program-base definitions.
      *
      * @return Optional Bindings
      */
     @Override
     public Optional<RecursiveBindings> getParentElementScriptingBindings() {
-        var parent = this.getParent();
-        if (parent instanceof Scriptable) {
-            return Optional.of(((Scriptable) parent).getScriptingBindings());
-        } else {
-            return Optional.empty();
-        }
+        return Optional.of(Scripting.getTopLevelBindings());
     }
 
     /**
@@ -245,7 +363,44 @@ public final class DocElement extends Element implements Scriptable {
     }
 
     @Override
-    public final String getRealType() {
+    public String getRealType() {
         return this.getClass().getName();
+    }
+
+    /**
+     * Attach a new script to the element.
+     *
+     * @param path Internal path to file.
+     * @param language Script language.
+     */
+    @Override
+    public void addScriptFile(final Path path, final String language) throws IOException {
+        if (!path.getFileSystem().provider().getScheme().contains("jar") && !path.getFileSystem().provider().getScheme().contains("zip")) {
+            throw new IOException("External files not supported. Add the file to the project.");
+        }
+        ScriptElement scEl = new ScriptElement("ext:script", VisualElement.EXT_URI, path.toString(), language);
+        var chEls = this.getChildElements();
+        //Remove other scripts.
+        for (var ch : chEls) {
+            if (ch instanceof ScriptElement) {
+                this.removeChild(ch);
+            }
+        }
+        this.appendChild(scEl);
+    }
+
+    @Override
+    public Boolean getEvalRequired() {
+        return evalRequired;
+    }
+
+    @Override
+    public void setEvalRequired(Boolean req) {
+        evalRequired = req;
+    }
+
+    @Override
+    public Optional<Scriptable> getParentScriptable() {
+        return Optional.empty();
     }
 }

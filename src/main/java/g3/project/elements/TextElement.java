@@ -28,7 +28,10 @@
  */
 package g3.project.elements;
 
+import g3.project.graphics.FontProps;
+import g3.project.graphics.StyledTextSeg;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Optional;
 import nu.xom.*;
 
@@ -38,6 +41,7 @@ import nu.xom.*;
  */
 public class TextElement extends Element implements Includable {
 //CHECKSTYLE:OFF
+
     private static ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
@@ -57,32 +61,70 @@ public class TextElement extends Element implements Includable {
     public TextElement(Element element) {
         super(element);
     }
-    
-    public TextElement(String name, String uri, String textString) {
+
+    public TextElement(String name, String uri, ArrayList<StyledTextSeg> textSegs) {
         super(name, uri);
-        var fontBlock = new FontElement("base:font", uri, textString);
-        this.appendChild(fontBlock);
+        for (StyledTextSeg seg : textSegs) {
+            var fontBlock = new FontElement("base:font", uri, seg);
+            this.appendChild(fontBlock);
+        }
     }
 //CHECKSTYLE:ON
 
     /**
      * Get all font blocks in this text section.
      *
-     * @return ArrayList of font-blocks in section.
+     * @return ArrayList of styled text segments.
      */
-    public final ArrayList<FontElement> getFontBlocks() {
-        var list = new ArrayList<FontElement>();
+    public final ArrayList<StyledTextSeg> getText() {
+        var list = new ArrayList<StyledTextSeg>();
+        var maybeAlignment = VisualElement.derefAttribute(this, FontProps.ALIGNMENT);
+        var maybeVAlignment = VisualElement.derefAttribute(this, FontProps.VALIGNMENT);
+
+        var myAlignment = (maybeAlignment.isEmpty()) ? FontProps.PROP_DEFAULTS.get(FontProps.ALIGNMENT) : maybeAlignment.get().getValue();
+        var myVAlignment = (maybeVAlignment.isEmpty()) ? FontProps.PROP_DEFAULTS.get(FontProps.VALIGNMENT) : maybeVAlignment.get().getValue();
         for (var ch : this.getChildElements()) {
             if (ch instanceof FontElement) {
-                list.add((FontElement) ch);
+                FontElement chf = (FontElement) ch;
+                var props = chf.getProperties();
+                props.put(FontProps.ALIGNMENT, myAlignment);
+                props.put(FontProps.VALIGNMENT, myVAlignment);
+                //Go through the children to find any links
+                for (int i = 0; i < chf.getChildCount(); i++) {
+                    var textOrRef = chf.getChild(i);
+                    if (textOrRef instanceof nu.xom.Text) {
+                        var seg = new StyledTextSeg(props, textOrRef.getValue());
+                        list.add(seg);
+                    } else if (textOrRef instanceof RefElement) {
+                        var seg = new StyledTextSeg(props, textOrRef.getValue());
+                        seg.setHRef(((RefElement) textOrRef).getTarget(), ((RefElement) textOrRef).getType());
+                        list.add(seg);
+                    }
+                }
             }
         }
         return list;
     }
 
+    /**
+     * Get my alignment properties.
+     *
+     * @return Alignment properties.
+     */
+    public final HashMap<String, Object> getAlignmentProps() {
+        HashMap<String, Object> retMap = new HashMap<>();
+        var maybeAlignment = VisualElement.derefAttribute(this, FontProps.ALIGNMENT);
+        var maybeVAlignment = VisualElement.derefAttribute(this, FontProps.VALIGNMENT);
+
+        retMap.put(FontProps.ALIGNMENT, (maybeAlignment.isEmpty()) ? FontProps.PROP_DEFAULTS.get(FontProps.ALIGNMENT) : maybeAlignment.get().getValue());
+        retMap.put(FontProps.VALIGNMENT, (maybeVAlignment.isEmpty()) ? FontProps.PROP_DEFAULTS.get(FontProps.VALIGNMENT) : maybeVAlignment.get().getValue());
+        return retMap;
+    }
+
     @Override
-    public Optional<String> getSourceLoc() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public final Optional<String> getSourceLoc() {
+        return Optional.ofNullable(this.getAttribute(INCLUDE_ATTR))
+                .map(f -> f.getValue());
     }
 
 }

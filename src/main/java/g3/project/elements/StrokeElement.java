@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -28,6 +28,9 @@
  */
 package g3.project.elements;
 
+import g3.project.graphics.StrokeProps;
+import java.util.Optional;
+import javafx.scene.paint.Color;
 import nu.xom.*;
 
 /**
@@ -35,28 +38,152 @@ import nu.xom.*;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public class StrokeElement extends Element {
+
+    /**
+     * Creates builder thread for the element
+     */
     private static ThreadLocal builders = new ThreadLocal() {
-        
-         protected synchronized Object initialValue() {
-             return new Builder(new ElementFactory());
-         }
-         
-     };
-    
-    
-    public StrokeElement(String name) {
+
+        protected synchronized Object initialValue() {
+            return new Builder(new ElementFactory());
+        }
+
+    };
+
+    /**
+     * Constructor
+     */
+    public StrokeElement(final String name) {
         super(name);
     }
 
-    
-    public StrokeElement(String name, String uri) {
+    /**
+     * Constructor
+     * @param name
+     * @param uri
+     */
+    public StrokeElement(final String name, final String uri) {
         super(name, uri);
     }
 
-    
-    public StrokeElement(Element element) {
+    /**
+     * Constructor
+     * @param element
+     */
+    public StrokeElement(final Element element) {
         super(element);
     }
 
-    
+    /**
+     * Get the stroke's colour.
+     *
+     * @return Optional colour.
+     */
+    public final Optional<Color> getColour() {
+        var col = Optional.ofNullable(this.getAttribute(StrokeProps.COLOUR));
+        // @todo: Find a nicer looking way of making this work Probably
+        // containing more streams.
+        if (col.isPresent()) {
+            //var colStr = col.get().getValue().replace("#", "");
+            var colStr = col.get().getValue();
+            return Optional.ofNullable(Color.web(colStr));
+        }
+
+        return Optional.empty();
+    }
+
+    /**
+     * Set colour of Stroke (RGBA).
+     *
+     * @param colourString RGBA colour string.
+     */
+    public final void setColour(final String colourString) {
+        var colAttr = new Attribute(StrokeProps.COLOUR, colourString);
+        this.addAttribute(colAttr);
+    }
+
+    /**
+     * Get the stroke's width.
+     *
+     * @return Optional width.
+     */
+    public final Optional<Double> getWidth() {
+        var width = Optional.ofNullable(this.getAttribute(StrokeProps.WIDTH));
+        if (width.isPresent()) {
+            return Optional.of(Double.valueOf(width.get().getValue()));
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Set the Stroke width.
+     *
+     * @param width Width.
+     */
+    public final void setWidth(final Double width) {
+        var widthAttr = new Attribute(StrokeProps.WIDTH, width.toString());
+        this.addAttribute(widthAttr);
+    }
+
+    /**
+     * Get the dash style.
+     *
+     * @return Optional dash style.
+     */
+    public final Optional<String> getStyle() {
+        var style = Optional.ofNullable(this.getAttribute(StrokeProps.DASH_STYLE));
+        if (style.isPresent()) {
+            return Optional.of(style.get().getValue());
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Set the Stroke dash style.
+     *
+     * @param style Style.
+     */
+    public final void setStyle(final String style) {
+        var styleAttr = new Attribute(StrokeProps.DASH_STYLE, style);
+        this.addAttribute(styleAttr);
+    }
+
+    /**
+     * Get stroke properties.
+     *
+     * @return StrokeProps.
+     */
+    public final StrokeProps getProps() {
+        StrokeProps props = new StrokeProps();
+        for (String prop : props.getPropsTypes().keySet()) {
+            var attr = this.getAttribute(prop);
+            if (attr != null) {
+                var attrVal = attr.getValue();
+                Class attrType = props.getPropsTypes().get(prop);
+                Object propVal;
+                if (attrType == Double.class) {
+                    propVal = Double.valueOf(attrVal);
+                } else if (attrType == Boolean.class) {
+                    propVal = Boolean.valueOf(attrVal);
+                } else if (attrType == Color.class) {
+                    propVal = Color.web(attrVal);
+                } else {
+                    propVal = attrVal; //Probably a string.
+                }
+                props.put(prop, propVal);
+            }
+        }
+        return props;
+    }
+
+    /**
+     * Set stroke props/attributes.
+     *
+     * @param props Stroke Properties.
+     */
+    public final void setProps(final StrokeProps props) {
+        for (String prop : props.keySet()) {
+            Attribute newAttr = new Attribute(prop, props.get(prop).toString());
+        }
+    }
 }

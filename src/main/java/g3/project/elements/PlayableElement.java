@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software 
+ *   be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -28,35 +28,190 @@
  */
 package g3.project.elements;
 
+import g3.project.xmlIO.DocIO;
+import java.util.Optional;
 import nu.xom.*;
 
 /**
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class PlayableElement extends VisualElement {
+public final class PlayableElement extends VisualElement implements Includable {
+//CHECKSTYLE:OFF
+
+    /*
+     Attributes
+     */
+    private static final String AUTOPLAY = "autoplay";
+    private static final String LOOP = "loop";
+    private static final String OFFSET = "seek_offset";
+    private static final String DISP_PLAYER = "display_player";
+//CHECKSTYLE:ON
+    /**
+     * Creates builder thread for the element
+     */
     private static ThreadLocal builders = new ThreadLocal() {
-        
-         protected synchronized Object initialValue() {
-             return new Builder(new ElementFactory());
-         }
-         
-     };
-    
-    
-    public PlayableElement(String name) {
+
+        protected synchronized Object initialValue() {
+            return new Builder(new ElementFactory());
+        }
+
+    };
+
+    /**
+     * Constructor
+     *
+     * @param name
+     */
+    public PlayableElement(final String name) {
         super(name);
     }
 
-    
-    public PlayableElement(String name, String uri) {
+    /**
+     * Constructor
+     *
+     * @param name
+     * @param uri
+     */
+    public PlayableElement(final String name, final String uri) {
         super(name, uri);
     }
 
-    
-    public PlayableElement(Element element) {
+    /**
+     * Constructor
+     *
+     * @param element
+     */
+    public PlayableElement(final Element element) {
         super(element);
     }
 
-    
+    @Override
+    public void delete(final DocIO resIO) {
+        this.getSourceLoc().ifPresent(s -> resIO.removeResource(s));
+        this.detach();
+    }
+
+    /**
+     * Should the player start automatically?
+     *
+     * @return Auto-play.
+     */
+    public Boolean getAutoplay() {
+        var autoAttr = this.getAttribute(AUTOPLAY);
+        if (autoAttr != null) {
+            var autoStr = autoAttr.getValue();
+            try {
+                return Boolean.valueOf(autoStr);
+            } catch (Exception ex) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Set auto-play.
+     *
+     * @param auto Auto-play.
+     */
+    public void setAutoplay(final Boolean auto) {
+        var autoAttr = new Attribute(AUTOPLAY, auto.toString());
+        this.addAttribute(autoAttr);
+    }
+
+    /**
+     * Should a player be displayed?
+     *
+     * @return display player.
+     */
+    public Boolean getDisplayPlayer() {
+        var dispAttr = this.getAttribute(DISP_PLAYER);
+        if (dispAttr != null) {
+            var dispStr = dispAttr.getValue();
+            try {
+                return Boolean.valueOf(dispStr);
+            } catch (Exception ex) {
+                return true;
+            }
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * Set display of player.
+     *
+     * @param disp player display.
+     */
+    public void setDisplayPlayer(final Boolean disp) {
+        var dispAttr = new Attribute(DISP_PLAYER, disp.toString());
+        this.addAttribute(dispAttr);
+    }
+
+    /**
+     * Get the seek offset for the player (in seconds).
+     *
+     * @return Seek offset.
+     */
+    public Double getSeekOffset() {
+        var seekAttr = this.getAttribute(OFFSET);
+        if (seekAttr != null) {
+            var osStr = seekAttr.getValue();
+            try {
+                return Double.valueOf(osStr);
+            } catch (Exception ex) {
+                return 0d;
+            }
+        } else {
+            return 0d;
+        }
+    }
+
+    /**
+     * Set the Seek offset (in seconds).
+     *
+     * @param offset seek offset.
+     */
+    public void setSeekOffset(final Double offset) {
+        var seekAttr = new Attribute(OFFSET, offset.toString());
+        this.addAttribute(seekAttr);
+    }
+
+    /**
+     * Should play looped?
+     *
+     * @return loop.
+     */
+    public Boolean getLoop() {
+        var loopAttr = this.getAttribute(LOOP);
+        if (loopAttr != null) {
+            var loopStr = loopAttr.getValue();
+            try {
+                return Boolean.valueOf(loopStr);
+            } catch (Exception ex) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Set if play should loop.
+     *
+     * @param loop loop play.
+     */
+    public void setLoop(final Boolean loop) {
+        var loopAttr = new Attribute(LOOP, loop.toString());
+        this.addAttribute(loopAttr);
+    }
+
+    @Override
+    public Optional<String> getSourceLoc() {
+        return Optional.ofNullable(this.getAttribute(INCLUDE_ATTR))
+                .map(f -> f.getValue());
+    }
+
 }

@@ -28,6 +28,7 @@
  */
 package g3.project.elements;
 
+import g3.project.xmlIO.DocIO;
 import java.util.Optional;
 import nu.xom.*;
 
@@ -91,6 +92,14 @@ public class ImageElement extends VisualElement implements Includable {
         this.addAttribute(sourceAttr);
     }
 
+    @Override
+    public void delete(final DocIO resIO) {
+        this.getSourceLoc().ifPresent(s -> { //Try deleting the resource.
+            resIO.removeResource(s);
+        });
+        this.detach();
+    }
+
     /**
      * Get the image's source path or URL.
      *
@@ -98,9 +107,6 @@ public class ImageElement extends VisualElement implements Includable {
      */
     @Override
     public final Optional<String> getSourceLoc() {
-        /**
-         * @todo check this is correct for a variety of inputs.
-         */
         //Get include_source attribute
         return Optional.ofNullable(this.getAttribute(INCLUDE_ATTR))
                 .map(f -> f.getValue());

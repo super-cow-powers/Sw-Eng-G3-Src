@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1" fx:controller="g3.project.ui.MainController">
+    <children>
+        <MenuBar>
+            <menus>
+                <Menu mnemonicParsing="false" text="File">
+                    <items>
+                        <MenuItem fx:id="openMenuItem" mnemonicParsing="false" onAction="#handleOpenNewDoc" text="Open" />
+                        <MenuItem fx:id="closeMenuItem" mnemonicParsing="false" onAction="#handleCloseAction" text="Close" />
+                        <MenuItem fx:id="saveMenuItem" mnemonicParsing="false" onAction="#handleSaveAction" text="Save" />
+                        <MenuItem fx:id="saveAsMenuItem" mnemonicParsing="false" onAction="#handleSaveAsAction" text="Save As" />
+                    </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="Edit">
+                    <items>
+                        <MenuItem onAction="#handleTogEdit" mnemonicParsing="false" text="Toggle Edit" />
+                        <MenuItem mnemonicParsing="false" text="Delete" />
+                    </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="View">
+                    <MenuItem mnemonicParsing="false" text="Show Console" onAction="#showConsole"/>
+                </Menu>
+                <Menu mnemonicParsing="false" text="Help">
+                    <items>
+                        <MenuItem mnemonicParsing="false" onAction="#handleAboutAction" text="About" />
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+        <SplitPane fx:id="splitPane" dividerPositions="0.09131403118040089" VBox.vgrow="ALWAYS">
+            <items>
+                <VBox prefHeight="200.0" prefWidth="100.0">
+                    <children>
+                        <SplitPane dividerPositions="0.5013550135501355" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" VBox.vgrow="ALWAYS">
+                            <items>
+                                <AnchorPane minHeight="0.0" minWidth="75" prefHeight="100.0" prefWidth="160.0">
+                                    <children>
+                                        <FlowPane fx:id="toolPane" layoutX="-66.0" layoutY="-53.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                    </children>
+                                </AnchorPane>
+                                <ScrollPane fx:id="propScroll" minHeight="0.0" minWidth="75" prefHeight="100.0" prefWidth="160.0">
+                                    <content>
+                                        <HBox HBox.hgrow="ALWAYS">
+                                        <VBox fx:id="propPane" prefHeight="200.0" minWidth="100.0"/>
+                                        </HBox>
+                                    </content>
+                                </ScrollPane>
+                            </items>
+                        </SplitPane>
+                    </children>
+                </VBox>
+                <VBox VBox.vgrow="ALWAYS">
+                    <children>
+                        <!--<Pane fx:id="pageContainer" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefHeight="373.0" prefWidth="505.0" vbarPolicy="NEVER" VBox.vgrow="ALWAYS">
+                        <content>-->
+                        <VBox fx:id="pageVBox" alignment="CENTER" prefHeight="200.0" prefWidth="100.0" VBox.vgrow="ALWAYS">
+                            <children>
+                                <Pane fx:id="pagePane" prefHeight="300" prefWidth="300.0" style="-fx-background-color: white;" VBox.vgrow="NEVER" />
+                            </children>
+                        </VBox>
+                        <!--</content>
+                        </Pane>-->
+                        <ScrollPane fx:id="cardSelPane" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" maxHeight="50.0" minHeight="50.0" pannable="true" prefHeight="50.0" prefWidth="200.0" vbarPolicy="NEVER" VBox.vgrow="NEVER">
+                            <content>
+                                <HBox>
+                                    <children>
+                                        <HBox fx:id="cardSelBox" maxHeight="50.0" minHeight="50.0" prefHeight="50.0" prefWidth="200.0" HBox.hgrow="ALWAYS"/>
+                                        <Button fx:id="newCardButton"/>
+                                    </children>
+                                </HBox>
+                            </content>
+                        </ScrollPane>
+                    </children>
+                </VBox>
+            </items>
+        </SplitPane>
+        <Label fx:id="messageLabel" contentDisplay="CENTER" prefHeight="20.0" text="Loading ..." />
+    </children>
+</VBox>

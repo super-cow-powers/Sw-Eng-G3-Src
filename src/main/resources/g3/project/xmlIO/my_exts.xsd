@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- These are our PWS Extensions -->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" xml:lang="EN" xmlns:target="http://PWS_Exts" targetNamespace="http://PWS_Exts">
+
+	<xsd:element name="script">
+		<xsd:complexType mixed="true">
+			<xsd:attribute name="language" type="xsd:string" use="optional" />
+			<xsd:attribute name="include_source" type="xsd:string" use="required" />
+		</xsd:complexType>
+	</xsd:element>
+
+        <xsd:element name="polyseg">
+            <xsd:annotation>
+			<xsd:documentation>
+	Segment for polygon or line.
+      </xsd:documentation>
+		</xsd:annotation>
+            <xsd:complexType>
+                <xsd:attribute name="x" type="xsd:double" use="required" />
+                <xsd:attribute name="y" type="xsd:double" use="required" />
+            </xsd:complexType>
+        </xsd:element>
+
+        <xsd:attribute name="alignment" type="xsd:string" />
+        <xsd:attribute name="vertalignment" type="xsd:string" />
+        <xsd:attribute name="highlight" type="xsd:string" />
+        
+	<xsd:attribute name="shade-px" type="xsd:double" />
+</xsd:schema>

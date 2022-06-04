@@ -28,13 +28,20 @@
  */
 package g3.project.elements;
 
-import g3.project.core.Engine;
 import g3.project.core.RecursiveBindings;
-import g3.project.ui.LocObj;
-import g3.project.ui.SizeObj;
+import g3.project.graphics.LocObj;
+import g3.project.graphics.Props;
+import g3.project.graphics.SizeObj;
+import g3.project.graphics.StrokeProps;
+import g3.project.graphics.VisualProps;
+import g3.project.xmlIO.DocIO;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Optional;
 import javafx.geometry.Point2D;
 import javafx.scene.paint.Color;
+import javax.script.Bindings;
 import nu.xom.Attribute;
 import nu.xom.Element;
 
@@ -42,24 +49,26 @@ import nu.xom.Element;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class VisualElement extends Element implements Scriptable {
-    static public final String BASE_URI = "http://PWS_Base";
-    static public final String EXT_URI = "http://PWS_Exts"; 
-    
+public abstract class VisualElement extends Element implements Scriptable {
+
+    /**
+     * Base URI.
+     */
+    static final String BASE_URI = "http://PWS_Base";
+    /**
+     * Extensions URI.
+     */
+    static final String EXT_URI = "http://PWS_Exts";
+
     /**
      * Script bindings for the element.
      */
     private RecursiveBindings elementScriptBindings = new RecursiveBindings();
 
     /**
-     * Ref to the engine.
+     * Does the script need evaluating again?
      */
-    private Optional<Engine> engine = Optional.empty();
-
-    /**
-     * Clone of this object. Might not use it.
-     */
-    private VisualElement scriptedClone;
+    private Boolean evalRequired = true;
 
     /**
      * Constructor.
@@ -90,13 +99,70 @@ public class VisualElement extends Element implements Scriptable {
     }
 
     /**
+     * Put something into this element's state/scope.
+     *
+     * @param name Name of thing.
+     * @param state Thing.
+     */
+    public void putStateVariable(final String name, final Object state) {
+        elementScriptBindings.put(name, state);
+    }
+
+    /**
+     * Get something from this element's state/scope.
+     *
+     * @param name Name of thing.
+     * @return Thing or Null.
+     */
+    public Object getStateVariable(final String name) {
+        var obj = ((Bindings) elementScriptBindings).get(name);
+        return obj;
+    }
+
+    /**
+     * Delete the element and sub-elements.
+     *
+     * @param resIO Resource handler to remove resources on delete.
+     */
+    public abstract void delete(DocIO resIO);
+
+    /**
+     * Find qualified attribute from element.
+     *
+     * @param el Element to use.
+     * @param qualifiedName Full attribute name.
+     * @return Maybe attribute.
+     */
+    public static Optional<Attribute> derefAttribute(final Element el, final String qualifiedName) {
+        var nameSplit = qualifiedName.split(":");
+        var attrNS = (nameSplit.length > 1) ? EXT_URI : "";
+        var attrName = (nameSplit.length > 1) ? nameSplit[1] : nameSplit[0];
+        var attr = el.getAttribute(attrName, attrNS);
+        return Optional.ofNullable(attr);
+    }
+
+    /**
+     * Make an attribute with a name-space.
+     *
+     * @param qualifiedName Full name.
+     * @param attrVal Value.
+     * @return Attribute.
+     */
+    public static Attribute makeAttrWithNS(final String qualifiedName, final String attrVal) {
+        var nameSplit = qualifiedName.split(":");
+        var attrNS = (nameSplit.length > 1) ? EXT_URI : "";
+        var attr = new Attribute(qualifiedName, attrNS, attrVal);
+        return attr;
+    }
+
+    /**
      * Get the object's X/Y location. Returns an Optional, which may contain
      * either the location or nothing. The caller can then determine the action
      * to take.
      *
      * @return Optional Location
      */
-    public final Optional<LocObj> getLoc() {
+    public final Optional<LocObj> getOrigin() {
         var x = Optional.ofNullable(this.getAttribute("x_orig"))
                 .map(f -> f.getValue())
                 .map(f -> Double.valueOf(f));
@@ -105,29 +171,29 @@ public class VisualElement extends Element implements Scriptable {
                 .map(f -> Double.valueOf(f));
 
         return (x.isPresent() && y.isPresent())
-                ? Optional.of(new LocObj(new Point2D(x.get(), y.get()), null, null, getZInd())) : Optional.empty();
+                ? Optional.of(new LocObj(new Point2D(x.get(), y.get()), getZInd())) : Optional.empty();
     }
 
     /**
-     * Set the object's X/Y location. Returns the new location.
+     * Set the object's X/Y location.
      *
      * @param loc Location to set
-     * @return Optional Set Location
      */
-    public final Optional<LocObj> setLoc(final LocObj loc) {
-        var start = loc.getStart();
-        var centre = loc.getCentre();
-        var end = loc.getEnd();
+    public final void setOriginXY(final LocObj loc) {
+        var point = loc.getLoc();
+        this.addAttribute(new Attribute("x_orig", Double.toString(point.getX())));
+        this.addAttribute(new Attribute("y_orig", Double.toString(point.getY())));
+    }
 
-        /**
-         * @todo Assign centre and end.
-         */
-        start.ifPresent(s -> {
-            this.addAttribute(new Attribute("x_orig", Double.toString(s.getX())));
-            this.addAttribute(new Attribute("y_orig", Double.toString(s.getY())));
-        });
-        hasUpdated();
-        return this.getLoc();
+    /**
+     * Set the object's X/Y location.
+     *
+     * @param x X location.
+     * @param y Y location.
+     */
+    public final void setOriginXY(final Double x, final Double y) {
+        this.addAttribute(new Attribute("x_orig", Double.toString(x)));
+        this.addAttribute(new Attribute("y_orig", Double.toString(y)));
     }
 
     /**
@@ -139,9 +205,17 @@ public class VisualElement extends Element implements Scriptable {
         var id = Optional.ofNullable(this.getAttribute("ID"))
                 .map(f -> f.getValue());
         var myDoc = this.getDocument();
-        var myDocEl = (DocElement) (myDoc.getRootElement());
-
-        return id.isPresent() ? id.get() : myDocEl.getNewUniqueID(this.getLocalName());
+        if ((myDoc != null) && (myDoc.getRootElement() instanceof DocElement)) { //When using an unattached element, root is NOT a document.
+            var myDocEl = (DocElement) myDoc.getRootElement();
+            if (!id.isPresent()) {
+                var nID = myDocEl.getNewUniqueID(this.getLocalName());
+                this.setID(nID);
+                return nID;
+            }
+            return id.get();
+        } else {
+            return id.isPresent() ? id.get() : "";
+        }
     }
 
     /**
@@ -152,8 +226,7 @@ public class VisualElement extends Element implements Scriptable {
      */
     public final String setID(final String id) {
         this.addAttribute(new Attribute("ID", id));
-        hasUpdated();
-        return this.getID();
+        return id;
     }
 
     /**
@@ -174,7 +247,6 @@ public class VisualElement extends Element implements Scriptable {
      */
     public final Double setZInd(final Double z) {
         this.addAttribute(new Attribute("z_ind", Double.toString(z)));
-        hasUpdated();
         return this.getZInd();
     }
 
@@ -185,21 +257,121 @@ public class VisualElement extends Element implements Scriptable {
      * @return Optional size
      */
     public final Optional<SizeObj> getSize() {
-        var x = Optional.ofNullable(this.getAttribute("x_size_px"))
+        var xOpt = Optional.ofNullable(this.getAttribute("x_size_px"))
                 .map(f -> f.getValue())
                 .map(f -> Double.valueOf(f));
-        var y = Optional.ofNullable(this.getAttribute("y_size_px"))
+        var yOpt = Optional.ofNullable(this.getAttribute("y_size_px"))
                 .map(f -> f.getValue())
                 .map(f -> Double.valueOf(f));
-        var rot = Optional.ofNullable(this.getAttribute("rot_angle"))
+        var rotOpt = Optional.ofNullable(this.getAttribute("rot_angle"))
                 .map(f -> f.getValue())
                 .map(f -> Double.valueOf(f));
 
-        return (x.isPresent() && y.isPresent())
-                ? Optional.of(new SizeObj(x.get(),
-                        y.get(),
-                        rot.isPresent() ? rot.get() : 0))
-                : Optional.empty();
+        if (xOpt.isEmpty() && yOpt.isEmpty() && rotOpt.isEmpty()) {
+            //Really is no size given.
+            return Optional.empty();
+        }
+        //Sometimes element may give only some params - set others to 0.
+        final Double x = (xOpt.isEmpty()) ? 0 : xOpt.get();
+        final Double y = (yOpt.isEmpty()) ? 0 : yOpt.get();
+        final Double rot = (rotOpt.isEmpty()) ? 0 : rotOpt.get();
+
+        return Optional.of(new SizeObj(x, y, rot));
+    }
+
+    /**
+     * Set the element size.
+     *
+     * @param size Size to set.
+     */
+    public final void setSize(final SizeObj size) {
+        Attribute xAttr = new Attribute("x_size_px", size.getX().toString());
+        Attribute yAttr = new Attribute("y_size_px", size.getY().toString());
+        Attribute rotAttr = new Attribute("rot_angle", size.getRot().toString());
+        this.addAttribute(xAttr);
+        this.addAttribute(yAttr);
+        this.addAttribute(rotAttr);
+    }
+
+    /**
+     * Set element size.
+     *
+     * @param x X size.
+     * @param y Y size.
+     * @param rot Rotation.
+     */
+    public final void setSize(final Double x, final Double y, final Double rot) {
+        Attribute xAttr = new Attribute("x_size_px", x.toString());
+        Attribute yAttr = new Attribute("y_size_px", y.toString());
+        Attribute rotAttr = new Attribute("rot_angle", rot.toString());
+        this.addAttribute(xAttr);
+        this.addAttribute(yAttr);
+        this.addAttribute(rotAttr);
+    }
+
+    /**
+     * Get the page this element is of.
+     *
+     * @return Maybe Page.
+     */
+    public final Optional<PageElement> getPage() {
+        if (this instanceof PageElement) {
+            return Optional.of((PageElement) this);
+        } else {
+            var par = this.getParent();
+            while (!(par instanceof PageElement) && (par.getParent() != null)) {
+                par = par.getParent();
+            }
+            return Optional.ofNullable((PageElement) par);
+        }
+    }
+
+    /**
+     * Set delay in seconds.
+     *
+     * @param del Delay in seconds.
+     */
+    public final void setDelaySecs(final Double del) {
+        Attribute delAttr = new Attribute("show_after_s", del.toString());
+        this.addAttribute(delAttr);
+    }
+
+    /**
+     * Get delay in seconds.
+     *
+     * @return Delay in seconds.
+     */
+    public final Optional<Double> getDelaySecs() {
+        Attribute delAttr = this.getAttribute("show_after_s");
+        if (delAttr != null) {
+            var delStr = delAttr.getValue();
+            return Optional.ofNullable(Double.valueOf(delStr));
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Get display duration in seconds.
+     *
+     * @return Duration in seconds.
+     */
+    public final Optional<Double> getDurationSecs() {
+        Attribute durAttr = this.getAttribute("disp_duration_s");
+        if (durAttr != null) {
+            var durStr = durAttr.getValue();
+            return Optional.ofNullable(Double.valueOf(durStr));
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Set delay in seconds.
+     *
+     * @param dur Delay in seconds.
+     */
+    public final void setDurationSecs(final Double dur) {
+        Attribute durAttr = new Attribute("disp_duration_s", dur.toString());
+        this.addAttribute(durAttr);
     }
 
     /**
@@ -208,37 +380,21 @@ public class VisualElement extends Element implements Scriptable {
      * @return Optional colour.
      */
     public final Optional<Color> getFillColour() {
-        final int lenRGB = 6;
-        final int lenRGBA = 8;
-        var col = Optional.ofNullable(this.getAttribute("fill"));
-        /**
-         * @todo: Find a nicer looking way of making this work Probably
-         * containing more streams.
-         */
-        if (col.isPresent()) {
-            var colStr = col.get().getValue().replace("#", "");
+        var colAttr = this.getAttribute("fill");
+        // @todo: Find a nicer looking way of making this work Probably
+        // containing more streams.
+        if (colAttr != null) {
 
-            switch (colStr.length()) {
-                case lenRGB:
-                    //CHECKSTYLE:OFF
-                    return Optional.of(new Color(
-                            (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
-                            1.0d));
-                //CHECKSTYLE:ON
-                case lenRGBA:
-                    //CHECKSTYLE:OFF
-                    return Optional.of(new Color(
-                            (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
-                            (double) Integer.valueOf(colStr.substring(6, 8), 16) / 255));
-                //CHECKSTYLE:ON
-                default:
+            //var colStr = colAttr.get().getValue().replace("#", "");
+            var colStr = colAttr.getValue();
+            Color col = null;
+            try {
+                col = Color.web(colStr);
+            } catch (IllegalArgumentException ex) {
+                System.err.println("Bad Colour: " + ex);
             }
+            return Optional.ofNullable(col);
         }
-
         return Optional.empty();
     }
 
@@ -249,12 +405,37 @@ public class VisualElement extends Element implements Scriptable {
      * @throws Exception Bad colour string.
      */
     public final void setFillColour(final String colourString) throws Exception {
-        if (!colourString.startsWith("#")) {
+        var col = Color.valueOf(colourString);
+        if (col == null) {
             throw new Exception("Bad Colour String");
         }
         var colAttr = new Attribute("fill", colourString);
         this.addAttribute(colAttr);
-        hasUpdated();
+    }
+
+    /**
+     * Set my visibility.
+     *
+     * @param vis Visible or not.
+     */
+    public void setVisibility(final Boolean vis) {
+        var visAttr = new Attribute(VisualProps.VISIBLE, vis.toString());
+        this.addAttribute(visAttr);
+    }
+
+    /**
+     * Get if the node is supposed to be visible.
+     *
+     * @return Is Visible?
+     */
+    public Boolean getVisibility() {
+        var visAttr = this.getAttribute(VisualProps.VISIBLE);
+        Boolean vis = true;
+        if (visAttr != null) {
+            //var colStr = colAttr.get().getValue().replace("#", "");
+            vis = Boolean.valueOf(visAttr.getValue());
+        }
+        return vis;
     }
 
     /**
@@ -264,7 +445,7 @@ public class VisualElement extends Element implements Scriptable {
      * @return Optional referred element.
      */
     public final Optional<VisualElement> getByID(final String id) {
-        if (this.getID() == id) {
+        if (this.getID().equals(id)) {
             return Optional.of(this);
         } else {
             for (Element el : this.getChildElements()) {
@@ -280,12 +461,105 @@ public class VisualElement extends Element implements Scriptable {
     }
 
     /**
+     * Get the stroke element for this element.
+     *
+     * @return Optional Stroke Element.
+     */
+    public final Optional<StrokeProps> getStroke() {
+        for (Element el : this.getChildElements()) {
+            if (el instanceof StrokeElement) {
+                return Optional.of(((StrokeElement) el).getProps());
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Get this element's visual properties map.
+     *
+     * @return visual props. map.
+     */
+    public final VisualProps getVisualProps() {
+        var propsMap = new VisualProps();
+        for (String prop : propsMap.getPropsTypes().keySet()) {
+            switch (prop) {
+                //Special cases
+                default: //Not a special case
+                    var attrMaybe = derefAttribute(this, prop);
+                    //this.getAttribute(prop, prop)
+                    if (attrMaybe.isPresent()) {
+                        var attr = attrMaybe.get();
+                        var attrVal = attr.getValue();
+                        Class attrType = propsMap.getPropsTypes().get(prop);
+                        Object propVal;
+                        //Cast to correct type
+                        if (attrType == Double.class) {
+                            propVal = Double.valueOf(attrVal);
+                        } else if (attrType == Boolean.class) {
+                            propVal = Boolean.valueOf(attrVal);
+                        } else if (attrType == Color.class) {
+                            propVal = Color.web(attrVal);
+                        } else {
+                            propVal = attrVal; //Probably a string.
+                        }
+                        propsMap.put(prop, propVal);
+                    }
+                    break;
+            }
+        }
+        return propsMap;
+    }
+
+    /**
+     * Get all properties of an Element.
+     *
+     * @return Element's properties.
+     */
+    public HashMap<String, HashMap<String, Object>> getAllProps() {
+        HashMap<String, HashMap<String, Object>> propsMap = new HashMap<>();
+        propsMap.put("visual", getVisualProps());
+        return propsMap;
+    }
+
+    /**
+     * Set this object's properties.
+     *
+     * @param props Properties.
+     */
+    public void setProps(final HashMap<String, Object> props) {
+        for (String prop : props.keySet()) {
+            var propVal = props.get(prop);
+            if (propVal != null) {
+                switch (prop) {
+                    //Special cases
+                    default: //Not a special case
+                        var attr = makeAttrWithNS(prop, propVal.toString());
+                        this.addAttribute(attr);
+                        break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Element has changed/updated. Notify the engine.
+     */
+    public final void hasUpdated() {
+        var root = this.getDocument().getRootElement();
+        if (root instanceof DocElement) {
+            ((DocElement) root).getChangeCallback().accept(this);
+        }
+    }
+
+    /**
      * Get the local scope for this object.
      *
      * @return my Bindings.
      */
     @Override
     public final RecursiveBindings getScriptingBindings() {
+        var parBinOpt = this.getParentElementScriptingBindings();
+        parBinOpt.ifPresent(b -> elementScriptBindings.setParent(b)); //Always set parent bindings
         return elementScriptBindings;
     }
 
@@ -328,12 +602,57 @@ public class VisualElement extends Element implements Scriptable {
     }
 
     /**
-     * Element has changed/updated. Notify the engine.
+     * Add a new script to the element. Any old file MUST have been deleted
+     * before use!
+     *
+     * @param path Path to new file.
+     * @param language Script language.
+     * @throws IOException
      */
-    protected final void hasUpdated() {
-        var root = this.getDocument().getRootElement();
-        if (root instanceof DocElement) {
-            ((DocElement) root).getChangeCallback().accept(this);
+    @Override
+    public void addScriptFile(Path path, String language) throws IOException {
+        if (!path.getFileSystem().provider().getScheme().contains("jar") && !path.getFileSystem().provider().getScheme().contains("zip")) {
+            throw new IOException("External files not supported. Add the file to the project.");
+        }
+        ScriptElement scEl = new ScriptElement("ext:script", VisualElement.EXT_URI, path.toString(), language);
+        var chEls = this.getChildElements();
+        //Remove other scripts.
+        for (var ch : chEls) {
+            if (ch instanceof ScriptElement) {
+                this.removeChild(ch);
+            }
+        }
+        this.evalRequired = true;
+        this.appendChild(scEl);
+    }
+
+    /**
+     * Should I be re-evaluated?
+     *
+     * @return To eval.
+     */
+    @Override
+    public Boolean getEvalRequired() {
+        return evalRequired;
+    }
+
+    /**
+     * Set if I should be re-evaluated.
+     *
+     * @param req Re-eval?
+     */
+    @Override
+    public void setEvalRequired(final Boolean req) {
+        evalRequired = req;
+    }
+
+    @Override
+    public Optional<Scriptable> getParentScriptable() {
+        var parent = this.getParent();
+        if (parent instanceof Scriptable) {
+            return Optional.of((Scriptable) parent);
+        } else {
+            return Optional.empty();
         }
     }
 

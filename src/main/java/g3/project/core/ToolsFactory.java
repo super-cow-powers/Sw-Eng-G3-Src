@@ -28,6 +28,7 @@
  */
 package g3.project.core;
 
+import g3.project.elements.ImageElement;
 import g3.project.elements.ScriptElement;
 import nu.xom.Element;
 import nu.xom.NodeFactory;
@@ -48,6 +49,8 @@ public class ToolsFactory extends NodeFactory {
                 return new Tool(name, namespaceURI);
             case "script":
                 return new ScriptElement(name, namespaceURI);
+            case "image":
+                return new ImageElement(name, namespaceURI);
             default:
                 return new Element(name, namespaceURI);
         }

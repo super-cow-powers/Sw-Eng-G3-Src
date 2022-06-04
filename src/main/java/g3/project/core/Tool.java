@@ -28,8 +28,11 @@
  */
 package g3.project.core;
 
+import g3.project.elements.ImageElement;
 import g3.project.elements.ScriptElement;
 import g3.project.elements.Scriptable;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 import nu.xom.Builder;
 import nu.xom.Element;
@@ -39,6 +42,16 @@ import nu.xom.Element;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public class Tool extends Element implements Scriptable {
+
+    /**
+     * Is Eval Required.
+     */
+    Boolean evalRequired = true;
+
+    /**
+     * My script bindings.
+     */
+    RecursiveBindings elementScriptBindings = new RecursiveBindings();
 
     /**
      * Create a builder.
@@ -99,23 +112,121 @@ public class Tool extends Element implements Scriptable {
         return id != null ? id.getValue() : "tool-null-id";
     }
 
+    /**
+     * Get the path to the associated image.
+     *
+     * @return Maybe path.
+     */
+    public final Optional<String> getImagePath() {
+        var chEls = this.getChildElements();
+        for (var ch : chEls) {
+            if (ch instanceof ImageElement) {
+                return ((ImageElement) ch).getSourceLoc();
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Get whether this tool sinks all events, or is pass-through.
+     *
+     * @return Is sink?
+     */
+    public final Boolean sinkEvents() {
+        var sinkAttr = this.getAttribute("is_sink");
+        if (sinkAttr == null) {
+            return false;
+        } else {
+            return Boolean.valueOf(sinkAttr.getValue());
+        }
+    }
+    
+    public final Boolean bubbleEvents() {
+        var sinkAttr = this.getAttribute("do_bubble");
+        if (sinkAttr == null) {
+            return false;
+        } else {
+            return Boolean.valueOf(sinkAttr.getValue());
+        }
+    }
+
+    /**
+     * Get the local scope for this object.
+     *
+     * @return my Bindings.
+     */
     @Override
-    public RecursiveBindings getScriptingBindings() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public final RecursiveBindings getScriptingBindings() {
+        return elementScriptBindings;
+    }
+
+    /**
+     * Return the Global bindings.
+     *
+     * @return Optional Bindings
+     */
+    @Override
+    public final Optional<RecursiveBindings> getParentElementScriptingBindings() {
+        return Optional.of(Scripting.getTopLevelBindings());
+    }
+
+    /**
+     * Get the ScriptElement attached to this object. There should only be one
+     * element.
+     *
+     * @return my (first) script element.
+     */
+    @Override
+    public final Optional<ScriptElement> getScriptEl() {
+        var chEls = this.getChildElements();
+        for (var ch : chEls) {
+            if (ch instanceof ScriptElement) {
+                return Optional.of((ScriptElement) ch);
+            }
+        }
+        return Optional.empty();
     }
 
     @Override
-    public Optional<RecursiveBindings> getParentElementScriptingBindings() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public final String getRealType() {
+        return this.getClass().getName();
+    }
+
+    /**
+     * Do not support modifying tools file on the fly. Will always throw
+     * IOException.
+     *
+     * @param path path to file.
+     * @param language Script language.
+     * @throws IOException If called.
+     */
+    @Override
+    public void addScriptFile(final Path path, final String language) throws IOException {
+        throw new IOException("Editing tools not supported.");
+    }
+
+    /**
+     * Evaluate only at load.
+     *
+     * @return False.
+     */
+    @Override
+    public Boolean getEvalRequired() {
+        return evalRequired;
+    }
+
+    /**
+     * Set if I should be re-evaluated.
+     *
+     * @param req Re-eval?
+     */
+    @Override
+    public void setEvalRequired(final Boolean req) {
+        evalRequired = req;
     }
 
     @Override
-    public Optional<ScriptElement> getScriptEl() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public String getRealType() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public Optional<Scriptable> getParentScriptable() {
+        return Optional.empty();
     }
 }
