@@ -45,12 +45,12 @@ import static org.junit.jupiter.api.Assertions.*;
 public final class RecursiveBindingsTest {
 
     /**
-     * Number of iterations to do
+     * Number of iterations to do.
      */
     private static Integer TEST_ITERATIONS = 1000;
 
     /**
-     * Maximum length of array during testing
+     * Maximum length of array during testing.
      */
     private static Integer MAX_ARR_LEN = 10000;
 

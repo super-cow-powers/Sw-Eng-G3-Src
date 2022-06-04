@@ -26,8 +26,10 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package g3.project.xmlIO;
+package g3.project.graphics;
 
+import static g3.project.graphics.LocObjTest.TEST_ITERATIONS;
+import java.util.Random;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,109 +41,76 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public class IoTest {
+public class SizeObjTest {
 
-    /**
-     * Constructor
-     */
-    public IoTest() {
+    //CHECKSTYLE:OFF
+    static final Integer TEST_ITERATIONS = 1000;
+
+    public SizeObjTest() {
     }
 
-    /**
-     * Sets up class
-     */
     @BeforeAll
     public static void setUpClass() {
     }
 
-    /**
-     * Gets rid of class
-     */
     @AfterAll
     public static void tearDownClass() {
     }
 
-    /**
-     * Setup to be run before each test
-     */
     @BeforeEach
     public void setUp() {
     }
 
-    /**
-     * Destroying setup done for each test
-     */
     @AfterEach
     public void tearDown() {
     }
+    //CHECKSTYLE:ON
 
     /**
-     * Test of getDoc method, of class Io.
+     * Test of getX method, of class SizeObj.
      */
     @Test
-    public void testGetDoc() {
+    public void testGetX() {
+        System.out.println("getX");
+        Random rand = new Random();
+        for (int i = 0; i < TEST_ITERATIONS; i++) {
+            var x = rand.nextDouble();
+            var y = rand.nextDouble();
+            var rot = rand.nextDouble();
+            var inst = new SizeObj(x, y, rot);
+            assertEquals(x, inst.getX());
+        }
     }
 
     /**
-     * Test of save method, of class Io.
+     * Test of getY method, of class SizeObj.
      */
     @Test
-    public void testSave() throws Exception {
+    public void testGetY() {
+        System.out.println("getY");
+        Random rand = new Random();
+        for (int i = 0; i < TEST_ITERATIONS; i++) {
+            var x = rand.nextDouble();
+            var y = rand.nextDouble();
+            var rot = rand.nextDouble();
+            var inst = new SizeObj(x, y, rot);
+            assertEquals(y, inst.getY());
+        }
     }
 
     /**
-     * Test of saveAs method, of class Io.
+     * Test of getRot method, of class SizeObj.
      */
     @Test
-    public void testSaveAs() throws Exception {
+    public void testGetRot() {
+        Random rand = new Random();
+        for (int i = 0; i < TEST_ITERATIONS; i++) {
+            var x = rand.nextDouble();
+            var y = rand.nextDouble();
+            var rot = rand.nextDouble();
+            var inst = new SizeObj(x, y, rot);
+            assertEquals(rot % 360, inst.getRot());
+        }
     }
 
-    /**
-     * Test of getResource method, of class Io.
-     */
-    @Test
-    public void testGetResource() {
-    }
-
-    /**
-     * Test of addResource method, of class Io.
-     */
-    @Test
-    public void testAddResource() {
-    }
-
-    /**
-     * Test of getInternalResource method, of class Io.
-     */
-    @Test
-    public void testGetInternalResource() {
-    }
-
-    /**
-     * Test of canSave method, of class Io.
-     */
-    @Test
-    public void testCanSave() {
-    }
-
-    /**
-     * Test of pathToUriString method, of class Io.
-     */
-    @Test
-    public void testPathToUriString() {
-    }
-
-    /**
-     * Test of maybeURI method, of class Io.
-     */
-    @Test
-    public void testMaybeURI() {
-    }
-
-    /**
-     * Test of close method, of class Io.
-     */
-    @Test
-    public void testClose() {
-    }
 }

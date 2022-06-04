@@ -28,32 +28,15 @@
  */
 package g3.project.xmlIO;
 
-import g3.project.elements.DocElement;
-import g3.project.elements.ElementFactory;
-import g3.project.ui.MainController;
-import java.io.BufferedWriter;
 import java.util.Optional;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.function.Function;
-import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nu.xom.*;
@@ -63,8 +46,10 @@ import nu.xom.*;
  * @author david
  */
 public final class ToolIO extends IO {
-
-    protected final static String xmlFileName = "tools.xml";
+/**
+ * Name of XML doc.
+ */
+    protected final static String XML_FILE_NAME = "tools.xml";
 
     /**
      * Load tools from path string.
@@ -92,7 +77,7 @@ public final class ToolIO extends IO {
      */
     @Override
     protected Optional<Document> retrieveDoc(final FileSystem fs) {
-        var docPath = fs.getPath(xmlFileName);
+        var docPath = fs.getPath(XML_FILE_NAME);
         try {
             var docIs = Files.newInputStream(docPath);
             return Parse.parseToolXML(docIs);
@@ -100,125 +85,6 @@ public final class ToolIO extends IO {
             Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
         }
         return Optional.empty();
-    }
-
-    /**
-     * Get parsed document.
-     *
-     * @return Optional document.
-     */
-    public Optional<Document> getDoc() {
-        return myDoc;
-    }
-
-    /**
-     * Get a resource from the zip.
-     *
-     * @param path Resource path.
-     * @return Optional resource bytes.
-     */
-    public synchronized Optional<byte[]> getResource(final String path) {
-        if (path.isEmpty()) {
-            return Optional.empty();
-        }
-        byte[] arr = null;
-        if (isUriInternal(path)) { //Get an internal resource
-            var fPath = zipFs.getPath(path);
-            try {
-                arr = Files.readAllBytes(fPath);
-            } catch (IOException ex) {
-                Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        } else { //Get an external resource
-            try {
-                var uri = new URI(path);
-                var is = uri.toURL().openStream();
-                arr = is.readAllBytes();
-            } catch (URISyntaxException | MalformedURIException | IOException ex) {
-                Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-        return Optional.ofNullable(arr);
-    }
-
-    /**
-     * Extract a resource from the zip and return its path.
-     *
-     * @param path Resource path.
-     * @return Optional resource bytes.
-     */
-    public synchronized Optional<String> getResourceTempPath(final String path) {
-        if (isUriInternal(path)) { //Get an internal resource
-            var cached = tempFiles.get(path); //Have we seen it before?
-            if (cached != null) {
-                return Optional.of(cached.toAbsolutePath().toString());
-            }
-            var fPath = zipFs.getPath(path);
-            try {
-                var tempfPath = Files.createTempFile(tempFilePrefix, "");
-                Files.copy(fPath, tempfPath, StandardCopyOption.REPLACE_EXISTING);
-                tempFiles.put(path, tempfPath);
-                return Optional.of(tempfPath.toAbsolutePath().toString());
-            } catch (IOException ex) {
-                Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
-                return Optional.empty();
-            }
-        } else { //External resource. Return input.
-            return Optional.of(path);
-        }
-    }
-
-    /**
-     * Check if given Path should be in the ZIP archive.
-     *
-     * @param path Path to check.
-     * @return True or False.
-     */
-    public static Boolean isUriInternal(final String path) {
-        if (path.startsWith("http")) {
-            return false;
-        } else if (path.startsWith("file:")) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    /**
-     * Add a resource to the zip.
-     *
-     * @param exrPath Existing Resource path.
-     * @param newPath Path within zip.
-     * @return Optional resource bytes.
-     */
-    public synchronized Optional<byte[]> addResource(final String exrPath, final String newPath) {
-        var internalPath = zipFs.getPath(newPath);
-        var resPath = Paths.get(exrPath);
-        try {
-            Files.copy(resPath, internalPath, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException ex) {
-            Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
-            return Optional.empty();
-        }
-        return getResource(newPath);
-    }
-
-    /**
-     * Get an internal class-path resource as bytes.
-     *
-     * @param file File to return.
-     * @param resClass Class to look in.
-     * @return Maybe file bytes.
-     */
-    public static Optional<byte[]> getInternalResource(final String file, final Class resClass) {
-        byte[] arr = null;
-        var is = resClass.getResourceAsStream(file);
-        try {
-            arr = is.readAllBytes();
-        } catch (IOException ex) {
-            Logger.getLogger(ToolIO.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return Optional.ofNullable(arr);
     }
 
     /**

@@ -51,7 +51,7 @@ public final class SizeObj {
     public SizeObj(final Double x, final Double y, final Double rot) {
         this.x_px = x;
         this.y_px = y;
-        this.rot_deg = rot;
+        this.rot_deg = rot % 360; //Mod 360 degrees.
     }
 
     /**

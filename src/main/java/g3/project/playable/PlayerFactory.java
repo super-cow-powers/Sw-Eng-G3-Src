@@ -36,6 +36,7 @@ import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public final class PlayerFactory {
+//CHECKSTYLE:OFF
 
     /**
      * Created Players.
@@ -45,6 +46,7 @@ public final class PlayerFactory {
      * Player Factory.
      */
     MediaPlayerFactory factory = new MediaPlayerFactory();
+//CHECKSTYLE:ON
 
     /**
      * Constructor.
@@ -55,10 +57,13 @@ public final class PlayerFactory {
 
     /**
      * Make a new player.
+     *
+     * @return Player.
      */
     public Player newPlayer() {
         return newPlayer(0d, 0d);
     }
+
     /**
      * Get a new player.
      *
@@ -76,7 +81,7 @@ public final class PlayerFactory {
      * Close all players and free resources.
      */
     public void freeAll() {
-        playerMap.forEach((hashCode, pl) -> pl.free());
+        playerMap.forEach((hashCode, pl) -> free(pl));
         factory.release();
     }
 

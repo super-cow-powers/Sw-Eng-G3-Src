@@ -42,7 +42,7 @@ public final class ExtShapeFactory {
      * text click handler.
      */
     @SuppressWarnings("empty-statement")
-    private Consumer<MouseEvent> textClickHandlerConsumer = (evt) -> {
+    protected Consumer<MouseEvent> textClickHandlerConsumer = (evt) -> {
         ;
     };
 
@@ -50,7 +50,7 @@ public final class ExtShapeFactory {
      * href click handler.
      */
     @SuppressWarnings("empty-statement")
-    private Consumer<MouseEvent> hrefClickHandlerConsumer = (evt) -> {
+    protected Consumer<MouseEvent> hrefClickHandlerConsumer = (evt) -> {
         ;
     };
 
@@ -58,7 +58,7 @@ public final class ExtShapeFactory {
      * href mouse roll-over (hover) enter handler.
      */
     @SuppressWarnings("empty-statement")
-    private Consumer<MouseEvent> hrefHovEntHandlerConsumer = (evt) -> {
+    protected Consumer<MouseEvent> hrefHovEntHandlerConsumer = (evt) -> {
         ;
     };
 
@@ -66,7 +66,7 @@ public final class ExtShapeFactory {
      * href mouse roll-over (hover) exit handler.
      */
     @SuppressWarnings("empty-statement")
-    private Consumer<MouseEvent> hrefHovExHandlerConsumer = (evt) -> {
+    protected Consumer<MouseEvent> hrefHovExHandlerConsumer = (evt) -> {
         ;
     };
 
@@ -102,19 +102,19 @@ public final class ExtShapeFactory {
         switch (shapeType) {
             case circle:
             case ellipse:
-                shape = new ExtEllip();
+                shape = new ExtEllip(shapeType);
                 break;
             case textbox:
-                shape = new ExtRect();
+                shape = new ExtRect(shapeType);
                 break;
             case rectangle:
-                shape = new ExtRect();
+                shape = new ExtRect(shapeType);
                 break;
             case polygon:
-                shape = new ExtPolygon();
+                shape = new ExtPolygon(shapeType);
                 break;
             case line:
-                shape = new ExtLine();
+                shape = new ExtLine(shapeType);
                 break;
             default:
                 break;

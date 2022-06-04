@@ -46,12 +46,25 @@ import nu.xom.*;
  */
 public class DocIO extends IO {
 
-    protected final static String xmlFileName = "doc.xml";
+    /**
+     * Name of XML doc.
+     */
+    protected final static String XML_FILE_NAME = "doc.xml";
 
+    /**
+     * Constructor.
+     *
+     * @param presFilePath Path to pres file.
+     */
     public DocIO(final String presFilePath) {
         super(presFilePath);
     }
 
+    /**
+     * Constructor.
+     *
+     * @param presStream Stream of pres zip.
+     */
     public DocIO(final InputStream presStream) {
         super(presStream);
     }
@@ -62,7 +75,9 @@ public class DocIO extends IO {
      * @throws IOException bad file.
      */
     public void save() throws IOException {
+        //CHECKSTYLE:OFF
         if (allowSave == true && origZip != null) {
+            //CHECKSTYLE:ON
             saveAs(origZip.getAbsolutePath());
         } else {
             throw new IOException("Can't save.");
@@ -81,7 +96,7 @@ public class DocIO extends IO {
         } else if (!newPath.matches("^.*\\.(zip|ZIP|spres|SPRES)$")) {
             throw new IOException("Bad File Name!");
         }
-        Path docPath = zipFs.getPath(xmlFileName);
+        Path docPath = zipFs.getPath(XML_FILE_NAME);
         Path tmpDocPath = Files.createTempFile("_tmpdoc", "");
         Files.deleteIfExists(docPath);
         var fileOutStream = Files.newOutputStream(tmpDocPath);
@@ -99,22 +114,6 @@ public class DocIO extends IO {
                 StandardCopyOption.REPLACE_EXISTING);
         origZip = newPathPath.toFile();
         allowSave = true;
-    }
-
-    /**
-     * Check if given Path should be in the ZIP archive.
-     *
-     * @param path Path to check.
-     * @return True or False.
-     */
-    public static Boolean isUriInternal(final String path) {
-        if (path.startsWith("http")) {
-            return false;
-        } else if (path.startsWith("file:")) {
-            return false;
-        } else {
-            return true;
-        }
     }
 
     /**
@@ -157,6 +156,7 @@ public class DocIO extends IO {
      * @param exrPath Existing Resource path.
      * @param newPath Path within zip.
      * @return Optional resource bytes.
+     * @throws java.io.IOException
      */
     public synchronized Optional<byte[]> addResource(final String exrPath, final String newPath) throws IOException {
         var internalPath = zipFs.getPath(newPath);
@@ -176,6 +176,7 @@ public class DocIO extends IO {
      *
      * @param path Path to file.
      * @param content File Content.
+     * @throws java.io.IOException
      */
     public void writeBytes(final String path, final byte[] content) throws IOException {
         var filePath = zipFs.getPath(path);
@@ -183,8 +184,8 @@ public class DocIO extends IO {
     }
 
     @Override
-    protected Optional<Document> retrieveDoc(FileSystem fs) {
-        var docPath = fs.getPath(xmlFileName);
+    protected Optional<Document> retrieveDoc(final FileSystem fs) {
+        var docPath = fs.getPath(XML_FILE_NAME);
         try {
             var docIs = Files.newInputStream(docPath);
             return Parse.parseDocXML(docIs);

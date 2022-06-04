@@ -38,13 +38,13 @@ import javafx.scene.shape.Shape;
  */
 public final class ExtLine extends ExtShape {
 
-    private Shape shape = getShape();
-
     /**
-     * Constructor
+     * Constructor.
+     *
+     * @param myType my type.
      */
-    public ExtLine() {
-        super(new Polyline());
+    public ExtLine(final ExtShapeFactory.ShapeType myType) {
+        super(new Polyline(), myType);
     }
 
     @Override
@@ -54,8 +54,9 @@ public final class ExtLine extends ExtShape {
     }
 
     /**
-     * Sets points for the line
-     * @param points
+     * Sets points for the line.
+     *
+     * @param points Array of points [x, y, x, y, x, y].
      * @throws Exception
      */
     public void setPoints(final ArrayList<Double> points) throws Exception {

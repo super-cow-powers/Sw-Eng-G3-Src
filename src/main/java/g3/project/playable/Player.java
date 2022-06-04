@@ -77,6 +77,7 @@ import uk.co.caprica.vlcj.player.embedded.videosurface.callback.format.RV32Buffe
  * https://github.com/caprica/vlcj-javafx-demo/commit/a057335a1a0ad5761e6d78c469afe1b5a80a9f86
  */
 public final class Player extends Group implements Visual {
+//CHECKSTYLE:OFF
 
     private static final int MAX_VOL = 100;
     private static final double CTRL_MAX_HEIGHT = 50d;
@@ -116,12 +117,14 @@ public final class Player extends Group implements Visual {
 
     private MediaPlayerEventCallback medPlEvtCB = new MediaPlayerEventCallback();
     private MediaEventCallback medEvtCB = new MediaEventCallback();
+//CHECKSTYLE:ON
 
     /**
      * Constructor.Make a new player.
      *
      * @param width Initial target width.
      * @param height Initial target height.
+     * @param fact Common factory for the embedded media player.
      */
     protected Player(final double width, final double height, final MediaPlayerFactory fact) {
         targetWidth.set(width);
@@ -184,8 +187,9 @@ public final class Player extends Group implements Visual {
                 timeLabel.setText(String.format("%02d:%02d:%02d", HH, MM, SS));
             }
         });
-
+//CHECKSTYLE:OFF
         volSlider.setMaxWidth(75d);
+//CHECKSTYLE:ON
         volSlider.setVisible(false);
         volSlider.valueProperty().addListener(new ChangeListener<Number>() {
             @Override
@@ -225,11 +229,12 @@ public final class Player extends Group implements Visual {
     }
 
     /**
-     * Play media "from" an input stream. Warning: I'm writing your stream to a
+     * Play media "from" an input stream.Warning: I'm writing your stream to a
      * temp file as vlcj really doesn't enjoy streams. As such, this is really
      * slow.
      *
      * @param mediaBytes media in memory as bytes.
+     * @param offset Offset to start at.
      * @throws java.io.IOException Couldn't open or write to temp file.
      */
     public void load(final byte[] mediaBytes, final Double offset) throws IOException {
@@ -242,10 +247,10 @@ public final class Player extends Group implements Visual {
     /**
      * Set player offset.
      *
-     * @param offset Offset.
+     * @param seekOffset Offset.
      */
-    public void setSeek(final Double offset) {
-        embeddedMediaPlayer.controls().setTime((long) (offset * 1000));
+    public void setSeek(final Double seekOffset) {
+        embeddedMediaPlayer.controls().setTime((long) (seekOffset * 1000));
     }
 
     /**
@@ -276,7 +281,7 @@ public final class Player extends Group implements Visual {
     /**
      * Set properties.
      *
-     * @param VisualProps Properties.
+     * @param props Properties.
      */
     @Override
     public void setVisualProps(final VisualProps props) {
@@ -315,7 +320,7 @@ public final class Player extends Group implements Visual {
         controlHbox.setVisible(false);
         controlHbox.setManaged(false);
     }
-
+//CHECKSTYLE:OFF
     /**
      * Private class provides a JFX compatible video surface, responding to
      * callbacks from vlcj.
@@ -480,4 +485,5 @@ public final class Player extends Group implements Visual {
             }
         }
     }
+    //CHECKSTYLE:ON
 }

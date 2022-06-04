@@ -52,44 +52,62 @@ import javafx.scene.text.TextFlow;
  * @author David Miall<dm1306@york.ac.uk>
  */
 public abstract class ExtShape extends Group implements Visual {
+//CHECKSTYLE:OFF
 
-    private StackPane stack = new StackPane();
-    private Shape shape = null;
-    private TextFlow textFlow = null;
-    private VBox textVbox = null;
+    protected StackPane stack = new StackPane();
+    protected Shape shape = null;
+    protected TextFlow textFlow = null;
+    protected VBox textVbox = null;
 
-    private Double width = 0d;
-    private Double height = 0d;
-    private Double rot = 0d;
+    protected Double width = 0d;
+    protected Double height = 0d;
+    protected Double rot = 0d;
 
     /**
      * text click handler.
      */
-    private Consumer<MouseEvent> textClickHandlerConsumer = null;
+    protected Consumer<MouseEvent> textClickHandlerConsumer = null;
 
     /**
      * href click handler.
      */
-    private Consumer<MouseEvent> hrefClickHandlerConsumer = null;
+    protected Consumer<MouseEvent> hrefClickHandlerConsumer = null;
 
     /**
      * href mouse roll-over (hover) enter handler.
      */
-    private Consumer<MouseEvent> hrefHovEntHandlerConsumer = null;
+    protected Consumer<MouseEvent> hrefHovEntHandlerConsumer = null;
 
     /**
      * href mouse roll-over (hover) exit handler.
      */
-    private Consumer<MouseEvent> hrefHovExHandlerConsumer = null;
+    protected Consumer<MouseEvent> hrefHovExHandlerConsumer = null;
+    /**
+     * My Enumerated Type.
+     */
+    protected final ExtShapeFactory.ShapeType shapeType;
+    //CHECKSTYLE:ON
 
     /**
-     * Constructor
-     * @param myShape
+     * Constructor.
+     *
+     * @param myShape Shape to display.
+     * @param myType My extShape type.
      */
-    public ExtShape(Shape myShape) {
+    public ExtShape(final Shape myShape, final ExtShapeFactory.ShapeType myType) {
         shape = myShape;
         stack.getChildren().add(shape);
         this.getChildren().add(stack);
+        this.shapeType = myType;
+    }
+
+    /**
+     * Get the shape type Enum value.
+     *
+     * @return ShapeType
+     */
+    public ExtShapeFactory.ShapeType getShapeType() {
+        return shapeType;
     }
 
     /**
@@ -146,59 +164,66 @@ public abstract class ExtShape extends Group implements Visual {
     }
 
     /**
-     * Getter for Stack
+     * Getter for Stack.
+     *
      * @return stack
      */
     public StackPane getStack() {
-        return(stack);
+        return (stack);
     }
 
     /**
-     * Getter for Shape
+     * Getter for Shape.
+     *
      * @return shape
      */
     public Shape getShape() {
-        return(shape);
+        return (shape);
     }
 
     /**
-     * Getter for TextFlow
+     * Getter for TextFlow.
+     *
      * @return textFlow
      */
     public TextFlow getTextFlow() {
-        return(textFlow);
+        return (textFlow);
     }
 
     /**
-     * Getter for textVbox
+     * Getter for textVbox.
+     *
      * @return textVbox
      */
     public VBox getTextVBox() {
-        return(textVbox);
+        return (textVbox);
     }
 
     /**
-     * Getter for width
+     * Getter for width.
+     *
      * @return width
      */
     public Double getWidth() {
-        return(width);
+        return (width);
     }
 
     /**
-     * Getter for height
+     * Getter for height.
+     *
      * @return height
      */
     public Double getHeight() {
-        return(height);
+        return (height);
     }
 
     /**
-     * Getter for rotation
+     * Getter for rotation.
+     *
      * @return rotation
      */
     public Double getRot() {
-        return(rot);
+        return (rot);
     }
 
     /**

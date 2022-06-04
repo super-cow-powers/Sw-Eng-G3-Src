@@ -50,14 +50,13 @@ import javafx.stage.Stage;
  *
  * @author David Miall<dm1306@york.ac.uk>
  */
-public final class Editor {
+public final class Editor extends Stage {
+//CHECKSTYLE:OFF
 
     private static final Double SCENE_WIDTH = 300.0;
     private static final Double SCENE_HEIGHT = 200.0;
-    /**
-     * Setting up area for text input
-     */
-    private final Stage dialog = new Stage();
+//CHECKSTYLE:ON
+
     /**
      * Text edit area
      */
@@ -77,11 +76,13 @@ public final class Editor {
             "python",
             "JavaScript"
     ));
-
+/**
+ * Label for element ID.
+ */
     private final Label elLabel = new Label();
 
     /**
-     * Look back at last line
+     * Callback on save.
      */
     private final BiConsumer<String, String> saveCallback;
 
@@ -96,8 +97,8 @@ public final class Editor {
      * @param lang Language.
      */
     public Editor(final Stage ownerWindow, final String text, final String lang, final String elID, final BiConsumer<String, String> saveConsumer) {
-        dialog.initModality(Modality.NONE);
-        dialog.initOwner(ownerWindow);
+        this.initModality(Modality.NONE);
+        this.initOwner(ownerWindow);
         VBox dialogVbox = new VBox();
         dialogVbox.getChildren().addAll(editArea, controlBox);
         controlBox.getChildren().addAll(saveButton, languageSelectBox, elLabel);
@@ -111,7 +112,7 @@ public final class Editor {
         editArea.setText(text);
         dialogVbox.setVgrow(editArea, Priority.ALWAYS);
         Scene dialogScene = new Scene(dialogVbox, SCENE_WIDTH, SCENE_HEIGHT);
-        dialog.setScene(dialogScene);
+        this.setScene(dialogScene);
         this.saveCallback = saveConsumer;
         saveButton.setOnMouseClicked(e -> {
             String selLang = languageSelectBox.getValue();
@@ -120,6 +121,6 @@ public final class Editor {
             }
             saveCallback.accept(selLang, editArea.getText());
         }); //Call the callback.
-        dialog.show();
+        this.show();
     }
 }

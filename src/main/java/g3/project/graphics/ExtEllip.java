@@ -28,9 +28,7 @@
  */
 package g3.project.graphics;
 
-import javafx.scene.layout.VBox;
 import javafx.scene.shape.Ellipse;
-import javafx.scene.shape.Shape;
 
 /**
  *
@@ -38,16 +36,13 @@ import javafx.scene.shape.Shape;
  */
 public final class ExtEllip extends ExtShape {
 
-    private Double width = getWidth();
-    private Double height = getHeight();
-    private Double rot = getRot();
-    private VBox textVbox = getTextVBox();
-    private Shape shape = getShape();
     /**
-     * Constructor
+     * Constructor.
+     *
+     * @param myType my ExtShape type.
      */
-    public ExtEllip() {
-        super(new Ellipse());
+    public ExtEllip(final ExtShapeFactory.ShapeType myType) {
+        super(new Ellipse(), myType);
     }
 
     @Override
