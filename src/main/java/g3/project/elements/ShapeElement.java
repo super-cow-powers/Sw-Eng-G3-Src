@@ -292,8 +292,8 @@ public class ShapeElement extends VisualElement {
         text.map(te -> {
             var myAlign = props.get(FontProps.ALIGNMENT);
             var myVAlign = props.get(FontProps.VALIGNMENT);
-            setAlignment(myAlign != null? myAlign.toString() : "", myVAlign != null? myVAlign.toString() : "");
-            
+            setAlignment(myAlign != null ? myAlign.toString() : "", myVAlign != null ? myVAlign.toString() : "");
+
             for (var ce : te.getChildElements()) {
                 if (ce instanceof FontElement) {
                     return ce;
@@ -301,6 +301,89 @@ public class ShapeElement extends VisualElement {
             }
             return null;
         }).ifPresent(fe -> ((FontElement) fe).setProperties(props));
+    }
+
+    /**
+     * Set alpha of contained text.
+     *
+     * @param alpha Opacity/Alpha value.
+     */
+    public void setTextAlpha(final Double alpha) {
+        Optional<TextElement> text = Optional.empty();
+        for (var ch : this.getChildElements()) {
+            if (ch instanceof TextElement) {
+                text = Optional.of(((TextElement) ch));
+            }
+        }
+        text.map(t -> {
+            var chArr = new ArrayList<FontElement>();
+            for (var ce : t.getChildElements()) {
+                if (ce instanceof FontElement) {
+                    chArr.add((FontElement) ce);
+                }
+            }
+            return chArr.isEmpty() ? null : chArr;
+        }).ifPresent(feArr -> {
+            feArr.forEach(fe -> {
+                var props = fe.getProperties();
+                Color oldCol = (Color) props.getProp(FontProps.COLOUR).get();
+                Color newCol = new Color(oldCol.getRed(), oldCol.getGreen(), oldCol.getBlue(), alpha);
+                props.put(FontProps.COLOUR, newCol.toString());
+                fe.setProperties(props);
+            });
+        });
+    }
+
+    /**
+     * Set text Colour.
+     *
+     * @param colour Colour String.
+     */
+    public void setTextColour(final String colour) {
+        Optional<TextElement> text = Optional.empty();
+        for (var ch : this.getChildElements()) {
+            if (ch instanceof TextElement) {
+                text = Optional.of(((TextElement) ch));
+            }
+        }
+        text.map(t -> {
+            var chArr = new ArrayList<FontElement>();
+            for (var ce : t.getChildElements()) {
+                if (ce instanceof FontElement) {
+                    chArr.add((FontElement) ce);
+                }
+            }
+            return chArr.isEmpty() ? null : chArr;
+        }).ifPresent(feArr -> {
+            feArr.forEach(fe -> {
+                var props = fe.getProperties();
+                Color newCol = Color.valueOf(colour);
+                props.put(FontProps.COLOUR, newCol.toString());
+                fe.setProperties(props);
+            });
+        });
+    }
+
+    /**
+     * Get Text Colour.
+     *
+     * @return Text Colour.
+     */
+    public Optional<Color> getTextColour() {
+        Optional<TextElement> text = Optional.empty();
+        for (var ch : this.getChildElements()) {
+            if (ch instanceof TextElement) {
+                text = Optional.of(((TextElement) ch));
+            }
+        }
+        return text.map(t -> {
+            for (var ce : t.getChildElements()) {
+                if (ce instanceof FontElement) {
+                    return (Color)((FontElement) ce).getProperties().getProp(FontProps.COLOUR).get();
+                }
+            }
+            return null;
+        });
     }
 
     /**
@@ -317,10 +400,10 @@ public class ShapeElement extends VisualElement {
             }
         }
         text.ifPresent(t -> {
-            if (!hAlign.isBlank()){
+            if (!hAlign.isBlank()) {
                 t.addAttribute(VisualElement.makeAttrWithNS(FontProps.ALIGNMENT, hAlign));
             }
-            if (!vAlign.isBlank()){
+            if (!vAlign.isBlank()) {
                 t.addAttribute(VisualElement.makeAttrWithNS(FontProps.VALIGNMENT, vAlign));
             }
         });

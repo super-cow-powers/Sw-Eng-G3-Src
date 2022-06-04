@@ -31,6 +31,7 @@ package g3.project.graphics;
 import g3.project.ui.Visual;
 import java.util.ArrayList;
 import java.util.function.Consumer;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -59,6 +60,7 @@ public abstract class ExtShape extends Group implements Visual {
     protected TextFlow textFlow = null;
     protected VBox textVbox = null;
 
+    protected static final Double DEFAULT_TEXT_PAD = 5d;
     protected Double width = 0d;
     protected Double height = 0d;
     protected Double rot = 0d;
@@ -246,6 +248,9 @@ public abstract class ExtShape extends Group implements Visual {
             } catch (NumberFormatException e) {
             }
         }
+        if (textFlow != null) {
+            textVbox.setPadding(new Insets(DEFAULT_TEXT_PAD));
+        }
     }
 
     /**
@@ -253,6 +258,7 @@ public abstract class ExtShape extends Group implements Visual {
      *
      * @param visualProps properties.
      */
+    @Override
     public final void setVisualProps(final VisualProps visualProps) {
         var maybeShadow = visualProps.makeShadow();
         maybeShadow.ifPresent(sh -> {
@@ -283,6 +289,7 @@ public abstract class ExtShape extends Group implements Visual {
             stack.getChildren().add(textVbox);
         }
         textVbox.setAlignment(textVertAlign);
+        textVbox.setPadding(new Insets(DEFAULT_TEXT_PAD));
         textFlow.getChildren().clear();
         textFlow.setTextAlignment(align);
         textFlow.setOnMouseClicked(e -> textClickHandlerConsumer.accept(e));

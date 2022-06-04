@@ -381,6 +381,7 @@ public abstract class VisualElement extends Element implements Scriptable {
      */
     public final Optional<Color> getFillColour() {
         var colAttr = this.getAttribute("fill");
+        var alAttr = this.getAttribute("alpha");
         // @todo: Find a nicer looking way of making this work Probably
         // containing more streams.
         if (colAttr != null) {
@@ -390,6 +391,10 @@ public abstract class VisualElement extends Element implements Scriptable {
             Color col = null;
             try {
                 col = Color.web(colStr);
+                if (alAttr != null) {
+                    var al = Double.valueOf(alAttr.getValue());
+                    col = Color.color(col.getRed(), col.getGreen(), col.getBlue(), al); //Alpha takes priority
+                }
             } catch (IllegalArgumentException ex) {
                 System.err.println("Bad Colour: " + ex);
             }
@@ -410,7 +415,41 @@ public abstract class VisualElement extends Element implements Scriptable {
             throw new Exception("Bad Colour String");
         }
         var colAttr = new Attribute("fill", colourString);
+        Double alpha = col.getOpacity();
+        if (alpha < 1) { //Specified an alpha/opacity value.
+            setAlpha(alpha);
+        }
         this.addAttribute(colAttr);
+    }
+
+    /**
+     * Set the element Alpha.
+     *
+     * @param alpha Alpha to set.
+     */
+    public final void setAlpha(final Double alpha) {
+        var alAttr = new Attribute("alpha", alpha.toString());
+        this.addAttribute(alAttr);
+    }
+
+    /**
+     * Get element alpha.
+     *
+     * @return Opacity value.
+     */
+    public final Double getAlpha() {
+        var colAttr = this.getAttribute("fill");
+        var alAttr = this.getAttribute("alpha");
+        Double alpha = 1d;
+        if (alAttr == null) {
+            if (colAttr != null) {
+                var col = Color.valueOf(colAttr.getValue());
+                alpha = col.getOpacity();
+            }
+        } else {
+            alpha = Double.valueOf(alAttr.getValue());
+        }
+        return alpha;
     }
 
     /**

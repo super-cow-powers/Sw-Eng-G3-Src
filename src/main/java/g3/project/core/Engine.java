@@ -311,8 +311,8 @@ public final class Engine extends Threaded {
                 } else if (!eventQueue.isEmpty()) { //New event?
                     handleEvent(eventQueue.take());
                 } else if (!callQueue.isEmpty()) { //Out-of-thread call request
-                    var callee = callQueue.take();
-                    callee.run();
+                    var function = callQueue.take();
+                    function.run();
                 } else { //Nothing to do. Suspend
                     suspended.set(true);
                 }
@@ -331,9 +331,11 @@ public final class Engine extends Threaded {
             }
         }
         netComms.stop();
+        //Cleanup resources
         if (docIO != null) {
-            docIO.close(); //Cleanup resources
+            docIO.close();
         }
+        toolIO.close();
         //Kill the delay pool.
         for (var r : elementDelayService.getQueue()) {
             elementDelayService.remove(r);
@@ -644,7 +646,19 @@ public final class Engine extends Threaded {
             }
             //When the doc changes, redraw the element that has changed.
             currentDoc.setChangeCallback(
-                    el -> this.redrawEl(el)
+                    el -> {
+                        if (el instanceof PageElement) {//Short-out the redraw logic for pages to avoid nasty flickering.
+                            var propsMap = el.getVisualProps();
+                            var id = el.getID();
+                            var maybeSize = el.getSize();
+                            Platform.runLater(() -> {
+                                controller.configCard(el.getSize(), el.getFillColour(), id);
+                                maybeSize.ifPresent(s -> controller.resizeElement(id, s));
+                            });
+                        } else {
+                            this.redrawEl(el);
+                        }
+                    }
             );
             //Add buttons for each page/card
             updateCardButtons(currentDoc.getPages());

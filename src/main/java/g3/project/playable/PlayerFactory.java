@@ -29,6 +29,8 @@
 package g3.project.playable;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 
 /**
@@ -41,11 +43,11 @@ public final class PlayerFactory {
     /**
      * Created Players.
      */
-    HashMap<Integer, Player> playerMap = new HashMap<>();
+    protected Map<Integer, Player> playerMap = new ConcurrentHashMap<>();
     /**
      * Player Factory.
      */
-    MediaPlayerFactory factory = new MediaPlayerFactory();
+    protected MediaPlayerFactory factory = new MediaPlayerFactory();
 //CHECKSTYLE:ON
 
     /**
@@ -71,7 +73,7 @@ public final class PlayerFactory {
      * @param height Player target height.
      * @return player.
      */
-    public Player newPlayer(final Double width, final Double height) {
+    public synchronized Player newPlayer(final Double width, final Double height) {
         var player = new Player(width, height, factory);
         playerMap.put(player.hashCode(), player);
         return player;
@@ -80,7 +82,7 @@ public final class PlayerFactory {
     /**
      * Close all players and free resources.
      */
-    public void freeAll() {
+    public synchronized void freeAll() {
         playerMap.forEach((hashCode, pl) -> free(pl));
         factory.release();
     }
@@ -91,7 +93,7 @@ public final class PlayerFactory {
      * @param pl player to free.
      * @throws IllegalStateException Couldn't find player in my map.
      */
-    public void free(final Player pl) throws IllegalStateException {
+    public synchronized void free(final Player pl) throws IllegalStateException {
         var intPl = playerMap.remove(pl.hashCode());
         if (intPl != null) {
             intPl.free();

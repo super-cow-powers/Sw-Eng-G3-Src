@@ -519,7 +519,7 @@ public final class MainController {
     }
 
     /**
-     * Remove a given element.
+     * Remove an element by ID.
      *
      * @param id ID of element to remove.
      */
@@ -528,6 +528,16 @@ public final class MainController {
             var obj = this.drawnElements.remove(id);
             pagePane.getChildren().remove(obj);
         }
+    }
+
+    /**
+     * Remove an element.
+     *
+     * @param el element.
+     */
+    public void remove(final Node el) {
+        drawnElements.remove(el.getId());
+        pagePane.getChildren().remove(el);
     }
 
     /**
@@ -684,10 +694,18 @@ public final class MainController {
                 //CHECKSTYLE:OFF
                 propEntry.setMaxWidth(200d);
                 //CHECKSTYLE:ON
-                ((TextField) propEntry).setOnAction(ev -> {
-                    props.put(propEntry.getId(), ((TextField) propEntry).getText());
-                    setterCallback.accept(props, nodeID);
-                });
+                if (prop.equals("ID")) { //ID needs the node removing and redrawing.
+                    ((TextField) propEntry).setOnAction(ev -> {
+                        props.put(propEntry.getId(), ((TextField) propEntry).getText());
+                        remove(node);
+                        setterCallback.accept(props, nodeID);
+                    });
+                } else {
+                    ((TextField) propEntry).setOnAction(ev -> {
+                        props.put(propEntry.getId(), ((TextField) propEntry).getText());
+                        setterCallback.accept(props, nodeID);
+                    });
+                }
             }
             propEntry.setId(prop);
             HBox propBox = new HBox(propLabel, propEntry);
@@ -742,7 +760,7 @@ public final class MainController {
 
         Button deleteButton = new Button("Delete");
         deleteButton.setOnMouseClicked(e -> {
-            remove(nodeID);
+            remove(node);
             propPane.getChildren().clear(); //Clear props.
             engine.deleteElement(nodeID);
         });
@@ -788,6 +806,7 @@ public final class MainController {
         playerSetControls(id, showPlayer);
         player.setLoop(loopPlay);
         playerSetPlaying(id, autoPlay);
+        player.setId(id);
     }
 
     /**
@@ -1062,7 +1081,7 @@ public final class MainController {
                                     public void changed(ObservableValue<? extends Boolean> arg0, Boolean oldPropertyValue, Boolean newPropertyValue) {
                                         if (newPropertyValue) {
                                             if (amEditable.get()) {
-                                                
+
                                             }
                                         } else {
                                         }
@@ -1153,8 +1172,7 @@ public final class MainController {
     }
 
     /**
-     * Return the Pane pagePane
-     * For testing
+     * Return the Pane pagePane For testing
      */
     public Pane getPagePane() {
         return pagePane;
