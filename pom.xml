@@ -9,14 +9,6 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
-    
-
-    <repositories>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-    </repositories>
 
 
     <dependencies>
@@ -49,11 +41,6 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.fxmisc.richtext</groupId>
-            <artifactId>richtextfx</artifactId>
-            <version>0.10.9</version>
-        </dependency>
-        <dependency>
             <groupId>org.python</groupId>
             <artifactId>jython-slim</artifactId>
             <version>2.7.2</version>
@@ -74,7 +61,7 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>5.6.0</version>
-            <scope>test</scope>
+            <scope>javafx force software renderingtest</scope>
         </dependency>
     </dependencies>
     <profiles>
@@ -119,10 +106,51 @@
             </dependencies>
         </profile>
         <profile>
+            <id>freebsd</id>
+            <activation>
+                <os>
+                    <name>freebsd</name>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            
+            <dependencies>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-base</artifactId>
+                    <version>14</version>
+                    <scope>system</scope>
+                    <systemPath>/usr/local/openjfx14/lib/javafx.base.jar</systemPath>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-controls</artifactId>
+                    <scope>system</scope>
+                    <systemPath>/usr/local/openjfx14/lib/javafx.controls.jar</systemPath>
+                    <version>14</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-fxml</artifactId>
+                    <scope>system</scope>
+                    <systemPath>/usr/local/openjfx14/lib/javafx.fxml.jar</systemPath>
+                    <version>14</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-graphics</artifactId>
+                    <scope>system</scope>
+                    <systemPath>/usr/local/openjfx14/lib/javafx.graphics.jar</systemPath>
+                    <version>14</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
             <id>maven-central-jfx</id>
             <activation>
                 <os>
                     <arch>!ppc64</arch>
+                    <name>!freebsd</name>
                 </os>
                 <activeByDefault>true</activeByDefault>
             </activation>
