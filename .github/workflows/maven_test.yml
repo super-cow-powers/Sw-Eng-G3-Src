@@ -29,3 +29,11 @@ jobs:
       with:
         name: surefire-test-report
         path: target/site/surefire-report.html
+    - name: Generate JavaDoc
+      run:  mvn javadoc:javadoc
+    - name: Archive JavaDoc
+      uses: actions/upload-artifact@v3
+      with:
+        name: JavaDoc
+        path: target/site/apidocs
+    
