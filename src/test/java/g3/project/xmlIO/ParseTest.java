@@ -88,6 +88,16 @@ public class ParseTest {
         Optional<Document> result = Parse.parseDocXML(xmlFile);
         assertTrue(result.isPresent());
         result.ifPresent(d -> assertTrue(d.getRootElement() instanceof DocElement));
+        //Try invalid doc
+        try {
+            xmlFile = new File(MainController.class.getResource("test_inv.xml").toURI());
+        } catch (URISyntaxException ex) {
+            Logger.getLogger(ParseTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail("Couldn't open test file!");
+            return;
+        }
+        result = Parse.parseDocXML(xmlFile);
+        assertTrue(result.isEmpty());
     }
 
     /**
@@ -107,6 +117,16 @@ public class ParseTest {
         Optional<Document> result = Parse.parseDocXML(xmlStream);
         assertTrue(result.isPresent());
         result.ifPresent(d -> assertTrue(d.getRootElement() instanceof DocElement));
+        //Try invalid doc
+        try {
+            xmlStream = MainController.class.getResourceAsStream("test_inv.xml");
+        } catch (Exception ex) {
+            Logger.getLogger(ParseTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail("Couldn't open test file!");
+            return;
+        }
+        result = Parse.parseDocXML(xmlStream);
+        assertTrue(result.isEmpty());
     }
 
     /**
@@ -125,6 +145,16 @@ public class ParseTest {
         Optional<Document> result = Parse.parseDocXML(xmlStream);
         assertTrue(result.isPresent());
         result.ifPresent(d -> assertTrue(d.getRootElement().getLocalName().equals("tools")));
+        //Try an invalid doc
+        try {
+            xmlStream = Engine.class.getResourceAsStream("test_tools_inv.xml");
+        } catch (Exception ex) {
+            Logger.getLogger(ParseTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail("Couldn't open test file!");
+            return;
+        }
+        result = Parse.parseDocXML(xmlStream);
+        assertTrue(result.isEmpty());
     }
 //CHECKSTYLE:ON
 }
