@@ -50,7 +50,7 @@ public class ShapeElement extends VisualElement {
     private final int MIN_POINTS = 4;
 
     /**
-     * Creates builder thread for the element
+     * Creates builder thread for the element.
      */
     private static ThreadLocal builders = new ThreadLocal() {
         protected synchronized Object initialValue() {
@@ -60,19 +60,19 @@ public class ShapeElement extends VisualElement {
     };
 
     /**
-     * Constructor
+     * Constructor.
      *
-     * @param name
+     * @param name Element Name.
      */
     public ShapeElement(final String name) {
         super(name);
     }
 
     /**
-     * Constructor
+     * Constructor.
      *
-     * @param name
-     * @param uri
+     * @param name Element Name.
+     * @param uri Element URI.
      */
     public ShapeElement(final String name, final String uri) {
         super(name, uri);
@@ -81,17 +81,24 @@ public class ShapeElement extends VisualElement {
     /**
      * Constructor
      *
-     * @param element
+     * @param element Element.
      */
     public ShapeElement(final Element element) {
         super(element);
     }
-
+    /**
+     * Get the Shape's type.
+     * @return Shape's Type.
+     */
     public String getType() {
         var type = this.getAttribute("type");
         return type != null ? type.getValue() : "";
     }
-
+    /**
+     * Set the shape's type.
+     * @param type Shape Type.
+     * @return Maybe set type.
+     */
     public String setType(String type) {
         this.addAttribute(new Attribute("type", type));
         return this.getType();
@@ -129,7 +136,7 @@ public class ShapeElement extends VisualElement {
      * Set segment points for polygon or alt-line.
      *
      * @param points Segment points.
-     * @throws java.lang.Exception
+     * @throws java.lang.Exception Something odd happened.
      */
     public final void setSegPoints(final ArrayList<Double> points) throws Exception {
         if (points.size() % 2 > 0) {
@@ -154,7 +161,9 @@ public class ShapeElement extends VisualElement {
             this.removeAttribute(this.getAttribute("y_end"));
             Attribute segAttr = new Attribute("x_end", String.valueOf(points.get(2)));
             this.addAttribute(segAttr);
+            //CHECKSTYLE:OFF
             segAttr = new Attribute("y_end", String.valueOf(points.get(3)));
+            //CHECKSTYLE:ON
             this.addAttribute(segAttr);
             var origin = this.getOrigin();
             origin.ifPresentOrElse(o -> {
@@ -205,9 +214,9 @@ public class ShapeElement extends VisualElement {
     }
 
     /**
-     * Gets text for shape element - optional as wont necessarily exist
+     * Gets text for shape element - optional as won't necessarily exist.
      *
-     * @return arraylist of text in the object
+     * @return Maybe text array.
      */
     public Optional<ArrayList<StyledTextSeg>> getText() {
         ArrayList<StyledTextSeg> text = null;

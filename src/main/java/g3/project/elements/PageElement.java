@@ -34,7 +34,7 @@ import nu.xom.*;
 
 /**
  *
- * Group 3 Miall <dm1306@york.ac.uk>
+ * @author Group 3
  */
 public class PageElement extends VisualElement {
 
@@ -57,7 +57,7 @@ public class PageElement extends VisualElement {
     /**
      * Constructor
      *
-     * @param name
+     * @param name Name of element.
      */
     public PageElement(final String name) {
         super(name);
@@ -66,8 +66,8 @@ public class PageElement extends VisualElement {
     /**
      * Constructor
      *
-     * @param name
-     * @param uri
+     * @param name Name of element.
+     * @param uri Element URI.
      */
     public PageElement(final String name, final String uri) {
         super(name, uri);
@@ -76,7 +76,7 @@ public class PageElement extends VisualElement {
     /**
      * Constructor
      *
-     * @param element
+     * @param element Element.
      */
     public PageElement(final Element element) {
         super(element);
@@ -94,8 +94,7 @@ public class PageElement extends VisualElement {
     }
 
     /**
-     * @TODO fill out javadoc
-     * @return
+     * @return Maybe Page title.
      */
     public Optional<String> getTitle() {
         var title = this.getAttribute("title");
@@ -112,9 +111,8 @@ public class PageElement extends VisualElement {
     }
 
     /**
-     * @TODO fill out javadoc
-     * @param name
-     * @return
+     * @param name Title.
+     * @return Maybe set title.
      */
     public Optional<String> setTitle(final String name) {
         this.addAttribute(new Attribute("title", name));

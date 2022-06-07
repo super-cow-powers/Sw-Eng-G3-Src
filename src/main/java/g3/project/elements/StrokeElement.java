@@ -40,7 +40,7 @@ import nu.xom.*;
 public class StrokeElement extends Element {
 
     /**
-     * Creates builder thread for the element
+     * Creates builder thread for the element.
      */
     private static ThreadLocal builders = new ThreadLocal() {
 
@@ -51,7 +51,9 @@ public class StrokeElement extends Element {
     };
 
     /**
-     * Constructor
+     * Constructor.
+     *
+     * @param name Element Name.
      */
     public StrokeElement(final String name) {
         super(name);
@@ -59,16 +61,18 @@ public class StrokeElement extends Element {
 
     /**
      * Constructor
-     * @param name
-     * @param uri
+     *
+     * @param name Element Name.
+     * @param uri Element URI.
      */
     public StrokeElement(final String name, final String uri) {
         super(name, uri);
     }
 
     /**
-     * Constructor
-     * @param element
+     * Constructor.
+     *
+     * @param element Element.
      */
     public StrokeElement(final Element element) {
         super(element);
@@ -77,7 +81,7 @@ public class StrokeElement extends Element {
     /**
      * Get the stroke's colour.
      *
-     * @return Optional colour.
+     * @return Maybe colour.
      */
     public final Optional<Color> getColour() {
         var col = Optional.ofNullable(this.getAttribute(StrokeProps.COLOUR));

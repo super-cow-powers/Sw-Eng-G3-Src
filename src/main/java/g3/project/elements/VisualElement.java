@@ -646,7 +646,7 @@ public abstract class VisualElement extends Element implements Scriptable {
      *
      * @param path Path to new file.
      * @param language Script language.
-     * @throws IOException
+     * @throws IOException Couldn't access Path.
      */
     @Override
     public void addScriptFile(Path path, String language) throws IOException {

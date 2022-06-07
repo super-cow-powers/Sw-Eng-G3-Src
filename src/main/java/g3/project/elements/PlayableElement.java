@@ -59,19 +59,19 @@ public final class PlayableElement extends VisualElement implements Includable {
     };
 
     /**
-     * Constructor
+     * Constructor.
      *
-     * @param name
+     * @param name Element name.
      */
     public PlayableElement(final String name) {
         super(name);
     }
 
     /**
-     * Constructor
+     * Constructor.
      *
-     * @param name
-     * @param uri
+     * @param name Element name.
+     * @param uri Element URI.
      */
     public PlayableElement(final String name, final String uri) {
         super(name, uri);
@@ -80,7 +80,7 @@ public final class PlayableElement extends VisualElement implements Includable {
     /**
      * Constructor
      *
-     * @param element
+     * @param element Element.
      */
     public PlayableElement(final Element element) {
         super(element);

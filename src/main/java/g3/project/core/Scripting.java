@@ -95,8 +95,6 @@ public final class Scripting {
     /**
      * Constructor.
      *
-     * @todo: Handle case of unknown language.
-     *
      * @param defaultLanguage Default scripting language.
      * @param globalEngine Ref to the engine.
      * @param writer Default Output writer.
@@ -259,8 +257,8 @@ public final class Scripting {
      * @param element Element to start with.
      * @param function Function to try and call.
      * @param args Arguments to function.
-     * @throws ScriptException
-     * @throws IOException
+     * @throws ScriptException Bad Script.
+     * @throws IOException Couldn't read file.
      */
     public void invokeOnElement(final Scriptable element, final String function, final Object... args) throws ScriptException, IOException {
         this.evalElement(element);

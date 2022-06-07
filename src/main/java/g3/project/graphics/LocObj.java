@@ -32,7 +32,7 @@ import javafx.geometry.Point2D;
 
 /**
  *
- * Group 3
+ * @author Group 3
  */
 public final class LocObj {
 //CHECKSTYLE:OFF

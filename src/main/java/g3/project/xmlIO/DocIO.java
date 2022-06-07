@@ -42,14 +42,14 @@ import nu.xom.*;
 
 /**
  *
- * Group 3
+ * @author Group 3
  */
 public class DocIO extends IO {
 
     /**
      * Name of XML doc.
      */
-    protected final static String XML_FILE_NAME = "doc.xml";
+    protected static final String XML_FILE_NAME = "doc.xml";
 
     /**
      * Constructor.
@@ -156,7 +156,7 @@ public class DocIO extends IO {
      * @param exrPath Existing Resource path.
      * @param newPath Path within zip.
      * @return Optional resource bytes.
-     * @throws java.io.IOException
+     * @throws java.io.IOException Couldn't access Path.
      */
     public synchronized Optional<byte[]> addResource(final String exrPath, final String newPath) throws IOException {
         var internalPath = zipFs.getPath(newPath);
@@ -176,7 +176,7 @@ public class DocIO extends IO {
      *
      * @param path Path to file.
      * @param content File Content.
-     * @throws java.io.IOException
+     * @throws java.io.IOException Couldn't access path.
      */
     public void writeBytes(final String path, final byte[] content) throws IOException {
         var filePath = zipFs.getPath(path);

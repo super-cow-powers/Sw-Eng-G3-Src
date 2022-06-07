@@ -30,7 +30,6 @@ package g3.project.graphics;
 
 import java.util.ArrayList;
 import javafx.scene.shape.Polygon;
-import javafx.scene.shape.Shape;
 
 /**
  *
@@ -55,8 +54,8 @@ public final class ExtPolygon extends ExtShape {
     /**
      * Sets points for the shape.
      *
-     * @param points
-     * @throws Exception
+     * @param points Polygon Points in form [x,y,x,y,...].
+     * @throws Exception Bad points array.
      */
     public void setPoints(final ArrayList<Double> points) throws Exception {
         if (points.size() % 2 != 0) {

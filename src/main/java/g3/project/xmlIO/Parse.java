@@ -58,22 +58,22 @@ import org.xml.sax.helpers.XMLReaderFactory;
 public final class Parse {
 
     /**
-     * PWS file name
+     * PWS file name.
      */
     private static final String PWS = "PWS.xsd";
 
     /**
-     * @TODO javadoc
+     * Name-space of the PWS.
      */
     public static final String PWS_NS = "PWS_Base";
 
     /**
-     * Schema for our extension
+     * Schema for our extension.
      */
     private static final String EXT_SCHEMA = "my_exts.xsd";
 
     /**
-     * PWS extension schema
+     * Extension name-space.
      */
     public static final String EXT_NS = "PWS_Exts";
 

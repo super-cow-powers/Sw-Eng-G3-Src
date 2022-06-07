@@ -40,31 +40,36 @@ import javafx.scene.image.ImageView;
 public class VisImageView extends ImageView implements Visual {
 
     /**
-     * Constructor
+     * Constructor.
      */
     public VisImageView() {
     }
 
     /**
-     * Constructor
-     * @param url
+     * Constructor.
+     *
+     * @param url URL to Image.
      */
     public VisImageView(final String url) {
         super(url);
     }
 
     /**
-     * Constructor
+     * Constructor.
+     *
+     * @param image Image to show.
      */
     public VisImageView(final Image image) {
         super(image);
     }
+
     /**
      * Set Visual Properties.
+     *
      * @param props Properties map.
      */
     @Override
-    public void setVisualProps(VisualProps props) {
+    public void setVisualProps(final VisualProps props) {
         var shad = props.makeShadow();
         shad.ifPresent(sh -> this.setEffect(sh));
         var vis = props.getProp(VisualProps.VISIBLE);
@@ -75,6 +80,7 @@ public class VisImageView extends ImageView implements Visual {
 
     /**
      * Set Size.
+     *
      * @param size Size.
      */
     @Override

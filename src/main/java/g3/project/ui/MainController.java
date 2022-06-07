@@ -577,7 +577,6 @@ public final class MainController {
      * Clear the page/card.
      *
      * @param id page to clear
-     * @todo: (Maybe) Support clearing specific cards.
      */
     public void clearCard(final String id) {
         pagePane.getChildren().clear();
@@ -958,7 +957,6 @@ public final class MainController {
     /**
      * Show a blocking message to the user.
      *
-     * @TODO Implement!!
      * @param message message to show.
      */
     public void showBlockingMessage(final String message) {
@@ -985,7 +983,7 @@ public final class MainController {
     }
 
     /**
-     * Allows editing elements - FXML
+     * Allows editing elements - FXML.
      */
     @FXML
     public void handleTogEdit() {
@@ -993,9 +991,9 @@ public final class MainController {
     }
 
     /**
-     * Allows editing elements
+     * Allows editing elements.
      *
-     * @param editable
+     * @param editable Is editable?
      */
     public void toggleEditable(final Boolean editable) {
         this.amEditable.set(editable);
@@ -1172,7 +1170,9 @@ public final class MainController {
     }
 
     /**
-     * Return the Pane pagePane For testing
+     * Return the Pane pagePane For testing.
+     *
+     * @return Pane containing all elements.
      */
     public Pane getPagePane() {
         return pagePane;

@@ -271,7 +271,6 @@ public abstract class ExtShape extends Group implements Visual {
     /**
      * Set text and style in element.
      *
-     * @todo Make work for arbitrary Rich Text.
      * @param text Text to set.
      * @param align Text horizontal alignment.
      * @param textVertAlign Text vertical alignment.

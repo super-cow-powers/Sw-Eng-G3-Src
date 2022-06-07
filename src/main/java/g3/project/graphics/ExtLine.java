@@ -57,7 +57,7 @@ public final class ExtLine extends ExtShape {
      * Sets points for the line.
      *
      * @param points Array of points [x, y, x, y, x, y].
-     * @throws Exception
+     * @throws Exception Bad Points array.
      */
     public void setPoints(final ArrayList<Double> points) throws Exception {
         if (points.size() % 2 != 0) {

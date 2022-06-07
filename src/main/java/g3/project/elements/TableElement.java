@@ -38,7 +38,7 @@ import nu.xom.*;
 public class TableElement extends VisualElement {
 
     /**
-     * Creates builder thread for the element
+     * Creates builder thread for the element.
      */
     private static ThreadLocal builders = new ThreadLocal() {
 
@@ -49,16 +49,19 @@ public class TableElement extends VisualElement {
     };
 
     /**
-     * Constructor
+     * Constructor.
      *
-     * @param name
+     * @param name Element Name.
      */
     public TableElement(final String name) {
         super(name);
     }
 
     /**
-     * Constructor
+     * Constructor.
+     *
+     * @param name Element Name.
+     * @param uri Element URI.
      */
     public TableElement(final String name, final String uri) {
         super(name, uri);
@@ -67,14 +70,14 @@ public class TableElement extends VisualElement {
     /**
      * Constructor
      *
-     * @param element
+     * @param element Element.
      */
     public TableElement(final Element element) {
         super(element);
     }
 
     @Override
-    public void delete(DocIO resIO) {
+    public void delete(final DocIO resIO) {
 
     }
 }

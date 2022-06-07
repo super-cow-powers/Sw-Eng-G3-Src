@@ -53,9 +53,10 @@ public interface Scriptable {
      * @return Optional Bindings
      */
     Optional<RecursiveBindings> getParentElementScriptingBindings();
-    
+
     /**
      * Get the parent of this Scriptable element.
+     *
      * @return Maybe parent.
      */
     Optional<Scriptable> getParentScriptable();
@@ -73,7 +74,7 @@ public interface Scriptable {
      *
      * @param path Path to file.
      * @param language Script language.
-     * @throws IOException
+     * @throws IOException Couldn't access path.
      */
     void addScriptFile(Path path, String language) throws IOException;
 
@@ -87,7 +88,7 @@ public interface Scriptable {
     /**
      * Get if the element requires evaluating again.
      *
-     * @return
+     * @return Is Eval required?
      */
     Boolean getEvalRequired();
 

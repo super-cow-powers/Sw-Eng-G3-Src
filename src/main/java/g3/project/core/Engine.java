@@ -78,7 +78,7 @@ import javax.script.ScriptException;
 import nu.xom.Element;
 
 /**
- * Group 3
+ * @author Group 3
  */
 public final class Engine extends Threaded {
 
@@ -704,6 +704,7 @@ public final class Engine extends Threaded {
      * @param id Image ID
      * @param xSize Image X Size.
      * @param ySize Image Y Size.
+     * @param rot Rotation.
      * @param xLoc X Location.
      * @param yLoc Y Location.
      * @param zInd Z Index.
@@ -800,8 +801,6 @@ public final class Engine extends Threaded {
     /**
      * Set text on a shape on screen. Sets properties for all text in the shape.
      *
-     * @TODO for linting - reduce the amount of parameters called to 7 if
-     * possible
      * @param shapeID Target ID.
      * @param text Text to set.
      * @param hAlign Horizontal alignment.
