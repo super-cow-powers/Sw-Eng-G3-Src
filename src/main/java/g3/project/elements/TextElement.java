@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, David Miall<dm1306@york.ac.uk>
+ * Copyright (c) 2022, Group 3
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@ import nu.xom.*;
 
 /**
  *
- * @author David Miall<dm1306@york.ac.uk>
+ * @author Group 3
  */
 public class TextElement extends Element implements Includable {
 //CHECKSTYLE:OFF
