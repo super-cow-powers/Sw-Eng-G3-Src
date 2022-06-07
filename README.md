@@ -10,4 +10,10 @@ It is a graphical Multimedia Application Development suite, programmable in a va
 Samples of what can be built with our application may be found in `demo` and `sales_demo`.
 
 ## Building
-The project requires Java 11 and OpenJFX 14 or higher, and builds with Maven. To build and run, clone this repository and then run `mvn javafx:run` which will fetch project dependancies, and then build and run the project. 
+The project requires Java 11 and OpenJFX 14 or higher, and builds with Maven. To build and run, clone this repository and then run `mvn javafx:run` which will fetch project dependancies, and then build and run the project. Certain platform-specific configurations are provided, and will be triggered automatically. 
+
+## Editing
+Any editor may be used to edit the project source. However, for easy integration with Maven, we suggest using Netbeans (with the CheckBeans linter extension) or IntelliJ; any support requests for issues relating to Eclipse will not be given priority.
+
+## Making Changes
+To commit any changes first open a new working branch, and when your changes are complete please open a new Pull Request to request the changes to be merged into Master. Your changes will be automatically tested and linted through the CICD pipeline, reviewed, and then either merged or rejected.
