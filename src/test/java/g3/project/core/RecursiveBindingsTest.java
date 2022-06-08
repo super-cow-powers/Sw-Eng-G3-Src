@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Group 3
+ * Copyright (c) 2022, David Miall<dm1306@york.ac.uk>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -11,7 +11,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  * * Neither the name of the copyright holder nor the names of its contributors may
- *   be used to endorse or promote products derived from this software
+ *   be used to endorse or promote products derived from this software 
  *   without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -40,18 +40,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
- * @author Group 3
+ * @author David Miall<dm1306@york.ac.uk>
  */
 public final class RecursiveBindingsTest {
 
-    /**
-     * Number of iterations to do.
-     */
     private static Integer TEST_ITERATIONS = 1000;
-
-    /**
-     * Maximum length of array during testing.
-     */
     private static Integer MAX_ARR_LEN = 10000;
 
     //CHECKSTYLE:OFF
@@ -59,20 +52,22 @@ public final class RecursiveBindingsTest {
     }
 
     @BeforeAll
-    public static void setUpClass() throws Exception {
+    public static void setUpClass() {
+        System.out.println("\n*** RecursiveBindings class tests ***");
     }
 
     @AfterAll
-    public static void tearDownClass() throws Exception {
+    public static void tearDownClass() {
+        System.out.println("RecursiveBindings class tests complete.");
     }
 
     @BeforeEach
     public void setUp() {
+        System.out.println("New test running...");
     }
 
     @AfterEach
-    public void tearDown() {
-    }
+    public void tearDown() { System.out.println("Test complete."); }
     //CHECKSTYLE:ON
 
     /**
@@ -80,7 +75,7 @@ public final class RecursiveBindingsTest {
      */
     @Test
     public void testSetParent() {
-        System.out.println("setParent");
+        System.out.println("Test: setParent");
         RecursiveBindings p = new RecursiveBindings();
         RecursiveBindings instance = new RecursiveBindings();
         instance.setParent(p);
@@ -95,7 +90,7 @@ public final class RecursiveBindingsTest {
     @Test
     public void testLocalContainsKey() {
         RecursiveBindings instance = new RecursiveBindings();
-        System.out.println("localContainsKey");
+        System.out.println("Test: localContainsKey");
         Random rand = new Random();
         for (int i = 0; i < TEST_ITERATIONS; i++) {
             byte[] array = new byte[rand.nextInt(MAX_ARR_LEN) + 1];
@@ -114,7 +109,7 @@ public final class RecursiveBindingsTest {
     @Test
     public void testLocalGet() {
         RecursiveBindings instance = new RecursiveBindings();
-        System.out.println("localGet");
+        System.out.println("Test: localGet");
         Random rand = new Random();
         for (int i = 0; i < TEST_ITERATIONS; i++) {
             byte[] keyArray = new byte[rand.nextInt(MAX_ARR_LEN) + 1];
@@ -139,7 +134,7 @@ public final class RecursiveBindingsTest {
         RecursiveBindings grandParent = new RecursiveBindings();
         parent.setParent(grandParent);
         instance.setParent(parent);
-        System.out.println("containsKey");
+        System.out.println("Test: containsKey");
         Random rand = new Random();
         //Test local
         for (int i = 0; i < TEST_ITERATIONS; i++) {
@@ -183,7 +178,7 @@ public final class RecursiveBindingsTest {
         RecursiveBindings grandParent = new RecursiveBindings();
         parent.setParent(grandParent);
         instance.setParent(parent);
-        System.out.println("get");
+        System.out.println("Test: get");
         Random rand = new Random();
         //Test local
         for (int i = 0; i < TEST_ITERATIONS; i++) {
@@ -228,7 +223,7 @@ public final class RecursiveBindingsTest {
      */
     @Test
     public void testGetParent() {
-        System.out.println("getParent");
+        System.out.println("Test: getParent");
         RecursiveBindings instance = new RecursiveBindings();
         RecursiveBindings p = new RecursiveBindings();
         //No parent.
