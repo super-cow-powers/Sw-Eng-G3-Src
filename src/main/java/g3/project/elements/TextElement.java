@@ -30,18 +30,24 @@ package g3.project.elements;
 
 import g3.project.graphics.FontProps;
 import g3.project.graphics.StyledTextSeg;
+import nu.xom.Builder;
+import nu.xom.Element;
+
 import java.util.ArrayList;
 import java.util.Optional;
-import nu.xom.*;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public class TextElement extends Element implements Includable {
 //CHECKSTYLE:OFF
 
-    private static ThreadLocal builders = new ThreadLocal() {
+    private static final ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
             return new Builder(new ElementFactory());

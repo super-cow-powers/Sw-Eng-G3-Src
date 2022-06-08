@@ -28,12 +28,23 @@
  */
 package g3.project.elements;
 
+<<<<<<< Updated upstream
+=======
+import g3.project.xmlIO.DocIO;
+import nu.xom.Attribute;
+import nu.xom.Builder;
+import nu.xom.Element;
+
+>>>>>>> Stashed changes
 import java.util.Optional;
-import nu.xom.*;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public final class PlayableElement extends VisualElement implements Includable {
 //CHECKSTYLE:OFF
@@ -49,7 +60,7 @@ public final class PlayableElement extends VisualElement implements Includable {
     /**
      * Creates builder thread for the element
      */
-    private static ThreadLocal builders = new ThreadLocal() {
+    private static final ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
             return new Builder(new ElementFactory());
@@ -66,9 +77,16 @@ public final class PlayableElement extends VisualElement implements Includable {
     }
 
     /**
+<<<<<<< Updated upstream
      * Constructor
      * @param name
      * @param uri
+=======
+     * Constructor.
+     *
+     * @param name Element name.
+     * @param uri  Element URI.
+>>>>>>> Stashed changes
      */
     public PlayableElement(final String name, final String uri) {
         super(name, uri);

@@ -32,13 +32,17 @@ import nu.xom.Builder;
 import nu.xom.Element;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public class ButtonElement extends Element {
     //CHECKSTYLE:OFF
 
-    private static ThreadLocal builders = new ThreadLocal() {
+    private static final ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
             return new Builder(new ElementFactory());

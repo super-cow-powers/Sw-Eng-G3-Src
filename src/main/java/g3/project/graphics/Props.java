@@ -32,8 +32,12 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public interface Props {
 
@@ -65,4 +69,14 @@ public interface Props {
      * @return Value, or default value. Empty if invalid property.
      */
     Optional<Object> getProp(String prop);
+<<<<<<< Updated upstream
+=======
+
+    /**
+     * Get all current props.
+     *
+     * @return current Props.
+     */
+    Map<String, Object> getProps();
+>>>>>>> Stashed changes
 }

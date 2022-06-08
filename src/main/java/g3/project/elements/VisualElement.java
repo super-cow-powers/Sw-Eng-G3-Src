@@ -34,18 +34,32 @@ import g3.project.graphics.LocObj;
 import g3.project.graphics.SizeObj;
 import g3.project.graphics.StrokeProps;
 import g3.project.graphics.VisualProps;
+<<<<<<< Updated upstream
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Optional;
+=======
+import g3.project.xmlIO.DocIO;
+>>>>>>> Stashed changes
 import javafx.geometry.Point2D;
 import javafx.scene.paint.Color;
 import nu.xom.Attribute;
 import nu.xom.Element;
 
+import javax.script.Bindings;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Optional;
+
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public class VisualElement extends Element implements Scriptable {
 
@@ -61,7 +75,7 @@ public class VisualElement extends Element implements Scriptable {
     /**
      * Script bindings for the element.
      */
-    private RecursiveBindings elementScriptBindings = new RecursiveBindings();
+    private final RecursiveBindings elementScriptBindings = new RecursiveBindings();
 
     /**
      * Ref to the engine.
@@ -86,7 +100,7 @@ public class VisualElement extends Element implements Scriptable {
      * Constructor.
      *
      * @param name Element name
-     * @param uri Element URI
+     * @param uri  Element URI
      */
     public VisualElement(final String name, final String uri) {
         super(name, uri);
@@ -104,7 +118,7 @@ public class VisualElement extends Element implements Scriptable {
     /**
      * Find qualified attribute from element.
      *
-     * @param el Element to use.
+     * @param el            Element to use.
      * @param qualifiedName Full attribute name.
      * @return Maybe attribute.
      */
@@ -117,6 +131,51 @@ public class VisualElement extends Element implements Scriptable {
     }
 
     /**
+<<<<<<< Updated upstream
+=======
+     * Make an attribute with a name-space.
+     *
+     * @param qualifiedName Full name.
+     * @param attrVal       Value.
+     * @return Attribute.
+     */
+    public static Attribute makeAttrWithNS(final String qualifiedName, final String attrVal) {
+        var nameSplit = qualifiedName.split(":");
+        var attrNS = (nameSplit.length > 1) ? EXT_URI : "";
+        var attr = new Attribute(qualifiedName, attrNS, attrVal);
+        return attr;
+    }
+
+    /**
+     * Put something into this element's state/scope.
+     *
+     * @param name  Name of thing.
+     * @param state Thing.
+     */
+    public void putStateVariable(final String name, final Object state) {
+        elementScriptBindings.put(name, state);
+    }
+
+    /**
+     * Get something from this element's state/scope.
+     *
+     * @param name Name of thing.
+     * @return Thing or Null.
+     */
+    public Object getStateVariable(final String name) {
+        var obj = ((Bindings) elementScriptBindings).get(name);
+        return obj;
+    }
+
+    /**
+     * Delete the element and sub-elements.
+     *
+     * @param resIO Resource handler to remove resources on delete.
+     */
+    public abstract void delete(DocIO resIO);
+
+    /**
+>>>>>>> Stashed changes
      * Get the object's X/Y location. Returns an Optional, which may contain
      * either the location or nothing. The caller can then determine the action
      * to take.
@@ -237,7 +296,91 @@ public class VisualElement extends Element implements Scriptable {
         this.addAttribute(xAttr);
         this.addAttribute(yAttr);
         this.addAttribute(rotAttr);
+<<<<<<< Updated upstream
         hasUpdated();
+=======
+    }
+
+    /**
+     * Set element size.
+     *
+     * @param x   X size.
+     * @param y   Y size.
+     * @param rot Rotation.
+     */
+    public final void setSize(final Double x, final Double y, final Double rot) {
+        Attribute xAttr = new Attribute("x_size_px", x.toString());
+        Attribute yAttr = new Attribute("y_size_px", y.toString());
+        Attribute rotAttr = new Attribute("rot_angle", rot.toString());
+        this.addAttribute(xAttr);
+        this.addAttribute(yAttr);
+        this.addAttribute(rotAttr);
+    }
+
+    /**
+     * Get the page this element is of.
+     *
+     * @return Maybe Page.
+     */
+    public final Optional<PageElement> getPage() {
+        if (this instanceof PageElement) {
+            return Optional.of((PageElement) this);
+        } else {
+            var par = this.getParent();
+            while (!(par instanceof PageElement) && (par.getParent() != null)) {
+                par = par.getParent();
+            }
+            return Optional.ofNullable((PageElement) par);
+        }
+    }
+
+    /**
+     * Get delay in seconds.
+     *
+     * @return Delay in seconds.
+     */
+    public final Optional<Double> getDelaySecs() {
+        Attribute delAttr = this.getAttribute("show_after_s");
+        if (delAttr != null) {
+            var delStr = delAttr.getValue();
+            return Optional.ofNullable(Double.valueOf(delStr));
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Set delay in seconds.
+     *
+     * @param del Delay in seconds.
+     */
+    public final void setDelaySecs(final Double del) {
+        Attribute delAttr = new Attribute("show_after_s", del.toString());
+        this.addAttribute(delAttr);
+    }
+
+    /**
+     * Get display duration in seconds.
+     *
+     * @return Duration in seconds.
+     */
+    public final Optional<Double> getDurationSecs() {
+        Attribute durAttr = this.getAttribute("disp_duration_s");
+        if (durAttr != null) {
+            var durStr = durAttr.getValue();
+            return Optional.ofNullable(Double.valueOf(durStr));
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Set delay in seconds.
+     *
+     * @param dur Delay in seconds.
+     */
+    public final void setDurationSecs(final Double dur) {
+        Attribute durAttr = new Attribute("disp_duration_s", dur.toString());
+        this.addAttribute(durAttr);
+>>>>>>> Stashed changes
     }
 
     /**
@@ -276,7 +419,65 @@ public class VisualElement extends Element implements Scriptable {
         }
         var colAttr = new Attribute("fill", colourString);
         this.addAttribute(colAttr);
+<<<<<<< Updated upstream
         hasUpdated();
+=======
+    }
+
+    /**
+     * Get element alpha.
+     *
+     * @return Opacity value.
+     */
+    public final Double getAlpha() {
+        var colAttr = this.getAttribute("fill");
+        var alAttr = this.getAttribute("alpha");
+        Double alpha = 1d;
+        if (alAttr == null) {
+            if (colAttr != null) {
+                var col = Color.valueOf(colAttr.getValue());
+                alpha = col.getOpacity();
+            }
+        } else {
+            alpha = Double.valueOf(alAttr.getValue());
+        }
+        return alpha;
+    }
+
+    /**
+     * Set the element Alpha.
+     *
+     * @param alpha Alpha to set.
+     */
+    public final void setAlpha(final Double alpha) {
+        var alAttr = new Attribute("alpha", alpha.toString());
+        this.addAttribute(alAttr);
+    }
+
+    /**
+     * Get if the node is supposed to be visible.
+     *
+     * @return Is Visible?
+     */
+    public Boolean getVisibility() {
+        var visAttr = this.getAttribute(VisualProps.VISIBLE);
+        Boolean vis = true;
+        if (visAttr != null) {
+            //var colStr = colAttr.get().getValue().replace("#", "");
+            vis = Boolean.valueOf(visAttr.getValue());
+        }
+        return vis;
+>>>>>>> Stashed changes
+    }
+
+    /**
+     * Set my visibility.
+     *
+     * @param vis Visible or not.
+     */
+    public void setVisibility(final Boolean vis) {
+        var visAttr = new Attribute(VisualProps.VISIBLE, vis.toString());
+        this.addAttribute(visAttr);
     }
 
     /**
@@ -432,6 +633,17 @@ public class VisualElement extends Element implements Scriptable {
         return this.getClass().getName();
     }
 
+<<<<<<< Updated upstream
+=======
+    /**
+     * Add a new script to the element. Any old file MUST have been deleted
+     * before use!
+     *
+     * @param path     Path to new file.
+     * @param language Script language.
+     * @throws IOException Couldn't access Path.
+     */
+>>>>>>> Stashed changes
     @Override
     public void addScriptFile(Path path, String language) throws IOException {
         if (!path.getFileSystem().provider().getScheme().contains("jar") && !path.getFileSystem().provider().getScheme().contains("zip")) {

@@ -29,17 +29,40 @@
 package g3.project.network;
 
 import g3.project.core.Threaded;
+import javafx.event.Event;
+
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javafx.event.Event;
-
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public final class NetThing extends Threaded {
+
+    /**
+     * Event queue from input sources.
+     */
+    private final BlockingQueue<Event> txEventQueue
+            = new LinkedBlockingQueue<Event>();
+    /**
+     * Event queue from input sources.
+     */
+    private final BlockingQueue<Event> rxEventQueue
+            = new LinkedBlockingQueue<Event>();
+    /**
+     * Get running
+     */
+    private final AtomicBoolean running = getRunning();
+    /**
+     * Get suspended
+     */
+    private final AtomicBoolean suspended = getSuspended();
 
     /**
      * Constructor.
@@ -47,18 +70,6 @@ public final class NetThing extends Threaded {
     public NetThing() {
         super();
     }
-
-    /**
-     * Event queue from input sources.
-     */
-    private final BlockingQueue<Event> txEventQueue
-            = new LinkedBlockingQueue<Event>();
-
-    /**
-     * Event queue from input sources.
-     */
-    private final BlockingQueue<Event> rxEventQueue
-            = new LinkedBlockingQueue<Event>();
 
     /**
      * Send an event to the net.
@@ -78,17 +89,6 @@ public final class NetThing extends Threaded {
     public BlockingQueue<Event> getRxQueue() {
         return rxEventQueue;
     }
-
-    /**
-     * Get running
-     */
-    private AtomicBoolean running = getRunning();
-
-    /**
-     * Get suspended
-     */
-    private AtomicBoolean suspended = getSuspended();
-
 
     @Override
     public void run() {

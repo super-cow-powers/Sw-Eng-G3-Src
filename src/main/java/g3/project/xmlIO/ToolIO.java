@@ -28,6 +28,7 @@
  */
 package g3.project.xmlIO;
 
+<<<<<<< Updated upstream
 import g3.project.elements.DocElement;
 import g3.project.elements.ElementFactory;
 import g3.project.ui.MainController;
@@ -44,9 +45,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+=======
+import nu.xom.Document;
+
+import java.io.IOException;
+import java.io.InputStream;
+>>>>>>> Stashed changes
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+<<<<<<< Updated upstream
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -54,17 +62,29 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
+=======
+import java.util.Optional;
+>>>>>>> Stashed changes
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nu.xom.*;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author david
  */
 public final class ToolIO extends IO {
 
     protected final static String xmlFileName = "tools.xml";
+=======
+ * @author Group 3
+ */
+public final class ToolIO extends IO {
+    /**
+     * Name of XML doc.
+     */
+    protected final static String XML_FILE_NAME = "tools.xml";
+>>>>>>> Stashed changes
 
     /**
      * Load tools from path string.

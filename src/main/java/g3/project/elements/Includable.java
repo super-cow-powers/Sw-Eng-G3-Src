@@ -31,14 +31,19 @@ package g3.project.elements;
 import java.util.Optional;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public interface Includable {
     /**
      * @TODO javadoc
      */
     String INCLUDE_ATTR = "include_source";
+
     /**
      * Return the source path or URL.
      *

@@ -28,16 +28,26 @@
  */
 package g3.project.elements;
 
+<<<<<<< Updated upstream
 import nu.xom.*;
 
 /**
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+import g3.project.xmlIO.DocIO;
+import nu.xom.Builder;
+import nu.xom.Element;
+
+/**
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public class TableElement extends VisualElement {
     /**
      * Creates builder thread for the element
      */
+<<<<<<< Updated upstream
     private static ThreadLocal builders = new ThreadLocal() {
         
          protected synchronized Object initialValue() {
@@ -46,6 +56,16 @@ public class TableElement extends VisualElement {
          
      };
     
+=======
+    private static final ThreadLocal builders = new ThreadLocal() {
+
+        protected synchronized Object initialValue() {
+            return new Builder(new ElementFactory());
+        }
+
+    };
+
+>>>>>>> Stashed changes
     /**
      * Constructor
      * @param name
@@ -55,7 +75,14 @@ public class TableElement extends VisualElement {
     }
 
     /**
+<<<<<<< Updated upstream
      * Constructor
+=======
+     * Constructor.
+     *
+     * @param name Element Name.
+     * @param uri  Element URI.
+>>>>>>> Stashed changes
      */
     public TableElement(final String name, final String uri) {
         super(name, uri);

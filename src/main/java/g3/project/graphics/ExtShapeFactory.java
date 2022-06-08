@@ -28,13 +28,18 @@
  */
 package g3.project.graphics;
 
-import java.util.Optional;
-import java.util.function.Consumer;
 import javafx.scene.input.MouseEvent;
 
+import java.util.Optional;
+import java.util.function.Consumer;
+
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public final class ExtShapeFactory {
 
@@ -42,32 +47,48 @@ public final class ExtShapeFactory {
      * text click handler.
      */
     @SuppressWarnings("empty-statement")
+<<<<<<< Updated upstream
     private Consumer<MouseEvent> textClickHandlerConsumer = (evt) -> {
         ;
+=======
+    protected Consumer<MouseEvent> textClickHandlerConsumer = (evt) -> {
+>>>>>>> Stashed changes
     };
 
     /**
      * href click handler.
      */
     @SuppressWarnings("empty-statement")
+<<<<<<< Updated upstream
     private Consumer<MouseEvent> hrefClickHandlerConsumer = (evt) -> {
         ;
+=======
+    protected Consumer<MouseEvent> hrefClickHandlerConsumer = (evt) -> {
+>>>>>>> Stashed changes
     };
 
     /**
      * href mouse roll-over (hover) enter handler.
      */
     @SuppressWarnings("empty-statement")
+<<<<<<< Updated upstream
     private Consumer<MouseEvent> hrefHovEntHandlerConsumer = (evt) -> {
         ;
+=======
+    protected Consumer<MouseEvent> hrefHovEntHandlerConsumer = (evt) -> {
+>>>>>>> Stashed changes
     };
 
     /**
      * href mouse roll-over (hover) exit handler.
      */
     @SuppressWarnings("empty-statement")
+<<<<<<< Updated upstream
     private Consumer<MouseEvent> hrefHovExHandlerConsumer = (evt) -> {
         ;
+=======
+    protected Consumer<MouseEvent> hrefHovExHandlerConsumer = (evt) -> {
+>>>>>>> Stashed changes
     };
 
     /**
@@ -81,7 +102,8 @@ public final class ExtShapeFactory {
         rectangle,
         polygon,
         line
-    };
+    }
+
     //CHECKSTYLE:ON//CHECKSTYLE:ON
 
     /**

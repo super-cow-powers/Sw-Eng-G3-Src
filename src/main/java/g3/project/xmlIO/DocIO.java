@@ -28,21 +28,23 @@
  */
 package g3.project.xmlIO;
 
-import java.util.Optional;
+import nu.xom.Document;
+import nu.xom.Serializer;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.FileSystem;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nu.xom.*;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author david
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public class DocIO extends IO {
     
@@ -117,7 +119,28 @@ public class DocIO extends IO {
     }
 
     /**
+<<<<<<< Updated upstream
      * Get an internal class-path resource as bytes.
+=======
+     * Try to get an empty file in the given location, with the given prefix and
+     * suffix.
+     *
+     * @param loc    Location to create file.
+     * @param prefix File Prefix.
+     * @param suffix File Suffix.
+     * @return New File Path.
+     * @throws IOException Couldn't make file.
+     */
+    public Path getEmptyFile(final String loc, final String prefix, final String suffix) throws IOException {
+        var containingPath = zipFs.getPath(loc);
+        Files.createDirectories(containingPath);
+        var filePath = Files.createTempFile(containingPath, prefix, suffix);
+        return filePath;
+    }
+
+    /**
+     * Add a resource to the zip.
+>>>>>>> Stashed changes
      *
      * @param file File to return.
      * @param resClass Class to look in.
@@ -131,7 +154,23 @@ public class DocIO extends IO {
         } catch (IOException ex) {
             Logger.getLogger(DocIO.class.getName()).log(Level.SEVERE, null, ex);
         }
+<<<<<<< Updated upstream
         return Optional.ofNullable(arr);
+=======
+        return getResource(newPath);
+    }
+
+    /**
+     * Write to a given file.
+     *
+     * @param path    Path to file.
+     * @param content File Content.
+     * @throws java.io.IOException Couldn't access path.
+     */
+    public void writeBytes(final String path, final byte[] content) throws IOException {
+        var filePath = zipFs.getPath(path);
+        Files.write(filePath, content);
+>>>>>>> Stashed changes
     }
 
     @Override

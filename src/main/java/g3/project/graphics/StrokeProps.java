@@ -28,16 +28,22 @@
  */
 package g3.project.graphics;
 
-import java.util.HashMap;
 import javafx.scene.paint.Color;
+
+import java.util.HashMap;
 import java.util.Map;
-import static java.util.Map.entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static java.util.Map.entry;
+
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public final class StrokeProps extends HashMap<String, Object> implements Props {
 
@@ -84,7 +90,7 @@ public final class StrokeProps extends HashMap<String, Object> implements Props 
      * Contains CSS strings for known props.
      */
     private static final Map<String, String> CSS = Map.ofEntries(entry(WIDTH, "-fx-stroke-width: %s; "),
-            entry(LINE_STYLE, "-fx-stroke-dash-array: %s;"), entry(COLOUR, "-fx-stroke: \'%s\';"), entry(LINE_CAP, "-fx-stroke-line-cap: %s;"));
+            entry(LINE_STYLE, "-fx-stroke-dash-array: %s;"), entry(COLOUR, "-fx-stroke: '%s';"), entry(LINE_CAP, "-fx-stroke-line-cap: %s;"));
 
     /**
      * Constructor. Takes map of properties.
@@ -157,7 +163,7 @@ public final class StrokeProps extends HashMap<String, Object> implements Props 
             var cssFmt = CSS.get(p);
             Object val = this.getProp(p).get();
             //Return nothing for solid stroke.
-            return (val.toString().equals(SOLID_STYLE)) ? "" : String.format(cssFmt, val.toString());
+            return (val.toString().equals(SOLID_STYLE)) ? "" : String.format(cssFmt, val);
         }).collect(Collectors.joining(" "));
         System.out.println(props);
         return props;

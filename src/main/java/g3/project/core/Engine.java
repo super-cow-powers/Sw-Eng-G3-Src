@@ -29,19 +29,12 @@
 package g3.project.core;
 
 import g3.project.elements.*;
-import g3.project.elements.DocElement;
-import g3.project.elements.PageElement;
-import g3.project.elements.VisualElement;
-import g3.project.graphics.FontProps;
-import g3.project.graphics.StyledTextSeg;
+import g3.project.graphics.*;
 import g3.project.network.NetThing;
-import g3.project.graphics.LocObj;
 import g3.project.ui.MainController;
-import g3.project.graphics.SizeObj;
-import g3.project.graphics.StrokeProps;
-import g3.project.graphics.VisualProps;
 import g3.project.xmlIO.DocIO;
 import g3.project.xmlIO.ToolIO;
+<<<<<<< Updated upstream
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,6 +50,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+=======
+>>>>>>> Stashed changes
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -66,8 +61,20 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
-import javax.script.ScriptException;
 import nu.xom.Element;
+
+import javax.script.ScriptException;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author david
@@ -75,19 +82,10 @@ import nu.xom.Element;
 public final class Engine extends Threaded {
 
     /**
-     * XML IO.
-     */
-    private DocIO docIO;
-
-    /**
-     * Tools IO.
-     */
-    private ToolIO toolIO;
-
-    /**
      * Network Communications module.
      */
     private final NetThing netComms = new NetThing();
+<<<<<<< Updated upstream
 
     /**
      * Scripting Engine Controller.
@@ -110,11 +108,14 @@ public final class Engine extends Threaded {
 
     private String currentToolID = "";
 
+=======
+>>>>>>> Stashed changes
     /**
      * Navigation history stack.
      */
     private final Stack<String> navHistory = new Stack<>();
     /**
+<<<<<<< Updated upstream
      * Current line from console.
      */
     private volatile String consoleLine = new String();
@@ -122,6 +123,15 @@ public final class Engine extends Threaded {
     private final AtomicBoolean consoleOnUserInput = new AtomicBoolean(false);
     private CountDownLatch consoleLineReady;
 
+=======
+     * Console is taking user input?
+     */
+    private final AtomicBoolean consoleOnUserInput = new AtomicBoolean(false);
+    /**
+     * Executor service for delaying events.
+     */
+    private final ScheduledThreadPoolExecutor elementDelayService = new ScheduledThreadPoolExecutor(1);
+>>>>>>> Stashed changes
     /**
      * Event queue from input sources.
      */
@@ -132,13 +142,11 @@ public final class Engine extends Threaded {
      */
     private final BlockingQueue<File> docQueue
             = new LinkedBlockingQueue<File>();
-
     /**
      * Out of thread call queue.
      */
     private final BlockingQueue<Runnable> callQueue
             = new LinkedBlockingQueue<>();
-
     /**
      * Ref to the UI controller.
      */
@@ -147,17 +155,46 @@ public final class Engine extends Threaded {
      * Writer for the scripting engine output.
      */
     private final Writer scrWriter;
-
     /**
      * Filename for the start screen
      */
     private final String startScreenFileName = "start_screen.spres";
-
     /**
      * Filename for a new empty project
      */
     private final String emptyFileName = "empty.spres";
-
+    /**
+     * XML IO.
+     */
+    private DocIO docIO;
+    /**
+     * Tools IO.
+     */
+    private ToolIO toolIO;
+    /**
+     * Scripting Engine Controller.
+     */
+    private Scripting scriptingEngine;
+    /**
+     * List of tools.
+     */
+    private Tools currentTools;
+    /**
+     * Document currently open.
+     */
+    private DocElement currentDoc;
+    /**
+     * Active Tool ID.
+     */
+    private String currentToolID = "";
+    /**
+     * Current line from console.
+     */
+    private volatile String consoleLine = "";
+    /**
+     * Console has data?
+     */
+    private CountDownLatch consoleLineReady;
     /**
      * Get current thread
      */
@@ -166,12 +203,12 @@ public final class Engine extends Threaded {
     /**
      * Get running
      */
-    private AtomicBoolean running = getRunning();
+    private final AtomicBoolean running = getRunning();
 
     /**
      * Get suspended
      */
-    private AtomicBoolean suspended = getSuspended();
+    private final AtomicBoolean suspended = getSuspended();
 
     /**
      * Constructor.
@@ -281,7 +318,7 @@ public final class Engine extends Threaded {
                                         imagePath = "";
                                     }
                                     Platform.runLater(() -> controller.
-                                    addTool(currentTool.getName(), currentTool.getID(), imagePath));
+                                            addTool(currentTool.getName(), currentTool.getID(), imagePath));
                                 }
                             },
                             () -> {
@@ -325,6 +362,19 @@ public final class Engine extends Threaded {
     }
 
     /**
+<<<<<<< Updated upstream
+=======
+     * Put a global into the scripting engine.
+     *
+     * @param name Global Name.
+     * @param obj  Global.
+     */
+    public void setScriptGlobal(final String name, final Object obj) {
+        scriptingEngine.setGlobal(name, obj);
+    }
+
+    /**
+>>>>>>> Stashed changes
      * Handle an incoming event.
      *
      * @param event Event to handle.
@@ -373,7 +423,7 @@ public final class Engine extends Threaded {
      * Route a MouseEvent to the correct location.
      *
      * @param mev Event.
-     * @param el Scriptable Element.
+     * @param el  Scriptable Element.
      */
     private void routeMouseEvent(final MouseEvent mev, final Scriptable el) {
         final var evType = mev.getEventType();
@@ -399,7 +449,7 @@ public final class Engine extends Threaded {
     /**
      * Route a KeyEvent to the correct location.
      *
-     * @param kev Event.
+     * @param kev  Event.
      * @param elID Element.
      */
     private void routeKeyEvent(final KeyEvent kev, final String elID) {
@@ -466,7 +516,7 @@ public final class Engine extends Threaded {
      * Handle an event on an hyperlink.
      *
      * @param hrefSeg Href.
-     * @param mev Event.
+     * @param mev     Event.
      */
     private void handleHrefEvt(final StyledTextSeg hrefSeg, final MouseEvent mev) {
         System.out.println("We got it: " + hrefSeg);
@@ -512,13 +562,13 @@ public final class Engine extends Threaded {
     /**
      * Handle an event from a Navigation button.
      *
-     * @param aev Button event.
+     * @param aev    Button event.
      * @param target Target button.
      */
     private void handleNavButtonEvent(final ActionEvent aev,
-            final Button target) {
-        if (((Button) target).getId().contains("-jump-card-button")) {
-            var id = ((Button) target).getId().replace("-jump-card-button", "");
+                                      final Button target) {
+        if (target.getId().contains("-jump-card-button")) {
+            var id = target.getId().replace("-jump-card-button", "");
             this.gotoPage(id, true);
         }
     }
@@ -637,6 +687,7 @@ public final class Engine extends Threaded {
     /**
      * Instruct the UI to draw an image using discrete values.
      *
+<<<<<<< Updated upstream
      * @param id
      * @param xSize
      * @param ySize
@@ -644,10 +695,20 @@ public final class Engine extends Threaded {
      * @param yLoc
      * @param zInd
      * @param source
+=======
+     * @param id     Image ID
+     * @param xSize  Image X Size.
+     * @param ySize  Image Y Size.
+     * @param rot    Rotation.
+     * @param xLoc   X Location.
+     * @param yLoc   Y Location.
+     * @param zInd   Z Index.
+     * @param source Image Source.
+>>>>>>> Stashed changes
      */
     //CHECKSTYLE:OFF
     public void putImage(final String id, final Double xSize, final Double ySize, final Double rot, final Double xLoc,
-            final Double yLoc, final Double zInd, final String source) {
+                         final Double yLoc, final Double zInd, final String source) {
         //CHECKSTYLE:ON
         if (Thread.currentThread() != myThread) {
             runFunction(() -> putImage(id, xSize, ySize, rot, xLoc, yLoc, zInd, source));
@@ -705,7 +766,7 @@ public final class Engine extends Threaded {
     /**
      * Put a shape to the display.
      *
-     * @param id Shape ID.
+     * @param id   Shape ID.
      * @param type Shape type.
      */
     public void putShape(final String id, final String type) {
@@ -724,7 +785,7 @@ public final class Engine extends Threaded {
     /**
      * Set a Shape's style.
      *
-     * @param id Target shape ID.
+     * @param id     Target shape ID.
      * @param colour Fill colour.
      */
     public void setShapeColour(final String id, final String colour) {
@@ -736,6 +797,7 @@ public final class Engine extends Threaded {
     /**
      * Set text on a shape. Sets properties for all text in the shape.
      *
+<<<<<<< Updated upstream
      * @TODO for linting - reduce the amount of parameters called to 7 if
      * possible
      * @param shapeID Target ID.
@@ -745,12 +807,26 @@ public final class Engine extends Threaded {
      * @param font Font name.
      * @param colour Font colour.
      * @param size Font size.
+=======
+     * @param shapeID    Target ID.
+     * @param text       Text to set.
+     * @param hAlign     Horizontal alignment.
+     * @param vAlign     Vertical alignment.
+     * @param font       Font name.
+     * @param colour     Font colour.
+     * @param size       Font size.
+>>>>>>> Stashed changes
      * @param underscore Under-line text.
-     * @param italic Italicise text.
-     * @param bold Bold text.
+     * @param italic     Italicise text.
+     * @param bold       Bold text.
      */
+<<<<<<< Updated upstream
     public void setShapeText(final String shapeID, final String text, final String hAlign, final String vAlign, final String font, final String colour,
             final Double size, final Boolean underscore, final Boolean italic, final Boolean bold) {
+=======
+    public void drawShapeText(final String shapeID, final String text, final String hAlign, final String vAlign, final String font, final String colour,
+                              final Double size, final Boolean underscore, final Boolean italic, final Boolean bold) {
+>>>>>>> Stashed changes
         var props = new FontProps();
         props.put(FontProps.ALIGNMENT, hAlign);
         props.put(FontProps.VALIGNMENT, vAlign);
@@ -771,12 +847,72 @@ public final class Engine extends Threaded {
     }
 
     /**
+<<<<<<< Updated upstream
+=======
+     * Get shape Text String.
+     *
+     * @param shapeID Shape.
+     * @return Maybe text string.
+     */
+    public Optional<String> getShapeTextString(final String shapeID) {
+        var maybeEl = currentDoc.getElementByID(shapeID);
+        return maybeEl.filter(el -> el instanceof ShapeElement).map(s -> {
+            return ((ShapeElement) s).getTextString();
+        });
+    }
+
+    /**
+     * Set Shape Text String.
+     *
+     * @param shapeID Shape.
+     * @param text    Text.
+     */
+    public void setShapeTextString(final String shapeID, final String text) {
+        var maybeEl = currentDoc.getElementByID(shapeID);
+        maybeEl.filter(el -> el instanceof ShapeElement).ifPresent(s -> {
+            ((ShapeElement) s).setText(text);
+            s.hasUpdated();
+        });
+    }
+
+    /**
+     * Get Shape's text properties.
+     *
+     * @param shapeID Shape.
+     * @return Maybe Properties.
+     */
+    public Optional<HashMap<String, Object>> getShapeTextProps(final String shapeID) {
+        HashMap<String, Object> retmap = new HashMap<>();
+        var maybeEl = currentDoc.getElementByID(shapeID);
+        maybeEl.filter(el -> el instanceof ShapeElement).ifPresent(s -> {
+            ShapeElement sel = (ShapeElement) s;
+            retmap.putAll(FontProps.PROP_DEFAULTS);
+            sel.getText().filter(ts -> !ts.isEmpty()).map(ts -> ts.get(0)).ifPresent(t -> retmap.putAll(t.getStyle()));
+        });
+        return retmap.isEmpty() == true ? Optional.empty() : Optional.of(retmap);
+    }
+
+    /**
+     * Set shape element text properties.
+     *
+     * @param shapeID Shape.
+     * @param props   Text props.
+     */
+    public void setShapeTextProps(final String shapeID, final HashMap<String, Object> props) {
+        currentDoc.getElementByID(shapeID).filter(el -> el instanceof ShapeElement).ifPresent(e -> {
+            ((ShapeElement) e).setTextProperties(props);
+            e.hasUpdated();
+        });
+    }
+
+    /**
+>>>>>>> Stashed changes
      * Set a shape's stroke.
      *
      * @param shapeID Target Shape ID.
-     * @param colour Colour to set.
-     * @param style Stroke Style.
-     * @param width Stroke Width.
+     * @param colour  Colour to set.
+     * @param style   Stroke Style.
+     * @param width   Stroke Width.
      */
     public void setShapeStroke(final String shapeID, final String colour, final String style, final Double width) {
         final StrokeProps props = new StrokeProps();
@@ -791,9 +927,9 @@ public final class Engine extends Threaded {
     /**
      * Resize an element on screen.
      *
-     * @param id Element ID.
-     * @param x New X size.
-     * @param y New Y size.
+     * @param id  Element ID.
+     * @param x   New X size.
+     * @param y   New Y size.
      * @param rot New rotation (degrees).
      */
     public void resizeElement(final String id, final Double x, final Double y, final Double rot) {
@@ -803,11 +939,33 @@ public final class Engine extends Threaded {
     }
 
     /**
+<<<<<<< Updated upstream
+=======
+     * Set a drawn element's on-screen visibility. Does not modify data.
+     *
+     * @param id  Element ID.
+     * @param vis Visibility.
+     */
+    public void setElementVisibility(final String id, final Boolean vis) {
+        Platform.runLater(() -> controller.setElementVisible(id, vis));
+    }
+
+    /**
+     * Remove an element from the screen. Does not modify data.
+     *
+     * @param id Element.
+     */
+    public void removeElementFromScreen(final String id) {
+        Platform.runLater(() -> controller.remove(id));
+    }
+
+    /**
+>>>>>>> Stashed changes
      * Move an element.
      *
-     * @param id Element ID.
-     * @param x New X location.
-     * @param y New Y location.
+     * @param id     Element ID.
+     * @param x      New X location.
+     * @param y      New Y location.
      * @param zIndex New Z Index
      */
     public void moveElement(final String id, final Double x, final Double y, final Double zIndex) {
@@ -819,7 +977,7 @@ public final class Engine extends Threaded {
     /**
      * Set basic shadow on an element.
      *
-     * @param id Target ID.
+     * @param id     Target ID.
      * @param radius Shadow radius.
      */
     public void setElementShadow(final String id, final Double radius) {
@@ -831,12 +989,12 @@ public final class Engine extends Threaded {
     /**
      * Show a player.
      *
-     * @param id Player ID.
-     * @param mediaLoc Media location.
+     * @param id           Player ID.
+     * @param mediaLoc     Media location.
      * @param showControls Display controls?
-     * @param autoPlay Auto-play media?
-     * @param loop Loop media?
-     * @param offset Media offset (in seconds).
+     * @param autoPlay     Auto-play media?
+     * @param loop         Loop media?
+     * @param offset       Media offset (in seconds).
      */
     public void drawPlayer(final String id, final String mediaLoc, final Boolean showControls, final Boolean autoPlay, final Boolean loop, final Double offset) {
         Platform.runLater(() -> {
@@ -845,6 +1003,19 @@ public final class Engine extends Threaded {
     }
 
     /**
+<<<<<<< Updated upstream
+=======
+     * Make a player on screen play/pause.
+     *
+     * @param id   Player ID.
+     * @param play Play/Pause.
+     */
+    public void togglePlayerPlaying(final String id, final Boolean play) {
+        Platform.runLater(() -> controller.togglePlayerPlaying(id, play));
+    }
+
+    /**
+>>>>>>> Stashed changes
      * Instruct the UI to create a player for the element.
      *
      * @param playable Playable element.
@@ -864,6 +1035,76 @@ public final class Engine extends Threaded {
     }
 
     /**
+<<<<<<< Updated upstream
+=======
+     * Delete an element.
+     *
+     * @param id Element ID.
+     */
+    public void deleteElement(final String id) {
+        if (Thread.currentThread() != getThread()) {
+            runFunction(() -> deleteElement(id));
+            return;
+        }
+        var maybeEl = currentDoc.getElementByID(id);
+        maybeEl.map(e -> {
+                    currentDoc.deleteElement(e, docIO);
+                    return e;
+                }).filter(e -> e instanceof PageElement)
+                .ifPresent(p -> {
+                    //Update page buttons.
+                    var pages = currentDoc.getPages();
+                    updateCardButtons(pages);
+                    Integer oldIndex = ((PageElement) p).getIndex();
+                    if (pages.isEmpty()) { //We removed the last page.
+                        makeNewCard(); //So add a new one.
+                        navHistory.clear();
+                        gotoPage(0, true);
+                    } else {
+                        gotoPrevPage();
+                    }
+                });
+    }
+
+    /**
+     * Append a new card.
+     */
+    public void makeNewCard() {
+        var basicPageStream = MainController.class
+                .getResourceAsStream("empty_page_stub.xml");
+        var newPageDoc = g3.project.xmlIO.Parse.parseDocXML(basicPageStream);
+        //Load the template. The first element is a "stub" containing the page.
+        newPageDoc.map(d -> d.getRootElement())
+                .map(r -> {
+                    for (var ch : r.getChildElements()) {
+                        if (ch instanceof PageElement) {
+                            return ch;
+                        }
+                    }
+                    return null;
+                })
+                .ifPresent(p -> {
+                    p.detach();
+                    String newID = currentDoc.getNewUniqueID("page-");
+                    ((PageElement) p).setID(newID);
+                    var endIndex = currentDoc.getPages().size();
+                    currentDoc.insertPage(endIndex, (PageElement) p);
+                    updateCardButtons(currentDoc.getPages());
+                });
+    }
+
+    /**
+     * Move card to new index.
+     *
+     * @param id       Card ID.
+     * @param newIndex Position to move to.
+     */
+    public void moveCard(final String id, final Integer newIndex) {
+
+    }
+
+    /**
+>>>>>>> Stashed changes
      * Set the cursor type.
      *
      * @param cType String of Cursor enum value.
@@ -882,9 +1123,15 @@ public final class Engine extends Threaded {
         }
         currentDoc.getCurrentPage().flatMap(card -> {
             if (card.getIndex() < currentDoc.getPages().size() - 1) {
+<<<<<<< Updated upstream
                 return currentDoc.getPage(card.getIndex() + 1);
             }
             return Optional.empty();
+=======
+                return card.getIndex() + 1;
+            }
+            return null;
+>>>>>>> Stashed changes
         }).ifPresent(next -> this.gotoPage(next, true));
     }
 
@@ -902,7 +1149,7 @@ public final class Engine extends Threaded {
     /**
      * Go to specified page number.
      *
-     * @param pageNum Number to go to.
+     * @param pageNum      Number to go to.
      * @param storeHistory Should I record it in history?
      */
     public void gotoPage(final Integer pageNum, final Boolean storeHistory) {
@@ -917,7 +1164,7 @@ public final class Engine extends Threaded {
     /**
      * Go to specified page.
      *
-     * @param pageID ID to go to.
+     * @param pageID       ID to go to.
      * @param storeHistory Should I record it in history?
      */
     public void gotoPage(final String pageID, final Boolean storeHistory) {
@@ -932,7 +1179,7 @@ public final class Engine extends Threaded {
     /**
      * Go to provided page.
      *
-     * @param page Page to go to.
+     * @param page         Page to go to.
      * @param storeHistory Should I record it in history?
      */
     public void gotoPage(final PageElement page, final Boolean storeHistory) {
@@ -992,6 +1239,7 @@ public final class Engine extends Threaded {
             runFunction(() -> processEls(el));
             return;
         }
+<<<<<<< Updated upstream
         // Do whatever you're going to do with this node…
         redrawEl(el);
         //If element is scriptable, evaluate it's load-function.
@@ -1000,6 +1248,33 @@ public final class Engine extends Threaded {
                 scriptingEngine.invokeOnElement(el, Scripting.LOAD_FUNCTION);
             } catch (ScriptException | IOException ex) {
                 Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+=======
+//CHECKSTYLE:OFF
+        //Check if there should be a delay.
+        var maybeDelay = el.getDelaySecs();
+        maybeDelay.ifPresentOrElse(del -> { //Element should be delayed
+            Double delaymS = Math.max(del * 1000, 0); //Don't delay less than 0 secs.
+            Runnable delayTask = () -> {
+                redrawEl(el);
+                // Then recurse the children
+                for (int i = 0; i < el.getChildCount(); i++) {
+                    var ch = el.getChild(i);
+                    if (ch instanceof VisualElement) {
+                        processEls((VisualElement) ch);
+                    }
+                }
+            };
+            elementDelayService.schedule(delayTask, delaymS.longValue(), TimeUnit.MILLISECONDS);
+        }, () -> { //No delay.
+            // Do whatever you're going to do with this node…
+            redrawEl(el);
+            // Then recurse the children
+            for (int i = 0; i < el.getChildCount(); i++) {
+                var ch = el.getChild(i);
+                if (ch instanceof VisualElement) {
+                    processEls((VisualElement) ch);
+                }
+>>>>>>> Stashed changes
             }
         }
         // Then recurse the children
@@ -1060,6 +1335,77 @@ public final class Engine extends Threaded {
     }
 
     /**
+<<<<<<< Updated upstream
+=======
+     * Get the string of an Element's script. Returns an empty string if none
+     * available.
+     *
+     * @param id Element ID.
+     * @return Script string.
+     */
+    public String getElScript(final String id) {
+        var maybeEl = currentDoc.getElementByID(id);
+        var maybeScr = maybeEl.flatMap(e -> e.getScriptEl())
+                .flatMap(s -> s.getSourceLoc())
+                .flatMap(sl -> docIO.getResource(sl))
+                .map(b -> new String(b, StandardCharsets.UTF_8));
+        if (maybeScr.isPresent()) {
+            return maybeScr.get();
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * Get an element's language.
+     *
+     * @param id Element ID.
+     * @return Language. python if not present.
+     */
+    public String getElScriptLang(final String id) {
+        var maybeEl = currentDoc.getElementByID(id);
+        var maybeLang = maybeEl.flatMap(e -> e.getScriptEl())
+                .map(s -> s.getScriptLang());
+        if (maybeLang.isPresent()) {
+            return maybeLang.get();
+        } else {
+            return "python";
+        }
+    }
+
+    /**
+     * Set an Element's script.
+     *
+     * @param id   Element ID.
+     * @param lang Language.
+     * @param scr  Script.
+     */
+    public void setElScript(final String id, final String lang, final String scr) {
+        if (Thread.currentThread() != getThread()) {
+            runFunction(() -> setElScript(id, lang, scr));
+            return;
+        }
+        var maybeEl = currentDoc.getElementByID(id);
+        maybeEl.flatMap(e -> e.getScriptEl()).flatMap(sel -> sel.getSourceLoc()).ifPresent(loc -> docIO.removeResource(loc)); //Remove existing
+        maybeEl.ifPresent(e -> {
+            String suffix = "";
+            if (lang.equalsIgnoreCase("rhino")) {
+                suffix = ".js";
+            } else if (lang.equalsIgnoreCase("python")) {
+                suffix = ".py";
+            }
+            try {
+                Path file = docIO.getEmptyFile("/scripts", id, suffix);
+                docIO.writeBytes(file.toString(), scr.getBytes());
+                e.addScriptFile(file, lang);
+            } catch (IOException ex) {
+                Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+    }
+
+    /**
+>>>>>>> Stashed changes
      * Get the current Tool IO.
      *
      * @return toolIO.
@@ -1129,7 +1475,7 @@ public final class Engine extends Threaded {
      * The UI has relocated an element. It upsets me that I can't just easily
      * use Events, but hey ho.
      *
-     * @param elID Element ID.
+     * @param elID   Element ID.
      * @param newLoc New location.
      */
     public void elementRelocated(final String elID, final LocObj newLoc) {
@@ -1149,14 +1495,41 @@ public final class Engine extends Threaded {
     public void provideProperties(final String elID) {
         Optional<VisualElement> maybeEl = currentDoc.getElementByID(elID);
         maybeEl.ifPresent(el -> {
+<<<<<<< Updated upstream
 //            el.
+=======
+            //el.getStroke().ifPresent(s -> retMap.putAll(s));
+            retMap.putAll(el.getVisualProps().getDefaultProps()); //Insert Defaults
+            retMap.putAll(el.getVisualProps()); //Override Defaults
+            if (el instanceof Includable) {
+                if (((Includable) el).getSourceLoc().isPresent()) {
+                    retMap.put("include_source", ((Includable) el).getSourceLoc().get());
+                } else {
+                    retMap.put("include_source", ((Includable) el).getSourceLoc().get());
+                }
+            }
+        });
+        return retMap;
+    }
+
+    /**
+     * Update element properties.
+     *
+     * @param props Properties map.
+     * @param elId  Element ID.
+     */
+    public void updateProperties(final HashMap<String, Object> props, final String elId) {
+        currentDoc.getElementByID(elId).ifPresent(e -> {
+            e.setProps(props);
+            e.hasUpdated();
+>>>>>>> Stashed changes
         });
     }
 
     /**
      * Instruct the UI to show a message to the User.
      *
-     * @param message Message to show
+     * @param message  Message to show
      * @param blocking Should I block the User?
      */
     public void putMessage(final String message, final Boolean blocking) {
@@ -1201,7 +1574,7 @@ public final class Engine extends Threaded {
             Logger.getLogger(Engine.class.getName()).log(Level.SEVERE, null, ex);
         }
         consoleOnUserInput.set(false);
-        return new String(consoleLine);
+        return consoleLine;
     }
 
     /**

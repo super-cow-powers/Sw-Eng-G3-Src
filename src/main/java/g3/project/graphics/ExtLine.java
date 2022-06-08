@@ -28,13 +28,17 @@
  */
 package g3.project.graphics;
 
-import java.util.ArrayList;
 import javafx.scene.shape.Polyline;
-import javafx.scene.shape.Shape;
+
+import java.util.ArrayList;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public final class ExtLine extends ExtShape {
 

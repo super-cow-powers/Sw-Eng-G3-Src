@@ -30,18 +30,30 @@ package g3.project.elements;
 
 import g3.project.graphics.FontProps;
 import g3.project.graphics.StyledTextSeg;
-import java.util.Optional;
+<<<<<<< Updated upstream
+=======
 import javafx.scene.paint.Color;
-import nu.xom.*;
+import nu.xom.Builder;
+import nu.xom.Element;
+
+import java.util.HashMap;
+>>>>>>> Stashed changes
+import java.util.Optional;
+
+import static g3.project.elements.VisualElement.derefAttribute;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public final class FontElement extends Element {
 //CHECKSTYLE:OFF
 
-    private static ThreadLocal builders = new ThreadLocal() {
+    private static final ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
             return new Builder(new ElementFactory());
@@ -68,6 +80,41 @@ public final class FontElement extends Element {
 
     }
 //CHECKSTYLE:ON
+
+    /**
+     * Get font colour.
+     *
+     * @param colString Colour string to convert.
+     * @return Optional font colour.
+     */
+    public static Optional<Color> convCol(final String colString) {
+        final int lenRGB = 6;
+        final int lenRGBA = 8;
+
+        var colStr = colString.replace("#", "");
+        switch (colStr.length()) {
+            case lenRGB:
+                //CHECKSTYLE:OFF
+                return Optional.of(new Color(
+                        (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
+                        (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
+                        (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
+                        1.0d));
+            //CHECKSTYLE:ON
+            case lenRGBA:
+                //CHECKSTYLE:OFF
+                return Optional.of(new Color(
+                        (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
+                        (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
+                        (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
+                        (double) Integer.valueOf(colStr.substring(6, 8), 16) / 255));
+            //CHECKSTYLE:ON
+            default:
+                return Optional.empty();
+
+        }
+
+    }
 
     /**
      * Get the element's font styling properties.
@@ -108,40 +155,5 @@ public final class FontElement extends Element {
             var attr = new Attribute(propKey, props.get(propKey).toString());
             this.addAttribute(attr);
         }
-    }
-
-    /**
-     * Get font colour.
-     *
-     * @param colString Colour string to convert.
-     * @return Optional font colour.
-     */
-    public static Optional<Color> convCol(final String colString) {
-        final int lenRGB = 6;
-        final int lenRGBA = 8;
-
-        var colStr = colString.replace("#", "");
-        switch (colStr.length()) {
-            case lenRGB:
-                //CHECKSTYLE:OFF
-                return Optional.of(new Color(
-                        (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
-                        (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
-                        (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
-                        1.0d));
-            //CHECKSTYLE:ON
-            case lenRGBA:
-                //CHECKSTYLE:OFF
-                return Optional.of(new Color(
-                        (double) Integer.valueOf(colStr.substring(0, 2), 16) / 255,
-                        (double) Integer.valueOf(colStr.substring(2, 4), 16) / 255,
-                        (double) Integer.valueOf(colStr.substring(4, 6), 16) / 255,
-                        (double) Integer.valueOf(colStr.substring(6, 8), 16) / 255));
-            //CHECKSTYLE:ON
-            default:
-                return Optional.empty();
-
-        }
-
     }
 }

@@ -31,13 +31,6 @@ package g3.project.playable;
 import g3.project.graphics.SizeObj;
 import g3.project.graphics.VisualProps;
 import g3.project.ui.Visual;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.Duration;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -69,10 +62,23 @@ import uk.co.caprica.vlcj.player.embedded.videosurface.callback.BufferFormatCall
 import uk.co.caprica.vlcj.player.embedded.videosurface.callback.RenderCallback;
 import uk.co.caprica.vlcj.player.embedded.videosurface.callback.format.RV32BufferFormat;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
  *
+=======
+ * @author Group 3
+ * <p>
+>>>>>>> Stashed changes
  * Based on:
  * https://github.com/caprica/vlcj-javafx-demo/commit/a057335a1a0ad5761e6d78c469afe1b5a80a9f86
  */
@@ -102,11 +108,11 @@ public final class Player extends Group implements Visual {
      */
     private final DoubleProperty targetHeight = new SimpleDoubleProperty(0);
 
-    private Slider controlSlider = new Slider();
-    private Slider volSlider = new Slider(0, MAX_VOL, 0);
-    private Label volLabel = new Label(" 🔊");
-    private Label timeLabel = new Label();
-    private Button playPauseButton = new Button();
+    private final Slider controlSlider = new Slider();
+    private final Slider volSlider = new Slider(0, MAX_VOL, 0);
+    private final Label volLabel = new Label(" 🔊");
+    private final Label timeLabel = new Label();
+    private final Button playPauseButton = new Button();
     private Double offset = 0d;
 
     /**
@@ -114,14 +120,24 @@ public final class Player extends Group implements Visual {
      */
     private Path tempFilePath = null;
 
+<<<<<<< Updated upstream
     private MediaPlayerEventCallback medPlEvtCB = new MediaPlayerEventCallback();
     private MediaEventCallback medEvtCB = new MediaEventCallback();
+=======
+    private final MediaPlayerEventCallback medPlEvtCB = new MediaPlayerEventCallback();
+    private final MediaEventCallback medEvtCB = new MediaEventCallback();
+//CHECKSTYLE:ON
+>>>>>>> Stashed changes
 
     /**
      * Constructor.Make a new player.
      *
-     * @param width Initial target width.
+     * @param width  Initial target width.
      * @param height Initial target height.
+<<<<<<< Updated upstream
+=======
+     * @param fact   Common factory for the embedded media player.
+>>>>>>> Stashed changes
      */
     protected Player(final double width, final double height, final MediaPlayerFactory fact) {
         targetWidth.set(width);
@@ -201,7 +217,7 @@ public final class Player extends Group implements Visual {
     /**
      * Play media from an MRL.
      *
-     * @param mrl Media location.
+     * @param mrl       Media location.
      * @param newoffset Seek offset (in seconds).
      */
     public void load(final String mrl, final Double newoffset) {
@@ -221,6 +237,10 @@ public final class Player extends Group implements Visual {
      * slow.
      *
      * @param mediaBytes media in memory as bytes.
+<<<<<<< Updated upstream
+=======
+     * @param offset     Offset to start at.
+>>>>>>> Stashed changes
      * @throws java.io.IOException Couldn't open or write to temp file.
      */
     public void load(final byte[] mediaBytes, final Double offset) throws IOException {
@@ -306,6 +326,10 @@ public final class Player extends Group implements Visual {
         controlHbox.setVisible(false);
         controlHbox.setManaged(false);
     }
+<<<<<<< Updated upstream
+=======
+//CHECKSTYLE:OFF
+>>>>>>> Stashed changes
 
     /**
      * Private class provides a JFX compatible video surface, responding to
@@ -329,7 +353,7 @@ public final class Player extends Group implements Visual {
         /**
          * Return an RV32 buffer format object for the given width/height.
          *
-         * @param newSourceWidth Width of source.
+         * @param newSourceWidth  Width of source.
          * @param newSourceHeight Height of source.
          * @return RV32 buffer.
          */
@@ -365,9 +389,9 @@ public final class Player extends Group implements Visual {
         /**
          * Render information.
          *
-         * @param mediaPlayer Rendering player.
+         * @param mediaPlayer   Rendering player.
          * @param nativeBuffers Frame data.
-         * @param bufferFormat Format of frame.
+         * @param bufferFormat  Format of frame.
          */
         @Override
         public void display(final MediaPlayer mediaPlayer, final ByteBuffer[] nativeBuffers, final BufferFormat bufferFormat) {
@@ -406,7 +430,7 @@ public final class Player extends Group implements Visual {
          * Time in Media has changed. Update slider.
          *
          * @param mediaPlayer Player.
-         * @param newTime Time at.
+         * @param newTime     Time at.
          */
         @Override
         public void timeChanged(final MediaPlayer mediaPlayer, final long newTime) {
@@ -448,7 +472,7 @@ public final class Player extends Group implements Visual {
          * Duration of media changed.
          *
          * @param media Media.
-         * @param l Duration (mS).
+         * @param l     Duration (mS).
          */
         @Override
         public void mediaDurationChanged(final Media media, final long l) {

@@ -29,8 +29,12 @@
 package g3.project.graphics;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public class StyledTextSeg {
 
@@ -49,7 +53,7 @@ public class StyledTextSeg {
     /**
      * Function to run on click of link.
      */
-    private Runnable refAction = () -> {
+    private final Runnable refAction = () -> {
         System.err.println(this.getRefTarget());
     };
 
@@ -57,7 +61,7 @@ public class StyledTextSeg {
      * Constructor. Create styled segment of text.
      *
      * @param myStyle Text Style.
-     * @param myWord Text to style.
+     * @param myWord  Text to style.
      */
     public StyledTextSeg(final FontProps myStyle, final String myWord) {
         style = myStyle;
@@ -68,7 +72,7 @@ public class StyledTextSeg {
      * Set an href on this segment.
      *
      * @param target href target.
-     * @param type href target type.
+     * @param type   href target type.
      */
     public final void setHRef(final String target, final REF_TYPE type) {
         myRef = new RefProps(type, target);
@@ -80,7 +84,7 @@ public class StyledTextSeg {
      * @return Boolean.
      */
     public final Boolean isHref() {
-        return myRef == null ? false : true;
+        return myRef != null;
     }
 
     /**
@@ -122,11 +126,12 @@ public class StyledTextSeg {
     }
 
     //CHECKSTYLE:OFF
+
     /**
      * Enumerator for use with refs. Is the ref to an internal or external
      * location?
      */
-    public static enum REF_TYPE {
+    public enum REF_TYPE {
         INTERNAL,
         EXTERNAL,
     }

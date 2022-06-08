@@ -28,16 +28,21 @@
  */
 package g3.project.elements;
 
-import java.util.Optional;
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
 import nu.xom.Attribute;
 import nu.xom.Builder;
 import nu.xom.Element;
 
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import java.util.Optional;
+
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public final class ScriptElement extends Element implements Includable {
 
@@ -50,35 +55,32 @@ public final class ScriptElement extends Element implements Includable {
      * Language attribute.
      */
     private static final String LANG_ATTR = "language";
-
-    /**
-     * Script engine to run element's script.
-     *
-     * WARNING: This is a global, shared object!!!
-     */
-    private ScriptEngine globalScriptEngine = null;
-    /**
-     * Invocable form of script engine.
-     */
-    private Invocable invScriptEngine = null;
-    /**
-     * Script's language.
-     */
-    private final String myLang = "python";
-
-    /**
-     * Script is inline?
-     */
-    private Boolean inlineScript;
-
     //CHECKSTYLE:OFF
-    private static ThreadLocal builders = new ThreadLocal() {
+    private static final ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
             return new Builder(new ElementFactory());
         }
 
     };
+    /**
+     * Script's language.
+     */
+    private final String myLang = "python";
+    /**
+     * Script engine to run element's script.
+     * <p>
+     * WARNING: This is a global, shared object!!!
+     */
+    private final ScriptEngine globalScriptEngine = null;
+    /**
+     * Invocable form of script engine.
+     */
+    private final Invocable invScriptEngine = null;
+    /**
+     * Script is inline?
+     */
+    private Boolean inlineScript;
 
     public ScriptElement(String name) {
         super(name);
@@ -96,8 +98,8 @@ public final class ScriptElement extends Element implements Includable {
     /**
      * Constructor with script.
      *
-     * @param name Element name.
-     * @param uri Element URI.
+     * @param name       Element name.
+     * @param uri        Element URI.
      * @param scriptPath Path to script.
      * @param scriptLang Script Language.
      */

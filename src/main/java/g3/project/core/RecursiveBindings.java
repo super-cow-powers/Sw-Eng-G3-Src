@@ -28,8 +28,8 @@
  */
 package g3.project.core;
 
-import java.util.Optional;
 import javax.script.SimpleBindings;
+import java.util.Optional;
 
 /**
  * Recursive bindings will search current bindings, then parent bindings, etc,
@@ -52,20 +52,21 @@ public final class RecursiveBindings extends SimpleBindings {
     }
 
     /**
+     * Get the optional parent bindings.
+     *
+     * @return Optional parent.
+     */
+    public Optional<RecursiveBindings> getParent() {
+        return this.parentBindings;
+    }
+
+    /**
      * Set parent bindings.
      *
      * @param p Parent bindings.
      */
     public void setParent(final RecursiveBindings p) {
         this.parentBindings = Optional.ofNullable(p);
-    }
-
-    /**
-     * Get the optional parent bindings.
-     * @return Optional parent.
-     */
-    public Optional<RecursiveBindings> getParent() {
-        return this.parentBindings;
     }
 
     /**

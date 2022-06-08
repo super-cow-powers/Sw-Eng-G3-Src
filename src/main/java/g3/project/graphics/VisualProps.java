@@ -28,16 +28,22 @@
  */
 package g3.project.graphics;
 
-import java.util.HashMap;
-import javafx.scene.paint.Color;
-import java.util.Map;
-import static java.util.Map.entry;
-import java.util.Optional;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.paint.Color;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+import static java.util.Map.entry;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public class VisualProps extends HashMap<String, Object> implements Props {
 
@@ -74,6 +80,22 @@ public class VisualProps extends HashMap<String, Object> implements Props {
     protected static final Class VISIBLE_TYPE = Boolean.class;
     public static final String ID = "ID";
     protected static final Class ID_TYPE = String.class;
+<<<<<<< Updated upstream
+=======
+    public static final String X_ORIG = "x_orig";
+    protected static final Class X_TYPE = Double.class;
+    public static final String Y_ORIG = "y_orig";
+    protected static final Class Y_TYPE = Double.class;
+    public static final String Z_IND = "z_ind";
+    protected static final Class Z_TYPE = Double.class;
+    public static final String X_SIZE = "x_size_px";
+    protected static final Class X_SZ_TYPE = Double.class;
+    public static final String Y_SIZE = "y_size_px";
+    protected static final Class Y_SZ_TYPE = Double.class;
+    public static final String ROT = "rot_angle";
+    protected static final Class ROT_TYPE = Double.class;
+
+>>>>>>> Stashed changes
     //CHECKSTYLE:ON
     /**
      * Contains known props and their classes.
@@ -88,7 +110,12 @@ public class VisualProps extends HashMap<String, Object> implements Props {
     protected static final Map<String, Object> PROP_DEFAULTS = Map.ofEntries(entry(SHADE_COL, Color.BLACK),
             entry(L_SHADE_SIZE, 0d), entry(R_SHADE_SIZE, 0d), entry(T_SHADE_SIZE, 0d), entry(B_SHADE_SIZE, 0d), entry(SHADE_SIZE, 0d),
             entry(ALPHA, 1d), entry(FILL, Color.TRANSPARENT), entry(DISP_SECS, -1d), entry(DELAY_SECS, 0d), entry(VISIBLE, true),
+<<<<<<< Updated upstream
             entry(ID, ""));
+=======
+            entry(ID, ""), entry(X_ORIG, 0d), entry(Y_ORIG, 0d), entry(Z_IND, 0d),
+            entry(X_SIZE, 100d), entry(Y_SIZE, 100d), entry(ROT, 0d));
+>>>>>>> Stashed changes
 
     /**
      * Constructor. Takes map of properties.
@@ -177,6 +204,11 @@ public class VisualProps extends HashMap<String, Object> implements Props {
         } else {
             ds.setRadius(gen);
         }
+<<<<<<< Updated upstream
+=======
+
+        ds.setColor(col);
+>>>>>>> Stashed changes
         return Optional.of(ds);
     }
 

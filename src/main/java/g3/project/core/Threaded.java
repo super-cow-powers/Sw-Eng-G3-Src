@@ -31,25 +31,27 @@ package g3.project.core;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public abstract class Threaded implements Runnable {
-
-    /**
-     * Thread I'm to run on.
-     */
-    private Thread myThread;
 
     /**
      * Am I running?
      */
     private final AtomicBoolean running = new AtomicBoolean(false);
-
     /**
      * Am I suspended?
      */
     private final AtomicBoolean suspended = new AtomicBoolean(false);
+    /**
+     * Thread I'm to run on.
+     */
+    private Thread myThread;
 
     /**
      * Request start thread activity.
@@ -81,27 +83,30 @@ public abstract class Threaded implements Runnable {
 
     /**
      * Getter for myThread
+     *
      * @return myThread
      */
     public Thread getThread() {
-        return(myThread);
+        return (myThread);
     }
 
     /**
      * Getter for running
+     *
      * @return running
      */
     public AtomicBoolean getRunning() {
-        return(running);
+        return (running);
     }
 
     /**
      * Getter for suspended
+     *
      * @return suspended
      */
     public AtomicBoolean getSuspended() {
-        return(suspended);
-    } 
+        return (suspended);
+    }
 
     /**
      * Run stuff.

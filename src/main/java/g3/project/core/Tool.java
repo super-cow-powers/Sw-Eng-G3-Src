@@ -31,33 +31,49 @@ package g3.project.core;
 import g3.project.elements.ImageElement;
 import g3.project.elements.ScriptElement;
 import g3.project.elements.Scriptable;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Optional;
 import nu.xom.Builder;
 import nu.xom.Element;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Optional;
+
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public class Tool extends Element implements Scriptable {
 
     /**
+<<<<<<< Updated upstream
      * My script bindings.
      */
     RecursiveBindings elementScriptBindings = new RecursiveBindings();
 
     /**
+=======
+>>>>>>> Stashed changes
      * Create a builder.
      */
-    private static ThreadLocal builders = new ThreadLocal() {
+    private static final ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
             return new Builder(new ToolsFactory());
         }
 
     };
+    /**
+     * Is Eval Required.
+     */
+    protected Boolean evalRequired = true;
+    /**
+     * My script bindings.
+     */
+    protected RecursiveBindings elementScriptBindings = new RecursiveBindings();
 
     /**
      * Constructor.
@@ -72,7 +88,7 @@ public class Tool extends Element implements Scriptable {
      * Constructor.
      *
      * @param name Tool name.
-     * @param uri Tool URI.
+     * @param uri  Tool URI.
      */
     public Tool(final String name, final String uri) {
         super(name, uri);
@@ -182,7 +198,7 @@ public class Tool extends Element implements Scriptable {
      * Do not support modifying tools file on the fly. Will always throw
      * IOException.
      *
-     * @param path path to file.
+     * @param path     path to file.
      * @param language Script language.
      * @throws IOException If called.
      */

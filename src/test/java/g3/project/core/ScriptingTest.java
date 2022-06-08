@@ -28,6 +28,7 @@
  */
 package g3.project.core;
 
+<<<<<<< Updated upstream
 import java.io.OutputStreamWriter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.AfterAll;
@@ -43,6 +44,28 @@ import org.mozilla.javascript.engine.RhinoScriptEngine;
  */
 public class ScriptingTest {
 
+=======
+import g3.project.elements.ScriptElement;
+import g3.project.elements.Scriptable;
+import org.junit.jupiter.api.*;
+
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.file.Path;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * @author Group 3
+ */
+public class ScriptingTest {
+
+    //CHECKSTYLE:OFF
+    Scripting instance;
+
+>>>>>>> Stashed changes
     public ScriptingTest() {
     }
 
@@ -90,4 +113,91 @@ public class ScriptingTest {
         assertEquals(rhinoBindings.get("va"), 5);
         //CHECKSTYLE:ON
     }
+<<<<<<< Updated upstream
 }
+=======
+
+    /**
+     * Test of setGlobal method, of class Scripting.
+     */
+    @Test
+    public void testSetGlobal() {
+        System.out.println("setGlobal");
+        String name = "test";
+        Boolean glob = true;
+        instance.setGlobal(name, glob);
+        assertEquals(instance.getGlobal(name).get(), glob);
+    }
+
+    /**
+     * Test of getGlobal method, of class Scripting.
+     */
+    @Test
+    public void testGetGlobal() {
+        System.out.println("getGlobal");
+        String name = "test";
+        Boolean glob = true;
+        instance.setGlobal(name, glob);
+        assertEquals(instance.getGlobal(name).get(), glob);
+    }
+
+    /**
+     * Test of getTopLevelBindings method, of class Scripting.
+     */
+    @Test
+    public void testGetTopLevelBindings() {
+        System.out.println("getTopLevelBindings");
+        RecursiveBindings result = Scripting.getTopLevelBindings();
+        assertTrue(result instanceof RecursiveBindings);
+    }
+
+    //CHECKSTYLE:OFF
+    class ScriptableTest implements Scriptable {
+
+        RecursiveBindings bin = new RecursiveBindings();
+
+        @Override
+        public RecursiveBindings getScriptingBindings() {
+            return bin;
+        }
+
+        @Override
+        public Optional<RecursiveBindings> getParentElementScriptingBindings() {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<Scriptable> getParentScriptable() {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<ScriptElement> getScriptEl() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public void addScriptFile(Path path, String language) throws IOException {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public String getRealType() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public Boolean getEvalRequired() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public void setEvalRequired(Boolean req) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+    }
+    //CHECKSTYLE:ON
+
+}
+>>>>>>> Stashed changes

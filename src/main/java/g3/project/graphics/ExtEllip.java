@@ -33,8 +33,12 @@ import javafx.scene.shape.Ellipse;
 import javafx.scene.shape.Shape;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public final class ExtEllip extends ExtShape {
 

@@ -31,8 +31,12 @@ package g3.project.graphics;
 import javafx.geometry.Point2D;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author david
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public final class LocObj {
 //CHECKSTYLE:OFF
@@ -45,7 +49,7 @@ public final class LocObj {
      * Create location container. Any argument may be null
      *
      * @param loc X/Y Location.
-     * @param z Z-Index.
+     * @param z   Z-Index.
      */
     public LocObj(final Point2D loc, final Double z) {
         locXY = loc;

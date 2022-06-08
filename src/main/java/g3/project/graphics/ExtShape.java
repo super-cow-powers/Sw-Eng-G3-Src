@@ -29,8 +29,12 @@
 package g3.project.graphics;
 
 import g3.project.ui.Visual;
+<<<<<<< Updated upstream
 import java.util.ArrayList;
 import java.util.function.Consumer;
+=======
+import javafx.geometry.Insets;
+>>>>>>> Stashed changes
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -46,9 +50,16 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 
+import java.util.ArrayList;
+import java.util.function.Consumer;
+
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public abstract class ExtShape extends Group implements Visual {
 
@@ -82,8 +93,15 @@ public abstract class ExtShape extends Group implements Visual {
     private Consumer<MouseEvent> hrefHovExHandlerConsumer = null;
 
     /**
+<<<<<<< Updated upstream
      * Constructor
      * @param myShape
+=======
+     * Constructor.
+     *
+     * @param myShape Shape to display.
+     * @param myType  My extShape type.
+>>>>>>> Stashed changes
      */
     public ExtShape(Shape myShape) {
         shape = myShape;
@@ -239,9 +257,14 @@ public abstract class ExtShape extends Group implements Visual {
     /**
      * Set text and style in element.
      *
+<<<<<<< Updated upstream
      * @todo Make work for arbitrary Rich Text.
      * @param text Text to set.
      * @param align Text horizontal alignment.
+=======
+     * @param text          Text to set.
+     * @param align         Text horizontal alignment.
+>>>>>>> Stashed changes
      * @param textVertAlign Text vertical alignment.
      */
     public final void setText(final ArrayList<StyledTextSeg> text, final TextAlignment align, final Pos textVertAlign) {
@@ -265,9 +288,9 @@ public abstract class ExtShape extends Group implements Visual {
             Node textEl;
             if (seg.isHref()) {
                 textEl = new Hyperlink(seg.getString());
-                ((Hyperlink) textEl).setOnMouseClicked(e -> hrefClickHandlerConsumer.accept(e));
-                ((Hyperlink) textEl).setOnMouseEntered(e -> hrefHovEntHandlerConsumer.accept(e));
-                ((Hyperlink) textEl).setOnMouseExited(e -> hrefHovExHandlerConsumer.accept(e));
+                textEl.setOnMouseClicked(e -> hrefClickHandlerConsumer.accept(e));
+                textEl.setOnMouseEntered(e -> hrefHovEntHandlerConsumer.accept(e));
+                textEl.setOnMouseExited(e -> hrefHovExHandlerConsumer.accept(e));
             } else {
                 textEl = new Text(seg.getString());
             }

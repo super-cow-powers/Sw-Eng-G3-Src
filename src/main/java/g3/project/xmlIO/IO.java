@@ -28,26 +28,27 @@
  */
 package g3.project.xmlIO;
 
-import java.util.Optional;
+import nu.xom.Document;
+import nu.xom.MalformedURIException;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nu.xom.*;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author david
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public abstract class IO {
     //CHECKSTYLE:OFF
@@ -206,7 +207,11 @@ public abstract class IO {
             try {
                 arr = Files.readAllBytes(fPath);
             } catch (IOException ex) {
+<<<<<<< Updated upstream
                 Logger.getLogger(IO.class.getName()).log(Level.SEVERE, null, ex);
+=======
+
+>>>>>>> Stashed changes
             }
         } else { //Get an external resource
             try {
@@ -257,11 +262,7 @@ public abstract class IO {
         //CHECKSTYLE:OFF
         if (path.startsWith("http")) {
             return false;
-        } else if (path.startsWith("file:")) {
-            return false;
-        } else {
-            return true;
-        }
+        } else return !path.startsWith("file:");
         //CHECKSTYLE:ON
     }
 
@@ -287,7 +288,7 @@ public abstract class IO {
     /**
      * Get an internal class-path resource as bytes.
      *
-     * @param file File to return.
+     * @param file     File to return.
      * @param resClass Class to look in.
      * @return Maybe file bytes.
      */

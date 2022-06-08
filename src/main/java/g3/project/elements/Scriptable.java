@@ -29,13 +29,18 @@
 package g3.project.elements;
 
 import g3.project.core.RecursiveBindings;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public interface Scriptable {
 
@@ -64,7 +69,12 @@ public interface Scriptable {
     
     /**
      * Attach a script file to this object.
+<<<<<<< Updated upstream
      * @param path Path to file.
+=======
+     *
+     * @param path     Path to file.
+>>>>>>> Stashed changes
      * @param language Script language.
      */
     void addScriptFile(Path path, String language) throws IOException;

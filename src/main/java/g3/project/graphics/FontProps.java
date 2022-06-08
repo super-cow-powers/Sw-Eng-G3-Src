@@ -28,16 +28,22 @@
  */
 package g3.project.graphics;
 
-import java.util.HashMap;
 import javafx.scene.paint.Color;
+
+import java.util.HashMap;
 import java.util.Map;
-import static java.util.Map.entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static java.util.Map.entry;
+
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public class FontProps extends HashMap<String, Object> {
 
@@ -83,9 +89,9 @@ public class FontProps extends HashMap<String, Object> {
     /**
      * Contains CSS strings for known props.
      */
-    private static final Map<String, String> CSS = Map.ofEntries(entry(US, "-fx-underline: \'%s\';"), entry(IT, "-fx-font-style: %s;"), entry(BOLD, "-fx-font-weight: %s;"),
-            entry(SIZE, "-fx-font-size: %s;"), entry(FONT, "-fx-font-family: \'%s\';"), entry(COLOUR, "-fx-fill: \'%s\';"),
-            entry(ALIGNMENT, "-fx-text-alignment: \'%s\';"));
+    private static final Map<String, String> CSS = Map.ofEntries(entry(US, "-fx-underline: '%s';"), entry(IT, "-fx-font-style: %s;"), entry(BOLD, "-fx-font-weight: %s;"),
+            entry(SIZE, "-fx-font-size: %s;"), entry(FONT, "-fx-font-family: '%s';"), entry(COLOUR, "-fx-fill: '%s';"),
+            entry(ALIGNMENT, "-fx-text-alignment: '%s';"));
 
     /**
      * Constructor. Takes map of properties.
@@ -145,7 +151,7 @@ public class FontProps extends HashMap<String, Object> {
                 default:
                     break;
             }
-            return String.format(cssFmt, val.toString());
+            return String.format(cssFmt, val);
         }).collect(Collectors.joining(" "));
     }
 

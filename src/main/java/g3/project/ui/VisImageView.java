@@ -34,8 +34,12 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public class VisImageView extends ImageView implements Visual {
 

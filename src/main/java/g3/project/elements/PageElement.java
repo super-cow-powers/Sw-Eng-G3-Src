@@ -28,29 +28,39 @@
  */
 package g3.project.elements;
 
+<<<<<<< Updated upstream
+=======
+import g3.project.xmlIO.DocIO;
+import nu.xom.Attribute;
+import nu.xom.Builder;
+import nu.xom.Element;
+
+>>>>>>> Stashed changes
 import java.util.Optional;
-import nu.xom.*;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall <dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public class PageElement extends VisualElement {
     /**
-     * My Index.
-     */
-    private Integer index = 0;
-
-    /**
      * Creates builder thread for the element
      */
-    private static ThreadLocal builders = new ThreadLocal() {
+    private static final ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
             return new Builder(new ElementFactory());
         }
 
     };
+    /**
+     * My Index.
+     */
+    private Integer index = 0;
 
     /**
      * Constructor
@@ -62,8 +72,14 @@ public class PageElement extends VisualElement {
 
     /**
      * Constructor
+<<<<<<< Updated upstream
      * @param name
      * @param uri
+=======
+     *
+     * @param name Name of element.
+     * @param uri  Element URI.
+>>>>>>> Stashed changes
      */
     public PageElement(final String name, final String uri) {
         super(name, uri);
@@ -96,19 +112,38 @@ public class PageElement extends VisualElement {
         return getTitle();
     }
     /**
+<<<<<<< Updated upstream
      * Set the page index.
      * This should be done before return from the Document to a user.
      * @param ind Index.
      */
     protected void setIndex(final Integer ind){
         index = ind;
+=======
+     * Get the page index. This should be set before use in the engine.
+     *
+     * @return Index.
+     */
+    public Integer getIndex() {
+        return index;
+>>>>>>> Stashed changes
     }
     /**
+<<<<<<< Updated upstream
      * Get the page index. This should be set before use in the engine.
      * @return Index.
      */
     public Integer getIndex(){
         return index;
+=======
+     * Set the page index. This should be done before return from the Document
+     * to a user.
+     *
+     * @param ind Index.
+     */
+    protected void setIndex(final Integer ind) {
+        index = ind;
+>>>>>>> Stashed changes
     }
 
 }

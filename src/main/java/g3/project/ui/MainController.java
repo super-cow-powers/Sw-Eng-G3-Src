@@ -28,26 +28,12 @@
  */
 package g3.project.ui;
 
-import g3.project.graphics.LocObj;
-import g3.project.graphics.SizeObj;
-import javafx.event.*;
-import javafx.fxml.*;
-import javafx.scene.control.*;
-import javafx.scene.input.*;
-import javafx.scene.layout.*;
 import g3.project.core.Engine;
-import g3.project.graphics.ExtLine;
-import g3.project.graphics.ExtPolygon;
-import g3.project.graphics.ExtShape;
-import g3.project.graphics.ExtShapeFactory;
-import g3.project.graphics.FontProps;
-import g3.project.graphics.Props;
-import g3.project.graphics.StrokeProps;
-import g3.project.graphics.StyledTextSeg;
-import g3.project.graphics.VisualProps;
+import g3.project.graphics.*;
 import g3.project.playable.Player;
 import g3.project.playable.PlayerFactory;
 import g3.project.xmlIO.DocIO;
+<<<<<<< Updated upstream
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.ArrayList;
@@ -61,25 +47,53 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+=======
+>>>>>>> Stashed changes
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener.Change;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.event.EventTarget;
+import javafx.fxml.FXML;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
+import javafx.scene.input.InputEvent;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
-import javafx.scene.transform.Scale;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Optional;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public final class MainController {
 
@@ -100,17 +114,17 @@ public final class MainController {
     /**
      * Media player factory.
      */
-    private PlayerFactory playerFact = new PlayerFactory();
+    private final PlayerFactory playerFact = new PlayerFactory();
 
     /**
      * Scene graph nodes hashed by their ID.
      */
-    private ConcurrentHashMap<String, javafx.scene.Node> drawnElements = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, javafx.scene.Node> drawnElements = new ConcurrentHashMap<>();
 
     /**
      * Cache image bytes by location.
      */
-    private ConcurrentHashMap<String, Image> loadedImages = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Image> loadedImages = new ConcurrentHashMap<>();
 
     /**
      * Loading image.
@@ -135,7 +149,7 @@ public final class MainController {
     /**
      * Shape factory.
      */
-    private ExtShapeFactory extShapeFactory = new ExtShapeFactory();
+    private final ExtShapeFactory extShapeFactory = new ExtShapeFactory();
 
     /**
      * Object drag delta.
@@ -149,7 +163,7 @@ public final class MainController {
 
     private static final Double MIN_POS_VAL = 0.15;
 
-//CHECKSTYLE:OFF
+    //CHECKSTYLE:OFF
     //FXML bound objects
     @FXML
     private MenuBar menuBar;
@@ -371,15 +385,19 @@ public final class MainController {
     /**
      * Draw/Redraw shape on screen.
      *
-     * @param id Shape ID.
+     * @param id        Shape ID.
      * @param shapeType Type of shape.
-     * @param stroke Stroke properties.
-     * @param text Text segments.
-     * @param segments Segments for a line or polygon.
+     * @param stroke    Stroke properties.
+     * @param text      Text segments.
+     * @param segments  Segments for a line or polygon.
      */
     public void updateShape(final String id, final String shapeType, final StrokeProps stroke,
+<<<<<<< Updated upstream
             final ArrayList<StyledTextSeg> text, final ArrayList<Double> segments) {
 
+=======
+                            final ArrayList<StyledTextSeg> text, final ArrayList<Double> segments) {
+>>>>>>> Stashed changes
         final var drawnShape = drawnElements.get(id);
 
 //Get the shape. Either a new or existing one.
@@ -410,7 +428,7 @@ public final class MainController {
     /**
      * Change Shape stroke.
      *
-     * @param id Shape ID.
+     * @param id    Shape ID.
      * @param props Stroke Props.
      */
     public void updateShapeStroke(final String id, final StrokeProps props) {
@@ -423,7 +441,7 @@ public final class MainController {
     /**
      * Change a shape's colour.
      *
-     * @param id Target ID.
+     * @param id  Target ID.
      * @param col colour.
      */
     public void updateShapeColour(final String id, final Color col) {
@@ -436,7 +454,7 @@ public final class MainController {
     /**
      * Update the text on a shape.
      *
-     * @param id Shape ID.
+     * @param id   Shape ID.
      * @param text Text.
      */
     public void updateShapeText(final String id, final ArrayList<StyledTextSeg> text) {
@@ -453,7 +471,7 @@ public final class MainController {
     /**
      * Show/Hide an element.
      *
-     * @param id Target ID.
+     * @param id      Target ID.
      * @param visible Visibility.
      */
     public void setElementVisible(final String id, final Boolean visible) {
@@ -466,7 +484,7 @@ public final class MainController {
     /**
      * Moves the given element to the specified location.
      *
-     * @param id Element ID.
+     * @param id  Element ID.
      * @param loc Location to go to.
      */
     public void moveElement(final String id, final LocObj loc) {
@@ -480,7 +498,7 @@ public final class MainController {
     /**
      * Set props on Visual Element.
      *
-     * @param id Element ID.
+     * @param id    Element ID.
      * @param props Properties.
      */
     public void setElVisualProps(final String id, final VisualProps props) {
@@ -493,7 +511,7 @@ public final class MainController {
     /**
      * Set a basic shadow on an element.
      *
-     * @param id Target ID.
+     * @param id     Target ID.
      * @param radius Shadow radius.
      */
     public void setElShadow(final String id, final Double radius) {
@@ -505,7 +523,7 @@ public final class MainController {
     /**
      * Resize a Visual Element.
      *
-     * @param id Element ID.
+     * @param id   Element ID.
      * @param size Element Size.
      */
     public void resizeElement(final String id, final SizeObj size) {
@@ -539,9 +557,9 @@ public final class MainController {
     /**
      * Configure the page/card.
      *
-     * @param size Page size
+     * @param size   Page size
      * @param colour Page colour
-     * @param id Page ID
+     * @param id     Page ID
      */
     public void configCard(final Optional<SizeObj> size, final Optional<Color> colour, final String id) {
         size.ifPresent(f -> {
@@ -553,7 +571,7 @@ public final class MainController {
         });
         //CHECKSTYLE:OFF
         colour.ifPresent(c -> {
-            pagePane.setStyle("-fx-background-color: \'" + c.toString() + "\';");
+            pagePane.setStyle("-fx-background-color: '" + c + "';");
         });
         //CHECKSTYLE:ON
         pagePane.setId(id);
@@ -581,8 +599,12 @@ public final class MainController {
      * Add navigation button for specified card/page.
      *
      * @param friendlyName Card human name.
+<<<<<<< Updated upstream
      * @param id Card ID.
      * @param number Card sequence number.
+=======
+     * @param id           Card ID.
+>>>>>>> Stashed changes
      */
     public void addCardButton(final String friendlyName, final String id, final Integer number) {
         Button cardButton = new Button(friendlyName);
@@ -611,7 +633,7 @@ public final class MainController {
      * Add tool to tool-list.
      *
      * @param toolname Name of tool.
-     * @param toolID Tool ID.
+     * @param toolID   Tool ID.
      * @param iconPath Path to tool icon.
      */
     public void addTool(final String toolname, final String toolID, final String iconPath) {
@@ -642,13 +664,130 @@ public final class MainController {
     }
 
     /**
+<<<<<<< Updated upstream
+=======
+     * Generate props list for given props and node.
+     *
+     * @param props          Properties.
+     * @param node           Node/Element.
+     * @param setterCallback Callback when props need to be set.
+     */
+    private void makeProgramaticPropsList(final HashMap<String, Object> props, final Node node, final BiConsumer<HashMap<String, Object>, String> setterCallback) {
+        final String nodeID = node.getId();
+        for (var prop : props.keySet()) {
+            Label propLabel = new Label(prop);
+            Control propEntry;
+            var propVal = props.get(prop);
+            var propClass = propVal.getClass();
+
+            if (propClass.equals(Color.class)) {
+                propEntry = new ColorPicker((Color) propVal);
+                ((ColorPicker) propEntry).setOnAction(ev -> {
+                    props.put(propEntry.getId(), ((ColorPicker) propEntry).getValue());
+                    setterCallback.accept(props, nodeID);
+                });
+            } else if (propClass.equals(Double.class)) {
+                propEntry = new Spinner(-Double.MAX_VALUE, Double.MAX_VALUE, (Double) propVal, 1d);
+                ((Spinner) propEntry).setEditable(true);
+                ((Spinner) propEntry).valueProperty().addListener((obs, oldValue, newValue) -> {
+                    props.put(propEntry.getId(), ((Spinner) propEntry).getValue());
+                    setterCallback.accept(props, nodeID);
+                });
+            } else if (propClass.equals(Boolean.class)) {
+                propEntry = new CheckBox();
+                ((CheckBox) propEntry).setSelected((Boolean) propVal);
+                ((CheckBox) propEntry).setOnAction(ev -> {
+                    props.put(propEntry.getId(), ((CheckBox) propEntry).isSelected());
+                    setterCallback.accept(props, nodeID);
+                });
+            } else { //Probably a String.
+                propEntry = new TextField(propVal.toString());
+                //CHECKSTYLE:OFF
+                propEntry.setMaxWidth(200d);
+                //CHECKSTYLE:ON
+                if (prop.equals("ID")) { //ID needs the node removing and redrawing.
+                    ((TextField) propEntry).setOnAction(ev -> {
+                        props.put(propEntry.getId(), ((TextField) propEntry).getText());
+                        remove(node);
+                        setterCallback.accept(props, nodeID);
+                    });
+                } else {
+                    ((TextField) propEntry).setOnAction(ev -> {
+                        props.put(propEntry.getId(), ((TextField) propEntry).getText());
+                        setterCallback.accept(props, nodeID);
+                    });
+                }
+            }
+            propEntry.setId(prop);
+            HBox propBox = new HBox(propLabel, propEntry);
+            //HBox.setHgrow(propBox, Priority.ALWAYS);
+            propPane.getChildren().addAll(propLabel, propEntry);
+        }
+    }
+
+    /**
+     * Update the list of properties.
+     *
+     * @param node Node to show props for.
+     */
+    public void updatePropsList(final Node node) {
+        propPane.getChildren().clear();
+        propPane.setAlignment(Pos.TOP_CENTER);
+        final String nodeID = node.getId();
+        Label itemLabel = new Label(nodeID);
+        propPane.getChildren().add(itemLabel);
+        final HashMap<String, Object> props = engine.getElementProperties(nodeID);
+        makeProgramaticPropsList(props, node, (p, nID) -> engine.updateProperties(p, nID));
+
+        final Optional<HashMap<String, Object>> maybeTextProps = engine.getShapeTextProps(nodeID);
+        final Optional<String> maybeText = engine.getShapeTextString(nodeID);
+        maybeTextProps.ifPresent(tp -> {
+            Label textSepLabel = new Label("Text");
+            propPane.getChildren().add(textSepLabel);
+            makeProgramaticPropsList(tp, node, (p, nID) -> engine.setShapeTextProps(nID, p));
+            final TextArea textBox = new TextArea();
+            //CHECKSTYLE:OFF
+            textBox.setMaxWidth(200d);
+            //CHECKSTYLE:ON
+            propPane.getChildren().add(textBox);
+            maybeText.ifPresent(t -> textBox.setText(t));
+            Button setTextButton = new Button("Set Text");
+            setTextButton.setOnAction(ev -> engine.setShapeTextString(nodeID, textBox.getText()));
+            propPane.getChildren().add(setTextButton);
+        });
+
+        Button editScrButton = new Button("Edit Script");
+        editScrButton.setOnMouseClicked(e -> {
+            //Launch a new editor for the element.
+            var ed = new Editor((Stage) pagePane.getScene().getWindow(),
+                    engine.getElScript(nodeID),
+                    engine.getElScriptLang(nodeID),
+                    nodeID,
+                    (String lang, String text) -> {
+                        engine.setElScript(nodeID, lang, text);
+                    });
+
+        });
+
+        Button deleteButton = new Button("Delete");
+        deleteButton.setOnMouseClicked(e -> {
+            remove(node);
+            propPane.getChildren().clear(); //Clear props.
+            engine.deleteElement(nodeID);
+        });
+
+        propPane.getChildren().addAll(new HBox(editScrButton), new HBox(deleteButton));
+    }
+
+    /**
+>>>>>>> Stashed changes
      * Show some playable media.
      *
-     * @param id media object ID.
-     * @param path Path to media.
+     * @param id         media object ID.
+     * @param path       Path to media.
      * @param showPlayer Show player controls.
-     * @param loopPlay Loop the media.
-     * @param autoPlay Auto-play the media.
+     * @param loopPlay   Loop the media.
+     * @param autoPlay   Auto-play the media.
      * @param seekOffset Start seek offset.
      */
     public void showPlayable(final String id, final String path, final Boolean showPlayer, final Boolean loopPlay, final Boolean autoPlay, final Double seekOffset) {
@@ -684,7 +823,7 @@ public final class MainController {
     /**
      * Set play/pause on player.
      *
-     * @param id Player.
+     * @param id      Player.
      * @param playing Play/Pause.
      */
     public void playerSetPlaying(final String id, final Boolean playing) {
@@ -702,7 +841,7 @@ public final class MainController {
     /**
      * Show/hide player controls.
      *
-     * @param id Player.
+     * @param id    Player.
      * @param shown Show controls?
      */
     public void playerSetControls(final String id, final Boolean shown) {
@@ -718,11 +857,43 @@ public final class MainController {
     }
 
     /**
+<<<<<<< Updated upstream
+=======
+     * Make a player play/pause.
+     *
+     * @param id   Player ID.
+     * @param play Play/Pause.
+     */
+    public void togglePlayerPlaying(final String id, final Boolean play) {
+        var pl = drawnElements.get(id);
+        if (pl instanceof Player) {
+            var player = (Player) pl;
+            if (play) {
+                player.play();
+            } else {
+                player.pause();
+            }
+        }
+    }
+
+    /**
+     * Set if elements can be focussed on.
+     *
+     * @param focus Allow element focus?
+     */
+    private void setElementsFocusable(final Boolean focus) {
+        for (var ch : pagePane.getChildren()) {
+            ch.setFocusTraversable(focus);
+        }
+    }
+
+    /**
+>>>>>>> Stashed changes
      * Show or update image on screen. The image will be cached based on its'
      * path.
      *
-     * @param id Image ID.
-     * @param path Image Path/URL/URI.
+     * @param id           Image ID.
+     * @param path         Image Path/URL/URI.
      * @param refreshCache Should I refresh the cache?
      */
     public void drawImage(final String id, final String path, final Boolean refreshCache) {
@@ -792,8 +963,8 @@ public final class MainController {
         messageLabel.setText(message);
         messageLabel.setOpacity(1d);
         nbMessageClearFuture = executorSvc.schedule(() -> {
-            Platform.runLater(() -> clearNBMessage(NBMESSAGE_FADE_MS));
-        },
+                    Platform.runLater(() -> clearNBMessage(NBMESSAGE_FADE_MS));
+                },
                 MESSAGE_DURATION,
                 TimeUnit.MILLISECONDS);
     }

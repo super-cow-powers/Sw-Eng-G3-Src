@@ -28,11 +28,16 @@
  */
 package g3.project.elements;
 
-import nu.xom.*;
+import nu.xom.Element;
+import nu.xom.NodeFactory;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public final class ElementFactory extends NodeFactory {
 

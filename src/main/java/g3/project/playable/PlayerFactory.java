@@ -28,12 +28,22 @@
  */
 package g3.project.playable;
 
+<<<<<<< Updated upstream
 import java.util.HashMap;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 
 /**
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public final class PlayerFactory {
 
@@ -62,7 +72,7 @@ public final class PlayerFactory {
     /**
      * Get a new player.
      *
-     * @param width Player target width.
+     * @param width  Player target width.
      * @param height Player target height.
      * @return player.
      */

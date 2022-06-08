@@ -31,6 +31,8 @@ package g3.project.core;
 import g3.project.elements.Scriptable;
 import g3.project.xmlIO.DocIO;
 import g3.project.xmlIO.IO;
+
+import javax.script.*;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -38,15 +40,14 @@ import java.util.HashMap;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.script.Invocable;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public final class Scripting {
 
@@ -57,6 +58,7 @@ public final class Scripting {
     public static final String MOUSE_EXIT_FN = "onMouseExit";
     public static final String DRAG_FUNCTION = "onDrag";
     public static final String LOAD_FUNCTION = "onLoad";
+<<<<<<< Updated upstream
 
     /**
      * Factory/manager for all script engines.
@@ -68,17 +70,18 @@ public final class Scripting {
      */
     private HashMap<String, ScriptEngine> knownScriptEngines = new HashMap<>();
 
+=======
+    public static final String TOOL_CLOSE_FUNCTION = "onClose";
+>>>>>>> Stashed changes
     /**
      * Top-level bindings to put base functions into. Kind of gross to be
      * static, but NVM.
      */
     private final static RecursiveBindings TOP_LEVEL_BINDINGS = new RecursiveBindings();
-
     /**
      * Default language string for the scripting
      */
     private final String defaultLang;
-
     /**
      * Default writer object for the scripting
      */
@@ -87,6 +90,14 @@ public final class Scripting {
      * Ref to engine object.
      */
     private final Engine engine;
+    /**
+     * Factory/manager for all script engines.
+     */
+    private final ScriptEngineManager scriptingEngineManager;
+    /**
+     * Instantiated Script Engines.
+     */
+    private final HashMap<String, ScriptEngine> knownScriptEngines = new HashMap<>();
 
     /**
      * Constructor.
@@ -94,8 +105,8 @@ public final class Scripting {
      * @todo: Handle case of unknown language.
      *
      * @param defaultLanguage Default scripting language.
-     * @param globalEngine Ref to the engine.
-     * @param writer Default Output writer.
+     * @param globalEngine    Ref to the engine.
+     * @param writer          Default Output writer.
      */
     public Scripting(final String defaultLanguage, final Engine globalEngine, final Writer writer) {
         // Init script engine manager
@@ -123,6 +134,15 @@ public final class Scripting {
     }
 
     /**
+     * Get Scripting global/top-level bindings.
+     *
+     * @return RecursiveBindings
+     */
+    public static RecursiveBindings getTopLevelBindings() {
+        return TOP_LEVEL_BINDINGS;
+    }
+
+    /**
      * Add an object to global bindings.
      *
      * @param name Object name.
@@ -144,21 +164,12 @@ public final class Scripting {
     }
 
     /**
-     * Get Scripting global/top-level bindings.
-     *
-     * @return RecursiveBindings
-     */
-    public static RecursiveBindings getTopLevelBindings() {
-        return TOP_LEVEL_BINDINGS;
-    }
-
-    /**
      * Evaluate the script on a given element. Required before invoking any
      * functions.
      *
      * @param element Element to eval script of.
      * @throws ScriptException Couldn't eval script.
-     * @throws IOException Couldn't get script.
+     * @throws IOException     Couldn't get script.
      */
     public void evalElement(final Scriptable element) throws ScriptException, IOException {
         IO elIo;
@@ -191,14 +202,43 @@ public final class Scripting {
             }
         } else {
 
+<<<<<<< Updated upstream
+=======
+            scrElOpt.flatMap(scrEl -> { //Get file location
+                var locOpt = scrEl.getSourceLoc();
+                var lang = scrEl.getScriptLang();
+                if (lang.equalsIgnoreCase("python")) {
+                    bindings.remove("me"); //Jython doesn't reserve 'this'
+                    bindings.put("this", element);
+                } else {
+                    bindings.remove("this"); //Most other things do reserve 'this'
+                    bindings.put("me", element);
+                }
+                if (locOpt.isEmpty()) {
+                    System.err.println("No script file specified");
+                }
+                return locOpt;
+            }).flatMap(loc -> { //Get Bytes
+                var bytesOpt = elIo.getResource(loc);
+                return bytesOpt;
+            }).ifPresentOrElse(bytes -> { //Eval
+                var str = new String(bytes, StandardCharsets.UTF_8);
+                try {
+                    this.evalString(str, scrElOpt.get().getScriptLang(), bindings);
+                } catch (ScriptException ex) {
+                    engine.putMessage(ex.getMessage(), true);
+                }
+            }, () -> System.err.println("Couldn't load Script for " + element.getClass()));
+            element.setEvalRequired(false);
+>>>>>>> Stashed changes
         }
     }
 
     /**
      * Evaluate a string of code. Provided for testing.
      *
-     * @param code Code to eval.
-     * @param lang Language.
+     * @param code     Code to eval.
+     * @param lang     Language.
      * @param bindings Bindings to use.
      * @throws ScriptException Bad script.
      */
@@ -220,9 +260,9 @@ public final class Scripting {
     /**
      * Evaluate a string in the given bindings, with the specified output.
      *
-     * @param code Code to evaluate.
-     * @param lang Language code is.
-     * @param bindings Bindings to use.
+     * @param code      Code to evaluate.
+     * @param lang      Language code is.
+     * @param bindings  Bindings to use.
      * @param outWriter Output Writer.
      * @throws ScriptException Bad code.
      */
@@ -236,9 +276,15 @@ public final class Scripting {
     /**
      * Invoke function on element.
      *
-     * @param element Element to start with.
+     * @param element  Element to start with.
      * @param function Function to try and call.
+<<<<<<< Updated upstream
      * @param args Arguments to function.
+=======
+     * @param args     Arguments to function.
+     * @throws ScriptException Bad Script.
+     * @throws IOException     Couldn't read file.
+>>>>>>> Stashed changes
      */
     public void invokeOnElement(final Scriptable element, final String function, final Object... args) throws ScriptException, IOException {
         if (element.getEvalRequired()) {

@@ -28,31 +28,34 @@
  */
 package g3.project.core;
 
+import org.junit.jupiter.api.*;
+
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.Random;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public final class RecursiveBindingsTest {
 
     /**
      * Number of iterations to do
      */
-    private static Integer TEST_ITERATIONS = 1000;
+    private static final Integer TEST_ITERATIONS = 1000;
 
     /**
      * Maximum length of array during testing
      */
-    private static Integer MAX_ARR_LEN = 10000;
+    private static final Integer MAX_ARR_LEN = 10000;
 
     //CHECKSTYLE:OFF
     public RecursiveBindingsTest() {
@@ -100,7 +103,7 @@ public final class RecursiveBindingsTest {
         for (int i = 0; i < TEST_ITERATIONS; i++) {
             byte[] array = new byte[rand.nextInt(MAX_ARR_LEN) + 1];
             rand.nextBytes(array);
-            String key = new String(array, Charset.forName("UTF-8"));
+            String key = new String(array, StandardCharsets.UTF_8);
             instance.put(key, "");
             boolean expResult = true;
             boolean result = instance.localContainsKey(key);
@@ -121,8 +124,8 @@ public final class RecursiveBindingsTest {
             byte[] valArray = new byte[rand.nextInt(MAX_ARR_LEN) + 1];
             rand.nextBytes(keyArray);
             rand.nextBytes(valArray);
-            String key = new String(keyArray, Charset.forName("UTF-8"));
-            String val = new String(valArray, Charset.forName("UTF-8"));
+            String key = new String(keyArray, StandardCharsets.UTF_8);
+            String val = new String(valArray, StandardCharsets.UTF_8);
             instance.put(key, val);
             String result = (String) instance.localGet(key).get();
             assertEquals(val, result);
@@ -145,7 +148,7 @@ public final class RecursiveBindingsTest {
         for (int i = 0; i < TEST_ITERATIONS; i++) {
             byte[] array = new byte[rand.nextInt(MAX_ARR_LEN) + 1];
             rand.nextBytes(array);
-            String key = new String(array, Charset.forName("UTF-8"));
+            String key = new String(array, StandardCharsets.UTF_8);
             instance.put(key, "key");
             boolean expResult = true;
             boolean result = instance.containsKey(key);
@@ -155,7 +158,7 @@ public final class RecursiveBindingsTest {
         for (int i = 0; i < TEST_ITERATIONS; i++) {
             byte[] array = new byte[rand.nextInt(MAX_ARR_LEN) + 1];
             rand.nextBytes(array);
-            String key = new String(array, Charset.forName("UTF-8"));
+            String key = new String(array, StandardCharsets.UTF_8);
             parent.put(key, "key");
             boolean expResult = true;
             boolean result = instance.containsKey(key);
@@ -165,7 +168,7 @@ public final class RecursiveBindingsTest {
         for (int i = 0; i < TEST_ITERATIONS; i++) {
             byte[] array = new byte[rand.nextInt(MAX_ARR_LEN) + 1];
             rand.nextBytes(array);
-            String key = new String(array, Charset.forName("UTF-8"));
+            String key = new String(array, StandardCharsets.UTF_8);
             grandParent.put(key, "key");
             boolean expResult = true;
             boolean result = instance.containsKey(key);
@@ -191,8 +194,8 @@ public final class RecursiveBindingsTest {
             byte[] valArray = new byte[rand.nextInt(MAX_ARR_LEN) + 1];
             rand.nextBytes(keyArray);
             rand.nextBytes(valArray);
-            String key = new String(keyArray, Charset.forName("UTF-8"));
-            String val = new String(valArray, Charset.forName("UTF-8"));
+            String key = new String(keyArray, StandardCharsets.UTF_8);
+            String val = new String(valArray, StandardCharsets.UTF_8);
             instance.put(key, val);
             var result = instance.get(key);
             assertEquals(val, result);
@@ -203,8 +206,8 @@ public final class RecursiveBindingsTest {
             byte[] valArray = new byte[rand.nextInt(MAX_ARR_LEN) + 1];
             rand.nextBytes(keyArray);
             rand.nextBytes(valArray);
-            String key = new String(keyArray, Charset.forName("UTF-8"));
-            String val = new String(valArray, Charset.forName("UTF-8"));
+            String key = new String(keyArray, StandardCharsets.UTF_8);
+            String val = new String(valArray, StandardCharsets.UTF_8);
             parent.put(key, val);
             var result = instance.get(key);
             assertEquals(val, result);
@@ -215,8 +218,8 @@ public final class RecursiveBindingsTest {
             byte[] valArray = new byte[rand.nextInt(MAX_ARR_LEN) + 1];
             rand.nextBytes(keyArray);
             rand.nextBytes(valArray);
-            String key = new String(keyArray, Charset.forName("UTF-8"));
-            String val = new String(valArray, Charset.forName("UTF-8"));
+            String key = new String(keyArray, StandardCharsets.UTF_8);
+            String val = new String(valArray, StandardCharsets.UTF_8);
             grandParent.put(key, val);
             var result = instance.get(key);
             assertEquals(val, result);

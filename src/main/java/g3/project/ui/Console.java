@@ -28,7 +28,6 @@
  */
 package g3.project.ui;
 
-import java.util.function.Consumer;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.control.Separator;
@@ -40,9 +39,15 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.util.function.Consumer;
+
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public final class Console {
 
@@ -69,8 +74,13 @@ public final class Console {
     /**
      * Create a new Console.
      *
+<<<<<<< Updated upstream
      * @param ownerWindow Window that owns this.
      * @param lineEnterConsumer
+=======
+     * @param ownerWindow       Window that owns this.
+     * @param lineEnterConsumer Callback on line entered.
+>>>>>>> Stashed changes
      */
     public Console(final Stage ownerWindow, final Consumer<String> lineEnterConsumer) {
         dialog.initModality(Modality.NONE);
@@ -80,7 +90,7 @@ public final class Console {
         separator.setMaxWidth(MAX_WIDTH);
         separator.setOrientation(Orientation.HORIZONTAL);
         dialogVbox.getChildren().addAll(historyArea, separator, inputField);
-        dialogVbox.setVgrow(historyArea, Priority.ALWAYS);
+        VBox.setVgrow(historyArea, Priority.ALWAYS);
         historyArea.setEditable(false);
         historyArea.setFocusTraversable(false);
         Scene dialogScene = new Scene(dialogVbox, SCENE_WIDTH, SCENE_HEIGHT);

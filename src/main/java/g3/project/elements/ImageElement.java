@@ -28,12 +28,23 @@
  */
 package g3.project.elements;
 
+<<<<<<< Updated upstream
+=======
+import g3.project.xmlIO.DocIO;
+import nu.xom.Attribute;
+import nu.xom.Builder;
+import nu.xom.Element;
+
+>>>>>>> Stashed changes
 import java.util.Optional;
-import nu.xom.*;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public class ImageElement extends VisualElement implements Includable {
 
@@ -42,7 +53,7 @@ public class ImageElement extends VisualElement implements Includable {
      *
      * @return builder
      */
-    private static ThreadLocal builders = new ThreadLocal() {
+    private static final ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
             return new Builder(new ElementFactory());
@@ -63,7 +74,7 @@ public class ImageElement extends VisualElement implements Includable {
      * Constructor.
      *
      * @param name Element name.
-     * @param uri Element URI.
+     * @param uri  Element URI.
      */
     public ImageElement(final String name, final String uri) {
         super(name, uri);
@@ -81,8 +92,8 @@ public class ImageElement extends VisualElement implements Includable {
     /**
      * Constructor with Source location.
      *
-     * @param name Element name.
-     * @param uri Element URI.
+     * @param name       Element name.
+     * @param uri        Element URI.
      * @param sourcePath Source Path.
      */
     public ImageElement(final String name, final String uri, final String sourcePath) {

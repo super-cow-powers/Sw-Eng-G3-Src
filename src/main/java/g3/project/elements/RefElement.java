@@ -29,16 +29,22 @@
 package g3.project.elements;
 
 import g3.project.graphics.StyledTextSeg.REF_TYPE;
-import nu.xom.*;
+import nu.xom.Attribute;
+import nu.xom.Builder;
+import nu.xom.Element;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public class RefElement extends Element {
 //CHECKSTYLE:OFF
 
-    private static ThreadLocal builders = new ThreadLocal() {
+    private static final ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
             return new Builder(new ElementFactory());
@@ -68,6 +74,7 @@ public class RefElement extends Element {
     }
 
 //CHECKSTYLE:ON
+
     /**
      * Get link text.
      *
@@ -86,7 +93,11 @@ public class RefElement extends Element {
         var typeAttr = this.getAttribute("type");
         if (typeAttr != null) {
             var type = typeAttr.getValue();
+<<<<<<< Updated upstream
             if (type == "external") {
+=======
+            if (type.equalsIgnoreCase("external")) {
+>>>>>>> Stashed changes
                 return REF_TYPE.EXTERNAL;
             } else {
                 return REF_TYPE.INTERNAL;

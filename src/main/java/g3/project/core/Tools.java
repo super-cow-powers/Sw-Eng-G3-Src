@@ -28,21 +28,26 @@
  */
 package g3.project.core;
 
-import java.util.ArrayList;
-import java.util.Optional;
 import nu.xom.Builder;
 import nu.xom.Element;
 
+import java.util.ArrayList;
+import java.util.Optional;
+
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public class Tools extends Element {
 
     /**
      * Create builder.
      */
-    private static ThreadLocal builders = new ThreadLocal() {
+    private static final ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
             return new Builder(new ToolsFactory());
@@ -63,7 +68,7 @@ public class Tools extends Element {
      * Constructor.
      *
      * @param name Tools element name.
-     * @param uri Tools element URI.
+     * @param uri  Tools element URI.
      */
     public Tools(final String name, final String uri) {
         super(name, uri);

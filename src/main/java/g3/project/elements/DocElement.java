@@ -31,12 +31,16 @@ package g3.project.elements;
 import g3.project.core.RecursiveBindings;
 import g3.project.graphics.SizeObj;
 import g3.project.xmlIO.DocIO;
+import nu.xom.Builder;
+import nu.xom.Element;
+
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.Random;
 import java.util.function.Consumer;
+<<<<<<< Updated upstream
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nu.xom.*;
@@ -44,13 +48,26 @@ import nu.xom.*;
 /**
  *
  * @author david
+=======
+
+/**
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public final class DocElement extends Element implements Scriptable {
 
+    //CHECKSTYLE:OFF
+    private static final ThreadLocal builders = new ThreadLocal() {
+
+        protected synchronized Object initialValue() {
+            return new Builder(new ElementFactory());
+        }
+
+    };
     /**
      * My script bindings.
      */
-    private RecursiveBindings topLevelBindings = null;
+    private final RecursiveBindings topLevelBindings = null;
     /**
      * My currently open page.
      */
@@ -59,31 +76,19 @@ public final class DocElement extends Element implements Scriptable {
      * Doc validation errors.
      */
     private ArrayList<String> validationErrors = new ArrayList<>();
-
     /**
      * Change callback.
      */
     private Consumer<VisualElement> updateCallback = (f) -> {
     };
-
     /**
      * Does the script need evaluating again?
      */
     private Boolean evalRequired = true;
-
     /**
      * Script bindings for the element.
      */
-    private RecursiveBindings elementScriptBindings = new RecursiveBindings();
-
-//CHECKSTYLE:OFF
-    private static ThreadLocal builders = new ThreadLocal() {
-
-        protected synchronized Object initialValue() {
-            return new Builder(new ElementFactory());
-        }
-
-    };
+    private final RecursiveBindings elementScriptBindings = new RecursiveBindings();
 
     public DocElement(final String name) {
         super(name);
@@ -98,14 +103,6 @@ public final class DocElement extends Element implements Scriptable {
     }
 
 //CHECKSTYLE:ON
-    /**
-     * Set change callback.
-     *
-     * @param func Notifier Function.
-     */
-    public void setChangeCallback(final Consumer<VisualElement> func) {
-        updateCallback = func;
-    }
 
     /**
      * Get the change callback.
@@ -117,12 +114,12 @@ public final class DocElement extends Element implements Scriptable {
     }
 
     /**
-     * Set doc validation errors.
+     * Set change callback.
      *
-     * @param errors validation errors.
+     * @param func Notifier Function.
      */
-    public void setValidationErrors(final ArrayList<String> errors) {
-        validationErrors = errors;
+    public void setChangeCallback(final Consumer<VisualElement> func) {
+        updateCallback = func;
     }
 
     /**
@@ -135,7 +132,15 @@ public final class DocElement extends Element implements Scriptable {
     }
 
     /**
+     * Set doc validation errors.
      *
+     * @param errors validation errors.
+     */
+    public void setValidationErrors(final ArrayList<String> errors) {
+        validationErrors = errors;
+    }
+
+    /**
      * @return ArrayList containing the Doc's pages
      */
     public ArrayList<PageElement> getPages() {
@@ -144,6 +149,11 @@ public final class DocElement extends Element implements Scriptable {
             var node = this.getChild(i);
             if (node.getClass() == PageElement.class) {
                 pages.add((PageElement) node);
+<<<<<<< Updated upstream
+=======
+                ((PageElement) node).setIndex(pageCnt);
+                pageCnt++;
+>>>>>>> Stashed changes
             }
         }
         return pages;
@@ -200,10 +210,24 @@ public final class DocElement extends Element implements Scriptable {
     }
 
     /**
+<<<<<<< Updated upstream
+=======
+     * Move a page.
+     *
+     * @param page Page to move.
+     * @param to   New location.
+     */
+    public void movePage(final PageElement page, final Integer to) {
+        this.removeChild(page);
+        insertPage(to, page);
+    }
+
+    /**
+>>>>>>> Stashed changes
      * Add a new page.
      *
      * @param pageNum Page number.
-     * @param el Page.
+     * @param el      Page.
      */
     public void addPage(final Integer pageNum, final PageElement el) {
         for (int i = 0; i < this.getChildCount(); i++) {
@@ -217,10 +241,10 @@ public final class DocElement extends Element implements Scriptable {
     /**
      * Add a page with the specified requirements.
      *
-     * @param pageNum Page Number.
+     * @param pageNum   Page Number.
      * @param pageTitle Page Title/Friendly Name.
-     * @param xSize X Size in PX.
-     * @param ySize Y Size in PX.
+     * @param xSize     X Size in PX.
+     * @param ySize     Y Size in PX.
      * @return New Page's ID.
      */
     public String addPage(final Integer pageNum, final String pageTitle, final Double xSize, final Double ySize) {
@@ -287,6 +311,30 @@ public final class DocElement extends Element implements Scriptable {
         return Optional.empty();
     }
 
+<<<<<<< Updated upstream
+=======
+    /**
+     * Delete an element.
+     *
+     * @param id    Element ID.
+     * @param resIO Resource IO to cleanup resources.
+     */
+    public void deleteElement(final String id, final DocIO resIO) {
+        Optional<VisualElement> maybeEl = getElementByID(id);
+        maybeEl.ifPresent(e -> deleteElement(e, resIO));
+    }
+
+    /**
+     * Delete an element.
+     *
+     * @param el    Element.
+     * @param resIO Resource IO to cleanup resources.
+     */
+    public void deleteElement(final VisualElement el, final DocIO resIO) {
+        el.delete(resIO);
+    }
+
+>>>>>>> Stashed changes
     @Override
     public RecursiveBindings getScriptingBindings() {
         elementScriptBindings.setParent(this.getParentElementScriptingBindings().get());
@@ -337,7 +385,7 @@ public final class DocElement extends Element implements Scriptable {
     /**
      * Attach a new script to the element.
      *
-     * @param path Internal path to file.
+     * @param path     Internal path to file.
      * @param language Script language.
      */
     @Override

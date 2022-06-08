@@ -29,8 +29,12 @@
 package g3.project.graphics;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public final class SizeObj {
 //CHECKSTYLE:OFF
@@ -41,11 +45,10 @@ public final class SizeObj {
 //CHECKSTYLE:ON
 
     /**
-     *
      * Create new object.X and Y are in PX, rot is in degrees.
      *
-     * @param x Size in X.
-     * @param y Size in Y.
+     * @param x   Size in X.
+     * @param y   Size in Y.
      * @param rot Rotation angle in degrees.
      */
     public SizeObj(final Double x, final Double y, final Double rot) {

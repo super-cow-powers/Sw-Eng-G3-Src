@@ -29,20 +29,27 @@
 package g3.project.elements;
 
 import g3.project.graphics.StrokeProps;
-import java.util.Optional;
 import javafx.scene.paint.Color;
-import nu.xom.*;
+import nu.xom.Attribute;
+import nu.xom.Builder;
+import nu.xom.Element;
+
+import java.util.Optional;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public class StrokeElement extends Element {
 
     /**
      * Creates builder thread for the element
      */
-    private static ThreadLocal builders = new ThreadLocal() {
+    private static final ThreadLocal builders = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
             return new Builder(new ElementFactory());
@@ -59,8 +66,14 @@ public class StrokeElement extends Element {
 
     /**
      * Constructor
+<<<<<<< Updated upstream
      * @param name
      * @param uri
+=======
+     *
+     * @param name Element Name.
+     * @param uri  Element URI.
+>>>>>>> Stashed changes
      */
     public StrokeElement(final String name, final String uri) {
         super(name, uri);

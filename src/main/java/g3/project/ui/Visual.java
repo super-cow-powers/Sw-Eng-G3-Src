@@ -32,8 +32,12 @@ import g3.project.graphics.SizeObj;
 import g3.project.graphics.VisualProps;
 
 /**
+<<<<<<< Updated upstream
  *
  * @author David Miall<dm1306@york.ac.uk>
+=======
+ * @author Group 3
+>>>>>>> Stashed changes
  */
 public interface Visual {
     /**
